@@ -5,7 +5,7 @@ namespace NiaIsland.Fishing
 {
     public sealed class FishingController : MonoBehaviour
     {
-        const float BobberDepth = -2.45f;
+        const float BobberDepth = -1.15f;
         const float MinimumDuration = 0.05f;
 
         [Header("Timing (seconds)")]
@@ -30,6 +30,11 @@ namespace NiaIsland.Fishing
         [SerializeField] SpriteRenderer bobber;
         [SerializeField] Transform fishingLine;
 
+        [Header("Art")]
+        [SerializeField] Sprite castButtonSprite;
+        [SerializeField] Sprite hookButtonSprite;
+        [SerializeField] Sprite biteCueSprite;
+
         [Header("Runtime")]
         [SerializeField] FishingState currentState;
 
@@ -37,7 +42,7 @@ namespace NiaIsland.Fishing
         FishingStateMachine _machine;
         FishingHud _hud;
         Vector3 _castTarget;
-        static readonly Color BobberOrange = new Color(0.92f, 0.28f, 0.12f, 1f);
+        static readonly Color BobberOrange = new Color(0.83f, 0.72f, 0.45f, 1f);
 
         void Awake()
         {
@@ -50,7 +55,7 @@ namespace NiaIsland.Fishing
 
         void Start()
         {
-            _hud = new FishingHud(this);
+            _hud = new FishingHud(this, castButtonSprite, hookButtonSprite, biteCueSprite);
             _hud.Refresh(_machine.State, 0f);
             UpdateVisuals();
         }
@@ -177,7 +182,7 @@ namespace NiaIsland.Fishing
         Vector3 HandPosition()
         {
             var facing = nia.transform.localScale.x < 0f ? -1f : 1f;
-            return nia.transform.position + new Vector3(0.35f * facing, 0.35f, 0f);
+            return nia.transform.position + new Vector3(0.45f * facing, 1.15f, 0f);
         }
 
         static Vector3 Arc(Vector3 from, Vector3 to, float t)
@@ -199,7 +204,7 @@ namespace NiaIsland.Fishing
 
             fishingLine.position = (from + to) * 0.5f;
             fishingLine.right = delta;
-            fishingLine.localScale = new Vector3(length, 0.045f, 1f);
+            fishingLine.localScale = new Vector3(length, 0.06f, 1f);
         }
 
         void ResolveReferences()

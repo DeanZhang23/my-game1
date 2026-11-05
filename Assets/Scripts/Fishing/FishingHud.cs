@@ -8,11 +8,15 @@ namespace NiaIsland.Fishing
     {
         readonly Text _state;
         readonly Text _bite;
+        readonly Image _biteImage;
         readonly Text _buttonLabel;
         readonly Image _buttonImage;
         readonly Image _flash;
+        readonly Sprite _castSprite;
+        readonly Sprite _hookSprite;
+        readonly bool _useArt;
 
-        public FishingHud(FishingController controller)
+        public FishingHud(FishingController controller, Sprite castSprite, Sprite hookSprite, Sprite biteCueSprite)
         {
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font == null)
@@ -34,12 +38,16 @@ namespace NiaIsland.Fishing
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
+            _castSprite = castSprite;
+            _hookSprite = hookSprite;
+            _useArt = castSprite != null && hookSprite != null;
+
             if (!EventSystemExists())
             {
                 new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             }
 
-            _flash = CreateImage(canvasObject.transform, "BiteFlash", new Color(1f, 0.95f, 0.7f, 0f));
+            _flash = CreateImage(canvasObject.transform, "BiteFlash", new Color(0.42f, 1f, 0.6f, 0f));
             Stretch(_flash.rectTransform);
 
             _state = CreateText(
@@ -59,7 +67,18 @@ namespace NiaIsland.Fishing
                 TextAnchor.UpperLeft,
                 new Color(0.9f, 0.94f, 0.96f, 0.95f));
             PlaceTopLeft(hint.rectTransform, 28f, -78f, 1200f, 40f);
-            hint.text = "Move with A/D or Left/Right. One button: Cast, then Hook on BITE.";
+            hint.text = "Move with A/D or Left/Right. Cast, then Hook when the green cue appears.";
+
+            _biteImage = CreateImage(canvasObject.transform, "BiteCueArt", Color.white);
+            var biteArtRect = _biteImage.rectTransform;
+            biteArtRect.anchorMin = new Vector2(0.5f, 0.5f);
+            biteArtRect.anchorMax = new Vector2(0.5f, 0.5f);
+            biteArtRect.pivot = new Vector2(0.5f, 0.5f);
+            biteArtRect.anchoredPosition = new Vector2(0f, 170f);
+            biteArtRect.sizeDelta = new Vector2(280f, 280f);
+            _biteImage.sprite = biteCueSprite;
+            _biteImage.preserveAspect = true;
+            _biteImage.gameObject.SetActive(false);
 
             _bite = CreateText(
                 canvasObject.transform,
@@ -84,10 +103,12 @@ namespace NiaIsland.Fishing
             buttonRect.anchorMax = new Vector2(0.5f, 0f);
             buttonRect.pivot = new Vector2(0.5f, 0f);
             buttonRect.anchoredPosition = new Vector2(0f, 36f);
-            buttonRect.sizeDelta = new Vector2(360f, 110f);
+            buttonRect.sizeDelta = _useArt ? new Vector2(340f, 290f) : new Vector2(360f, 110f);
 
             _buttonImage = buttonObject.GetComponent<Image>();
-            _buttonImage.color = ReadyColor;
+            _buttonImage.sprite = _useArt ? castSprite : null;
+            _buttonImage.preserveAspect = true;
+            _buttonImage.color = _useArt ? Color.white : ReadyColor;
             _buttonImage.raycastTarget = true;
 
             var button = buttonObject.GetComponent<Button>();
@@ -106,6 +127,8 @@ namespace NiaIsland.Fishing
                 Color.white);
             Stretch(_buttonLabel.rectTransform);
             _buttonLabel.text = "Cast";
+            if (_useArt)
+                _buttonLabel.gameObject.SetActive(false);
         }
 
         public void Refresh(FishingState state, float bitePulse)
@@ -113,20 +136,36 @@ namespace NiaIsland.Fishing
             _state.text = "State: " + state;
 
             var biting = state == FishingState.BiteWindow;
-            if (_bite.gameObject.activeSelf != biting)
-                _bite.gameObject.SetActive(biting);
+            var showTextCue = biting && !_useArt;
+            if (_bite.gameObject.activeSelf != showTextCue)
+                _bite.gameObject.SetActive(showTextCue);
+            if (_biteImage != null && _biteImage.sprite != null && _biteImage.gameObject.activeSelf != biting)
+                _biteImage.gameObject.SetActive(biting);
             if (biting)
             {
-                var scale = 1f + 0.1f * bitePulse;
-                _bite.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                var scale = 1f + 0.12f * bitePulse;
+                if (showTextCue)
+                    _bite.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                if (_biteImage != null && _biteImage.sprite != null)
+                    _biteImage.rectTransform.localScale = new Vector3(scale, scale, 1f);
             }
 
             var flash = _flash.color;
-            flash.a = biting ? 0.16f + 0.34f * bitePulse : 0f;
+            flash.a = biting ? 0.08f + 0.2f * bitePulse : 0f;
             _flash.color = flash;
 
-            _buttonLabel.text = ButtonLabel(state);
-            _buttonImage.color = ButtonColor(state);
+            if (_useArt)
+            {
+                _buttonImage.sprite = biting ? _hookSprite : _castSprite;
+                _buttonImage.color = state == FishingState.Ready || biting
+                    ? Color.white
+                    : new Color(0.62f, 0.62f, 0.62f, 1f);
+            }
+            else
+            {
+                _buttonLabel.text = ButtonLabel(state);
+                _buttonImage.color = ButtonColor(state);
+            }
         }
 
         static string ButtonLabel(FishingState state)
