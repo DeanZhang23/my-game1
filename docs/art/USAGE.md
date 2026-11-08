@@ -1,10 +1,10 @@
 # Art usage — legacy pixel MVP + locked hand-painted terrain
 
-Two packs live side by side. Gameplay and the GDD are unchanged; these notes only say where the art sits and how to import it.
+Pixel placeholders and the hand-painted packs live side by side. Gameplay and the GDD are unchanged; these notes only say where the art sits and how to import it.
 
 ## Legacy pixel MVP (placeholders)
 
-**Status:** Legacy placeholders pending reskin. Sheets under `Assets/Art/Characters`, `Assets/Art/UI`, `Assets/Art/Fish`, and `Assets/Art/Backgrounds` (plus `Assets/Art/Style/palette_abyss_hook.png`) stay until a hand-painted pass replaces them. They are **not** the locked style. Production direction is `docs/art/STYLE_GUIDE.md` (v2).
+**Status:** Legacy placeholders pending reskin. Sheets under `Assets/Art/Characters`, `Assets/Art/UI`, and `Assets/Art/Backgrounds`, plus the pixel fish sheet `Assets/Art/Fish/fish_silhouettes_mvp.png` and `Assets/Art/Style/palette_abyss_hook.png`, stay until a hand-painted pass replaces them. They are **not** the locked style. Production direction is `docs/art/STYLE_GUIDE.md` (v2). `Assets/Art/Fish/mandela_snake/` is hand-painted and is not part of that legacy sheet.
 
 **Placeholder status:** Grok Imagine concept sheets. Slice into final sprites as needed; mark any temporary assets `PLACEHOLDER` in importer until Verifier signs off.
 
@@ -55,3 +55,20 @@ Soft hand-painted modular terrain. Mood: 异质 / 压抑 / 侵蚀. Palette and r
 - **Filter Mode = Bilinear** (soft paint). Compression = None until sliced. Sprite Mode = Multiple.
 - Keep walkable tops and collision outlines clear. Do not cover footholds with eldritch glow or debris.
 - Structure follows the terrain-base north star. Mood and palette follow the locked guide (sick rot moss and cold rock, not cozy green).
+
+## Mandela Snake / 曼德拉蛇 (locked hand-painted)
+
+Catchable fish/monster (MVP-adjacent). Same lock as terrain: `docs/art/STYLE_GUIDE.md` v2 (异质 / 压抑 / 侵蚀). Pack notes: `Assets/Art/Fish/mandela_snake/README.md`. Short index: `docs/art/mandela_snake.md`. Does not replace `Assets/Art/Fish/fish_silhouettes_mvp.png`. No gameplay wiring.
+
+| File | Purpose |
+|------|---------|
+| `Assets/Art/Fish/mandela_snake/mandela_snake_side.png` | Side silhouette / in-water sprite reference (1280×720) |
+| `Assets/Art/Fish/mandela_snake/mandela_snake_portrait.png` | Colored catch portrait for UI (1024×1024) |
+| `Assets/Art/Fish/mandela_snake/mandela_snake_bite.png` | Bite / reel action frame (1280×720) |
+| `Assets/Art/Fish/mandela_snake/README.md` | Palette, import, and naming |
+
+### Import
+
+- Concept frames on void `#0B0E14`. Mask to transparent in engine if needed.
+- **Filter Mode = Bilinear** (soft paint). Compression = None until cropped.
+- Readable near ~128px character height. Eldritch `#6EC8B8` / `#9B7AE8` on the eyes only.
