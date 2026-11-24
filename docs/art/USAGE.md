@@ -1,6 +1,7 @@
 # Echoes of Fate — M0 art USAGE
 
-Art-only pack for TestArena. Do not treat prior Abyss Hook / Cthulhu sheets as production for this mode.
+**Style:** Q 版暗黑 (chibi dark-fantasy). See `STYLE_GUIDE.md`.  
+The earlier realistic / painterly M0 draft is **void**. Do not import it into TestArena. Prior Abyss Hook / Cthulhu sheets are also not for this mode.
 
 ## Import (Unity 6 / URP 2D)
 
@@ -9,13 +10,13 @@ Art-only pack for TestArena. Do not treat prior Abyss Hook / Cthulhu sheets as p
 | Texture Type | Sprite (2D and UI) |
 | Pixels Per Unit | 64 |
 | Filter Mode | Bilinear |
-| Compression | None or High quality for UI; default for env |
-| Mesh Type | Tight or Full Rect (dice = Full Rect) |
-| Pivot | See STYLE_GUIDE (characters at feet / ring; dice center; ground center) |
+| Compression | None or High quality for UI |
+| Mesh Type | Dice = Full Rect; characters Tight or Full Rect |
+| Pivot | Characters at feet / ring; dice center; ground center |
 
-Sorting layers: `BGFar` < `BGMid` < `Ground` < `UnitsRing` < `Units` < `FG` < `UI`. Y-sort units by foot pivot. 2D Lights may tint gold (ally lamp) or rust/cyan (rift) — keep them local, not full-screen.
+Sorting layers: `BGFar` < `BGMid` < `Ground` < `UnitsRing` < `Units` < `FG` < `UI`. Y-sort units by foot pivot. Keep 2D Lights local (gold lamp or rust/cyan rift), never a full-screen wash.
 
-Generated frames may sit on void `#0B1220` or a chroma key; if a PNG is not pre-multiplied transparent, mask the void before shipping to a scene.
+If a PNG still has void `#0B1220` instead of alpha, mask it before placing in a scene. Production slices in this pack are authored with transparency.
 
 ## Paths
 
@@ -30,20 +31,18 @@ Assets/_Project/Art/Characters/chr_ally_placeholder_caster_idle.png
 Assets/_Project/Art/Characters/chr_enemy_placeholder_idle.png
 ```
 
-The `sheets/` contact sheets are the uncut source. Import the eighteen sliced `ui_dice_{face}_{state}.png` files, not the sheets.
+## Dice
 
-## Dice states
+- `normal` — flat parchment, gold rim, clear icon
+- `locked` — padlock **inside** the face square
+- `cracked` — graphic rust cracks (`status_crack`)
 
-- `normal` — parchment face, gold rim, clear symbol
-- `locked` — iron/wax seal, cooler and dimmer, still readable
-- `cracked` — rust-red fissures through the face (maps to `status_crack` presentation)
+Star is a magic spark-star, not a hexagram. Coin is a gold coin, not a compass.
 
-Faces: sword, shield, star, feather, coin, skull.
+## TestArena
 
-## TestArena (Rift Battlefield)
-
-`env_riftarena_ground` is an isometric field marked for **3×3 ally vs 3×3 enemy** with a mid-line. Place units on cell centers. BG Far / Mid are backdrops; FG is optional near-edge ash / cracked stone (must not hide footholds).
+`env_riftarena_ground` is the only playable field (3×3 vs 3×3). Mid is a backdrop. Far is sky/void. FG is a bottom overlay only.
 
 ## Placeholders
 
-Idle only in M0. Melee = front-line cloak + polearm. Caster = pointed hood + lantern or staff. Enemy shares one look for `enemy_c1` / `enemy_c2`, distinguished from allies by rust ring and rust outline (no grave-lamp gold).
+Idle only. All Q-version (big head, short body). Melee = cloak + polearm. Caster = pointed hood + lantern or staff. Enemy uses a **different silhouette** from melee, plus rust ring / rust outline and no gold.
