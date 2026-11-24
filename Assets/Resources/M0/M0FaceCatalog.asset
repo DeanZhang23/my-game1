@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1a00006e1a00006e1a00006e1a00006, type: 3}
+  m_Name: M0FaceCatalog
+  faces:
+  - id: face_sword
+    nameKey: face.sword.name
+    descriptionKey: face.sword.desc
+  - id: face_shield
+    nameKey: face.shield.name
+    descriptionKey: face.shield.desc
+  - id: face_star
+    nameKey: face.star.name
+    descriptionKey: face.star.desc
+  - id: face_feather
+    nameKey: face.feather.name
+    descriptionKey: face.feather.desc
+  - id: face_coin
+    nameKey: face.coin.name
+    descriptionKey: face.coin.desc
+  - id: face_skull
+    nameKey: face.skull.name
+    descriptionKey: face.skull.desc

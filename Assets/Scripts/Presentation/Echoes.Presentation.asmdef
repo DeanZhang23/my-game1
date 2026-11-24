@@ -1,0 +1,17 @@
+{
+    "name": "Echoes.Presentation",
+    "rootNamespace": "Echoes.Presentation",
+    "references": [
+        "Echoes.Simulation",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
