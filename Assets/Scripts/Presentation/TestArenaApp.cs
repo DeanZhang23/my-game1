@@ -74,18 +74,28 @@ namespace Echoes.Presentation
         private string _dragUnitId;
         private bool _fromDrag;
 
-        // Reference-pixel rects. Interactive formation stays below the dice (y 214-286)
-        // and the reroll / march buttons (y 150-190), and left of the log (x >= 350).
-        private const float CellW = 132f;
-        private const float CellH = 48f;
-        private static readonly Vector2 BoardPos = new Vector2(0f, -95f);
+        // Reference canvas 1600x900, origin at center, +y up.
+        // Left: ally 3x3. Center: enemy 3x3. Right: seed, dice, reroll, march, log below them.
+        // Front (*_c*) is the inner column and faces the vertical midline. Back (*_a*) is outer.
+        // Column 1 is the top file. Slot ids are not mirrored.
+        // Board, midline, captions, and portraits do not raycast. The right column is built
+        // after the board and the log so those controls stay clickable.
+        private const float CellW = 128f;
+        private const float CellH = 84f;
+        private const float ColPitch = 92f;
+        private const float RowPitch = 136f;
+        private static readonly Vector2 AllyOrigin = new Vector2(-480f, 40f);
+        private static readonly Vector2 EnemyOrigin = new Vector2(0f, 40f);
+        private static readonly Vector2 BoardPos = new Vector2(-240f, 40f);
+        private const float BoardW = 896f;
+        private const float BoardH = 284f;
         private static readonly Color AllyCell = new Color(0.18f, 0.24f, 0.21f, 1f);
         private static readonly Color AllyCellEmpty = new Color(0.12f, 0.14f, 0.13f, 1f);
         private static readonly Color EnemyCell = new Color(0.28f, 0.16f, 0.16f, 1f);
         private static readonly Color TokenColor = new Color(0.28f, 0.38f, 0.34f, 1f);
         private static readonly Color TokenSelected = new Color(0.62f, 0.52f, 0.22f, 1f);
         private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
-        private const float PortraitSize = 56f;
+        private const float PortraitSize = 44f;
 
         private void Awake()
         {
@@ -443,29 +453,36 @@ namespace Echoes.Presentation
             scaler.matchWidthOrHeight = 0.5f;
             Transform root = canvasGo.transform;
 
-            _title = MakeText(Box(root, "Title", new Vector2(0f, 400f), new Vector2(700f, 40f), new Color(0f, 0f, 0f, 0f)), 28);
-            _localeLabel = MakeText(ButtonBox(root, "Locale", new Vector2(680f, 400f), new Vector2(140f, 36f), ToggleLocale), 18);
-
-            _seedLabel = MakeText(Box(root, "SeedLabel", new Vector2(-220f, 340f), new Vector2(120f, 36f), new Color(0f, 0f, 0f, 0f)), 18);
-            _seedInput = MakeInput(root, new Vector2(-40f, 340f));
-            if (fixedSeed != 0)
-                _seedInput.text = fixedSeed.ToString(CultureInfo.InvariantCulture);
-            _beginLabel = MakeText(ButtonBox(root, "Begin", new Vector2(180f, 340f), new Vector2(160f, 40f), BeginBattle), 20);
-            _beginButton = _beginLabel.transform.parent.gameObject;
+            _title = MakeText(Box(root, "Title", new Vector2(-360f, 308f), new Vector2(640f, 40f), new Color(0f, 0f, 0f, 0f)), 28);
+            _localeLabel = MakeText(ButtonBox(root, "Locale", new Vector2(710f, 410f), new Vector2(130f, 34f), ToggleLocale), 18);
 
             BuildFormation(root);
+
+            _status = MakeText(Box(root, "Status", new Vector2(0f, -420f), new Vector2(1520f, 32f), new Color(0f, 0f, 0f, 0f)), 16);
+            _result = MakeText(Box(root, "Result", new Vector2(-420f, -376f), new Vector2(520f, 30f), new Color(0f, 0f, 0f, 0f)), 24);
+
+            BuildLog(root);
+            BuildTactical(root);
+
+            // Right column, after the board and the log. Seed, dice, reroll, and march stay on top.
+            _seedLabel = MakeText(Box(root, "SeedLabel", new Vector2(360f, 336f), new Vector2(72f, 32f), new Color(0f, 0f, 0f, 0f)), 18);
+            _seedInput = MakeInput(root, new Vector2(520f, 336f));
+            if (fixedSeed != 0)
+                _seedInput.text = fixedSeed.ToString(CultureInfo.InvariantCulture);
+            _beginLabel = MakeText(ButtonBox(root, "Begin", new Vector2(706f, 336f), new Vector2(140f, 40f), BeginBattle), 20);
+            _beginButton = _beginLabel.transform.parent.gameObject;
 
             for (int i = 0; i < 3; i++)
             {
                 int index = i;
-                RectTransform die = ButtonBox(root, "Die" + i.ToString(CultureInfo.InvariantCulture), new Vector2(-180f + i * 180f, 250f), new Vector2(160f, 72f), delegate { ToggleDie(index); });
+                RectTransform die = ButtonBox(root, "Die" + i.ToString(CultureInfo.InvariantCulture), new Vector2(395f + i * 158f, 250f), new Vector2(150f, 74f), delegate { ToggleDie(index); });
                 _diceImage[i] = die.GetComponent<Image>();
-                _dice[i] = MakeText(die, 18);
+                _dice[i] = MakeText(die, 16);
             }
 
-            _rerollLabel = MakeText(ButtonBox(root, "Reroll", new Vector2(-90f, 170f), new Vector2(160f, 40f), OnReroll), 20);
+            _rerollLabel = MakeText(ButtonBox(root, "Reroll", new Vector2(453f, 168f), new Vector2(180f, 42f), OnReroll), 20);
             _rerollButton = _rerollLabel.transform.parent.gameObject;
-            _commitLabel = MakeText(ButtonBox(root, "Commit", new Vector2(90f, 170f), new Vector2(160f, 40f), OnCommit), 20);
+            _commitLabel = MakeText(ButtonBox(root, "Commit", new Vector2(653f, 168f), new Vector2(180f, 42f), OnCommit), 20);
             _commitButton = _commitLabel.transform.parent.gameObject;
             _rerollButton.SetActive(false);
             _commitButton.SetActive(false);
@@ -474,18 +491,13 @@ namespace Echoes.Presentation
             colors.disabledColor = new Color(0.25f, 0.25f, 0.28f, 0.75f);
             commit.colors = colors;
 
-            _status = MakeText(Box(root, "Status", new Vector2(0f, 115f), new Vector2(1100f, 32f), new Color(0f, 0f, 0f, 0f)), 16);
-            _result = MakeText(Box(root, "Result", new Vector2(0f, -360f), new Vector2(700f, 36f), new Color(0f, 0f, 0f, 0f)), 26);
-
-            BuildLog(root);
-            BuildTactical(root);
             BuildDragLayer(root);
             EnsureTokens();
         }
 
         private void BuildLog(Transform root)
         {
-            RectTransform panel = Box(root, "LogPanel", new Vector2(560f, -40f), new Vector2(420f, 640f), new Color(0.08f, 0.09f, 0.11f, 0.92f));
+            RectTransform panel = Box(root, "LogPanel", new Vector2(553f, -121f), new Vector2(466f, 498f), new Color(0.08f, 0.09f, 0.11f, 0.92f));
             var scrollGo = new GameObject("Scroll", typeof(RectTransform), typeof(ScrollRect), typeof(Image));
             scrollGo.transform.SetParent(panel, false);
             RectTransform scrollRt = Stretch(scrollGo.GetComponent<RectTransform>(), 8f);
@@ -521,7 +533,7 @@ namespace Echoes.Presentation
 
         private void BuildTactical(Transform root)
         {
-            RectTransform panel = Box(root, "Tactical", new Vector2(0f, 0f), new Vector2(420f, 180f), new Color(0.12f, 0.10f, 0.08f, 0.96f));
+            RectTransform panel = Box(root, "Tactical", new Vector2(-240f, 40f), new Vector2(400f, 168f), new Color(0.12f, 0.10f, 0.08f, 0.96f));
             _tacticalPanel = panel.gameObject;
             _tacticalTitle = MakeText(Box(panel, "TacticalTitle", new Vector2(0f, 50f), new Vector2(380f, 36f), new Color(0f, 0f, 0f, 0f)), 22);
             _tacticalBody = MakeText(Box(panel, "TacticalBody", new Vector2(0f, 10f), new Vector2(380f, 36f), new Color(0f, 0f, 0f, 0f)), 16);
@@ -604,14 +616,12 @@ namespace Echoes.Presentation
             var widget = new UnitWidget();
             widget.root = panel.gameObject;
             widget.unitId = unitId;
-            widget.portrait = AddPortrait(panel, SpriteFor(unitId), new Vector2(-36f, 12f), 52f);
-            float textX = widget.portrait != null ? 24f : 0f;
-            float textW = widget.portrait != null ? 80f : 124f;
-            widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 12f), new Vector2(textW, 14f), Clear), 13);
-            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(textX, -4f), new Vector2(textW, 12f), Clear), 11);
-            float barX = widget.portrait != null ? 24f : 0f;
-            float barW = widget.portrait != null ? 78f : 116f;
-            RectTransform bar = Box(panel, "Bar", new Vector2(barX, -18f), new Vector2(barW, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
+            widget.portrait = AddPortrait(panel, SpriteFor(unitId), new Vector2(-38f, 18f), 40f);
+            float textX = widget.portrait != null ? 22f : 0f;
+            float textW = widget.portrait != null ? 72f : 116f;
+            widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 24f), new Vector2(textW, 16f), Clear), 13);
+            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, -12f), new Vector2(116f, 14f), Clear), 11);
+            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -28f), new Vector2(112f, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
             widget.fill = Box(bar, "Fill", Vector2.zero, new Vector2(116f, 6f), new Color(0.45f, 0.75f, 0.42f, 1f)).GetComponent<Image>();
             RectTransform fillRt = widget.fill.rectTransform;
             fillRt.anchorMin = new Vector2(0f, 0f);
@@ -645,7 +655,8 @@ namespace Echoes.Presentation
             return SlotAbsolute(slot) - BoardPos;
         }
 
-        // Allies read back-to-front toward the center. Enemies read front-to-back away from it.
+        // Allies face right toward the midline. Enemies face left toward it.
+        // *_c* is the inner column, *_a* the outer column, *_b* between them.
         private static Vector2 SlotAbsolute(string slot)
         {
             bool ally;
@@ -655,36 +666,41 @@ namespace Echoes.Presentation
                 return Vector2.zero;
             int rowIndex = row == FormationRow.Back ? 0 : row == FormationRow.Mid ? 1 : 2;
             int colIndex = column - 1;
-            float x = (colIndex - 1) * 148f + (ally ? rowIndex * 10f : -rowIndex * 10f);
-            float y = ally ? 48f - rowIndex * 54f : -128f - (2 - rowIndex) * 54f;
+            Vector2 origin = ally ? AllyOrigin : EnemyOrigin;
+            float depth = (rowIndex - 1) * RowPitch;
+            float x = origin.x + (ally ? depth : -depth);
+            float y = origin.y + (1 - colIndex) * ColPitch;
             return new Vector2(x, y);
         }
 
         private void BuildFormation(Transform root)
         {
-            _board = Box(root, "Board", BoardPos, new Vector2(520f, 350f), new Color(0.10f, 0.11f, 0.14f, 0.55f), false);
-            float allyFront = SlotAbsolute("ally_c2").y - CellH * 0.5f;
-            float enemyFront = SlotAbsolute("enemy_c2").y + CellH * 0.5f;
-            float midY = (allyFront + enemyFront) * 0.5f;
-            Box(_board, "Midline", new Vector2(0f, midY - BoardPos.y), new Vector2(440f, 2f), new Color(0.55f, 0.55f, 0.6f, 0.8f), false);
+            _board = Box(root, "Board", BoardPos, new Vector2(BoardW, BoardH), new Color(0.10f, 0.11f, 0.14f, 0.55f), false);
+            float allyFront = SlotAbsolute("ally_c2").x + CellW * 0.5f;
+            float enemyFront = SlotAbsolute("enemy_c2").x - CellW * 0.5f;
+            float midX = (allyFront + enemyFront) * 0.5f;
+            Box(_board, "Midline", new Vector2(midX - BoardPos.x, 0f), new Vector2(2f, BoardH - 24f), new Color(0.55f, 0.55f, 0.6f, 0.8f), false);
 
             for (int i = 0; i < Slots.AllyIds.Length; i++)
                 BuildCell(Slots.AllyIds[i], true);
             for (int i = 0; i < Slots.EnemyIds.Length; i++)
                 BuildCell(Slots.EnemyIds[i], false);
 
+            float labelY = AllyOrigin.y + ColPitch + CellH * 0.5f + 28f;
             string[] samples = { "ally_a2", "ally_b2", "ally_c2", "enemy_c2", "enemy_b2", "enemy_a2" };
             for (int i = 0; i < samples.Length; i++)
             {
                 Vector2 at = SlotAbsolute(samples[i]);
-                _rowLabels[i] = PlaceLabel(root, "Row" + i.ToString(CultureInfo.InvariantCulture), new Vector2(296f, at.y), new Vector2(68f, 22f), 14);
+                _rowLabels[i] = PlaceLabel(root, "Row" + i.ToString(CultureInfo.InvariantCulture), new Vector2(at.x, labelY), new Vector2(72f, 22f), 14);
             }
 
-            _allyCaption = PlaceLabel(root, "AllyCaption", new Vector2(-330f, SlotAbsolute("ally_a2").y), new Vector2(72f, 22f), 14);
-            _enemyCaption = PlaceLabel(root, "EnemyCaption", new Vector2(-330f, SlotAbsolute("enemy_a2").y), new Vector2(72f, 22f), 14);
+            float captionY = labelY + 32f;
+            _allyCaption = PlaceLabel(root, "AllyCaption", new Vector2(AllyOrigin.x, captionY), new Vector2(80f, 22f), 16);
+            _enemyCaption = PlaceLabel(root, "EnemyCaption", new Vector2(EnemyOrigin.x, captionY), new Vector2(80f, 22f), 16);
 
-            _bench = Box(root, "Bench", new Vector2(-470f, -6f), new Vector2(124f, 184f), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
-            _benchLabel = PlaceLabel(_bench, "BenchLabel", new Vector2(0f, 78f), new Vector2(112f, 18f), 13);
+            float benchH = CellH + ColPitch * 2f;
+            _bench = Box(root, "Bench", new Vector2(-740f, AllyOrigin.y), new Vector2(88f, benchH), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
+            _benchLabel = PlaceLabel(_bench, "BenchLabel", new Vector2(0f, benchH * 0.5f - 16f), new Vector2(80f, 18f), 13);
             Listen(_bench.gameObject, EventTriggerType.PointerClick, delegate { NotifyBenchClick(); });
             _bench.gameObject.SetActive(false);
         }
@@ -692,7 +708,7 @@ namespace Echoes.Presentation
         private void BuildCell(string slotId, bool ally)
         {
             RectTransform rect = Box(_board, slotId, SlotLocal(slotId), new Vector2(CellW, CellH), ally ? AllyCellEmpty : EnemyCell, ally);
-            RectTransform slotBar = Box(rect, "SlotId", new Vector2(0f, -18f), new Vector2(120f, 12f), new Color(0.04f, 0.05f, 0.06f, 0.82f), false);
+            RectTransform slotBar = Box(rect, "SlotId", new Vector2(0f, -CellH * 0.5f + 11f), new Vector2(CellW - 16f, 16f), new Color(0.04f, 0.05f, 0.06f, 0.82f), false);
             Text slotText = MakeText(slotBar, 11);
             slotText.text = slotId;
             slotText.color = new Color(0.90f, 0.86f, 0.72f, 1f);
@@ -705,9 +721,9 @@ namespace Echoes.Presentation
             if (!ally)
             {
                 cell.unitId = EnemyOn(slotId);
-                cell.portrait = AddPortrait(rect, SpriteFor(cell.unitId), new Vector2(-26f, -2f), PortraitSize);
-                Vector2 namePos = cell.portrait != null ? new Vector2(28f, -6f) : new Vector2(0f, 4f);
-                Vector2 nameSize = cell.portrait != null ? new Vector2(68f, 28f) : new Vector2(124f, 22f);
+                cell.portrait = AddPortrait(rect, SpriteFor(cell.unitId), new Vector2(-34f, 8f), PortraitSize);
+                Vector2 namePos = cell.portrait != null ? new Vector2(26f, 8f) : new Vector2(0f, 8f);
+                Vector2 nameSize = cell.portrait != null ? new Vector2(64f, 30f) : new Vector2(CellW - 8f, 22f);
                 cell.occupant = PlaceLabel(rect, "Occupant", namePos, nameSize, 13);
             }
             _cells[slotId] = cell;
@@ -751,16 +767,16 @@ namespace Echoes.Presentation
                     continue;
                 string unitId = placement.Unit.Id;
                 Sprite sprite = SpriteFor(unitId);
-                RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(112f, sprite != null ? 62f : 28f), TokenColor, true);
+                RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(118f, sprite != null ? 56f : 28f), TokenColor, true);
                 var view = new TokenView();
                 view.unitId = unitId;
                 view.rect = rect;
                 view.image = rect.GetComponent<Image>();
-                view.portrait = AddPortrait(rect, sprite, new Vector2(-26f, 6f), PortraitSize);
+                view.portrait = AddPortrait(rect, sprite, new Vector2(-30f, 2f), PortraitSize);
                 if (view.portrait != null)
                 {
                     view.image.color = Clear;
-                    RectTransform namePlate = Box(rect, "NamePlate", new Vector2(28f, -4f), new Vector2(50f, 28f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
+                    RectTransform namePlate = Box(rect, "NamePlate", new Vector2(28f, 0f), new Vector2(52f, 26f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
                     view.label = MakeText(namePlate, 12);
                     Outline outline = view.label.gameObject.AddComponent<Outline>();
                     outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
@@ -817,19 +833,19 @@ namespace Echoes.Presentation
                 if (!string.IsNullOrEmpty(slot) && _cells.ContainsKey(slot))
                 {
                     parent = _cells[slot].rect;
-                    pos = hasPortrait ? new Vector2(0f, 1f) : new Vector2(0f, 8f);
+                    pos = hasPortrait ? new Vector2(0f, 10f) : new Vector2(0f, 12f);
                     occupied.Add(slot);
                 }
                 else
                 {
                     parent = _bench;
-                    pos = hasPortrait ? new Vector2(0f, 18f - stacked * 66f) : new Vector2(0f, 44f - stacked * 30f);
+                    pos = hasPortrait ? new Vector2(0f, 36f - stacked * 64f) : new Vector2(0f, 70f - stacked * 32f);
                     stacked++;
                 }
                 if (parent != null && token.rect.parent != parent)
                     token.rect.SetParent(parent, false);
                 token.rect.anchoredPosition = pos;
-                token.rect.sizeDelta = hasPortrait ? new Vector2(112f, 62f) : new Vector2(124f, 28f);
+                token.rect.sizeDelta = hasPortrait ? new Vector2(118f, 56f) : new Vector2(116f, 28f);
                 bool selected = token.unitId == _selectedUnitId;
                 if (hasPortrait)
                 {
@@ -1180,7 +1196,7 @@ namespace Echoes.Presentation
 
         private InputField MakeInput(Transform parent, Vector2 pos)
         {
-            RectTransform rt = Box(parent, "Seed", pos, new Vector2(180f, 36f), new Color(0.16f, 0.17f, 0.2f, 1f), true);
+            RectTransform rt = Box(parent, "Seed", pos, new Vector2(160f, 36f), new Color(0.16f, 0.17f, 0.2f, 1f), true);
             Text text = MakeText(rt, 18);
             text.alignment = TextAnchor.MiddleLeft;
             text.raycastTarget = true;
