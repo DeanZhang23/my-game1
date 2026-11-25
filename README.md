@@ -1,6 +1,6 @@
 # 命运残响 / Echoes of Fate
 
-M0 Test Arena. Unity **6.3 LTS** (`6000.3.29f1`, changeset `96d2fe17529c`) with URP 17.3 and the 2D Renderer. The battle is pure 2D: an orthographic camera and a greybox UI. There is no 3D mesh pipeline.
+M0 Test Arena. Unity **6.3 LTS** (`6000.3.29f1`, changeset `96d2fe17529c`) with URP 17.3 and the 2D Renderer. The battle is pure 2D: an orthographic camera and a greybox UI. Formation tokens draw official ally idle sprites. There is no 3D mesh pipeline.
 
 The design is `docs/gdd/m0-test-arena.md`. This slice is E1 plus E1.1: dice, the combat state machine, formula tests, one Golden Seed, and Setup placement on the ally 3×3.
 
@@ -33,11 +33,11 @@ UPDATE_GOLDEN=1 dotnet test tests/Echoes.Simulation.Tests/Echoes.Simulation.Test
 
 Unity `6000.3.29f1`, scene `Assets/Scenes/TestArena.unity`. The cloud VM has no Unity Editor, so this list was not run in Play Mode.
 
-Default lineup until an ally is moved during Setup: melee on `ally_c2` (`unit_placeholder_melee`), caster on `ally_a2` (`unit_placeholder_caster`), foes on `enemy_c1` and `enemy_c2` (`unit_placeholder_enemy`). Enemy cells are the encounter preset. There is no enemy placement editor.
+Default lineup until an ally is moved during Setup: melee on `ally_c2` (`unit_placeholder_melee`), caster on `ally_a2` (`unit_placeholder_caster`), foes on `enemy_c1` and `enemy_c2` (`unit_placeholder_enemy`). Enemy cells are the encounter preset. There is no enemy placement editor. The melee token shows `chr_ally_ashguard_idle_01`, the caster token shows `chr_ally_riftmage_idle_01`, and both foes show `chr_enemy_placeholder_idle`. Unit ids, stats, and the starting slots stay the same. The other six official idles are imported for later use and are not on this formation.
 
 Ally cells, the reserve strip, and the row labels sit below the dice and the reroll / march buttons (nothing interactive above y=90) and left of the log (nothing interactive at x≥350). Those controls stay clickable. Decorative text does not take clicks. A dragged token does not raycast, so releasing it over a die, Reroll, or March cancels the move instead of stealing the click.
 
-1. Press Play. The grids show the default lineup. Tokens are not draggable yet. Type a seed or leave it blank, then press Begin. Three dice faces appear. During Setup, drag an ally onto another ally cell to swap, or onto an empty ally cell to move. Or click a token, then click a cell, another token, or Reserve (待命). Each cell shows its slot id.
+1. Press Play. The grids show the default lineup: the ashguard idle on `ally_c2`, the riftmage idle on `ally_a2`, and the enemy placeholder idle on `enemy_c1` and `enemy_c2`. Tokens are not draggable yet. Type a seed or leave it blank, then press Begin. Three dice faces appear. During Setup, drag an ally onto another ally cell to swap, or onto an empty ally cell to move. Or click a token, then click a cell, another token, or Reserve (待命). Each cell shows its slot id. The same idles stay on the unit panels after March.
 2. Put both allies on Reserve. March (出征) stays on screen and does not start the countdown. The status line says the formation is empty. Put at least one ally back on any ally cell. March works again.
 3. March on the default lineup, or after a move. Countdown starts and the tokens can no longer be dragged or clicked into a new cell. Spawn lines in the log include the slot id (`近战 ally_c2`). Later damage lines include both slots.
 4. Position check, using sword / shield / star faces (seeds are in the E1 list below, or reroll until those faces show). Melee on a front cell (`ally_c*`) gains keen, and a shield face gives that front unit a shield. Caster on a back cell (`ally_a*`) gains starting energy from a star. The same units on a mid cell (`ally_b*`) do not gain keen, that shield, or that energy. Team attack, armor, and skill-damage bonuses still apply on the mid row.

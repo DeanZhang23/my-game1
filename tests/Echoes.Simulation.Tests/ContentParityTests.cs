@@ -75,6 +75,51 @@ namespace Echoes.Simulation.Tests
         }
 
         [Fact]
+        public void UnitSprites_MapTheDefaultRosterToOfficialIdles()
+        {
+            string root = RepoRoot();
+            string catalog = Read(root, "Assets/Resources/M0/M0UnitSprites.asset");
+            int melee = catalog.IndexOf("unitId: unit_placeholder_melee", StringComparison.Ordinal);
+            int caster = catalog.IndexOf("unitId: unit_placeholder_caster", StringComparison.Ordinal);
+            int enemy = catalog.IndexOf("unitId: unit_placeholder_enemy", StringComparison.Ordinal);
+            Assert.True(melee >= 0 && melee < caster && caster < enemy);
+            Assert.Contains("guid: e1d00001e1d00001e1d00001e1d00001", catalog.Substring(melee, caster - melee));
+            Assert.Contains("guid: e1d00004e1d00004e1d00004e1d00004", catalog.Substring(caster, enemy - caster));
+            Assert.Contains("guid: e1d00009e1d00009e1d00009e1d00009", catalog.Substring(enemy));
+
+            string scene = Read(root, "Assets/Scenes/TestArena.unity");
+            Assert.Contains("guid: e1b00024e1b00024e1b00024e1b00024", scene);
+        }
+
+        [Fact]
+        public void OfficialAllyIdles_UseTheUsageImportSettings()
+        {
+            string root = RepoRoot();
+            string[] ids =
+            {
+                "ashguard", "oathblade", "lampsister", "riftmage",
+                "misthunter", "boneapostle", "chainjudge", "bloodacolyte"
+            };
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string meta = Read(root, "Assets/_Project/Art/Characters/chr_ally_" + ids[i] + "_idle_01.png.meta");
+                Assert.Contains("textureType: 8", meta);
+                Assert.Contains("spritePixelsToUnits: 64", meta);
+                Assert.Contains("filterMode: 1", meta);
+                Assert.Contains("alignment: 9", meta);
+                Assert.Contains("spritePivot: {x: 0.5, y: 0.125}", meta);
+                Assert.Contains("textureCompression: 0", meta);
+                Assert.Contains("alphaIsTransparency: 1", meta);
+            }
+
+            string enemy = Read(root, "Assets/_Project/Art/Characters/chr_enemy_placeholder_idle.png.meta");
+            Assert.Contains("textureType: 8", enemy);
+            Assert.Contains("spritePixelsToUnits: 64", enemy);
+            Assert.Contains("filterMode: 1", enemy);
+            Assert.Contains("spritePivot: {x: 0.5, y: 0.15}", enemy);
+        }
+
+        [Fact]
         public void ScriptsAndScenes_DoNotHardcodePlayerFacingCopy()
         {
             string root = RepoRoot();
