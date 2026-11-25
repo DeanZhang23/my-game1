@@ -37,6 +37,12 @@ namespace Echoes.Presentation
         private ScrollRect _logScroll;
         private GameObject _beginButton;
         private GameObject _commitButton;
+        private GameObject _rollButton;
+        private GameObject _confirmDiceButton;
+        private Text _rollLabel;
+        private Text _confirmDiceLabel;
+        private Text _fateLabel;
+        private Text _diceLabel;
         private readonly Dictionary<string, UnitWidget> _units = new Dictionary<string, UnitWidget>();
         private readonly StringBuilder _logBuilder = new StringBuilder();
         private Transform _board;
@@ -236,8 +242,10 @@ namespace Echoes.Presentation
                 return L("log.dice_reroll");
             if (evt.Type == BattleEvents.CrackGained)
                 return F("log.crack_gained", evt.Get("stacks"));
+            if (evt.Type == BattleEvents.FateEnergy)
+                return F("log.fate_energy", evt.Get("source"), evt.Get("gained"), evt.Get("pool"));
             if (evt.Type == BattleEvents.DiceCommit)
-                return F("log.dice_commit", FaceName(evt.Get("die0")), FaceName(evt.Get("die1")), FaceName(evt.Get("die2")));
+                return F("log.dice_commit", FaceName(evt.Get("die0")), FaceName(evt.Get("die1")), FaceName(evt.Get("die2")), evt.Get("affected"));
             if (evt.Type == BattleEvents.ComboResolved)
                 return F("log.combo_resolved", ComboName(evt.Get("combo")));
             if (evt.Type == BattleEvents.UnitSpawned)
@@ -278,6 +286,7 @@ namespace Echoes.Presentation
             _beginLabel.text = L(LocKeys.Begin);
             _commitLabel.text = L(LocKeys.Commit);
             _localeLabel.text = L(LocKeys.Locale);
+            PaintDice();
 
             bool setup = _sim != null && _sim.Phase == BattlePhase.Setup;
             bool countdown = _sim != null && _sim.Phase == BattlePhase.Countdown;
@@ -391,6 +400,73 @@ namespace Echoes.Presentation
 
             BuildDragLayer(root);
             EnsureTokens();
+            BuildDice(root);
+        }
+
+        // Right column, above March. Built last so the board cannot take the click.
+        private void BuildDice(Transform root)
+        {
+            _fateLabel = MakeText(Box(root, "Fate", new Vector2(640f, 300f), new Vector2(340f, 26f), new Color(0f, 0f, 0f, 0f)), 16);
+            _diceLabel = MakeText(Box(root, "Dice", new Vector2(640f, 268f), new Vector2(360f, 32f), new Color(0f, 0f, 0f, 0f)), 14);
+            _rollLabel = MakeText(ButtonBox(root, "Roll", new Vector2(545f, 220f), new Vector2(150f, 40f), OnRoll), 20);
+            _rollButton = _rollLabel.transform.parent.gameObject;
+            _confirmDiceLabel = MakeText(ButtonBox(root, "Confirm", new Vector2(715f, 220f), new Vector2(150f, 40f), OnConfirmDice), 20);
+            _confirmDiceButton = _confirmDiceLabel.transform.parent.gameObject;
+            DimButton(_rollButton);
+            DimButton(_confirmDiceButton);
+            _rollButton.SetActive(false);
+            _confirmDiceButton.SetActive(false);
+        }
+
+        private static void DimButton(GameObject button)
+        {
+            Button widget = button.GetComponent<Button>();
+            ColorBlock colors = widget.colors;
+            colors.disabledColor = new Color(0.25f, 0.25f, 0.28f, 0.75f);
+            widget.colors = colors;
+        }
+
+        private void PaintDice()
+        {
+            if (_rollButton == null || _confirmDiceButton == null)
+                return;
+            bool live = _sim != null;
+            _rollButton.SetActive(live);
+            _confirmDiceButton.SetActive(live);
+            if (!live)
+                return;
+            _rollLabel.text = L(LocKeys.Roll);
+            _confirmDiceLabel.text = L(LocKeys.Confirm);
+            _rollButton.GetComponent<Button>().interactable = _sim.CanRoll;
+            _confirmDiceButton.GetComponent<Button>().interactable = _sim.CanConfirm;
+            _fateLabel.text = F(LocKeys.Fate, _sim.FateEnergy.ToString(CultureInfo.InvariantCulture));
+            string faces = "- / - / -";
+            if (_sim.HasRolled)
+                faces = FaceName(_sim.RolledFace(0)) + " / " + FaceName(_sim.RolledFace(1)) + " / " + FaceName(_sim.RolledFace(2));
+            if (_sim.CanConfirm)
+            {
+                int seconds = (_sim.DiceConfirmRemainingMs + 999) / 1000;
+                faces = faces + "  " + seconds.ToString(CultureInfo.InvariantCulture) + "s";
+            }
+            _diceLabel.text = faces;
+        }
+
+        private void OnRoll()
+        {
+            if (_sim == null || !_sim.CanRoll)
+                return;
+            _sim.Roll();
+            ApplyNew();
+            Paint();
+        }
+
+        private void OnConfirmDice()
+        {
+            if (_sim == null || !_sim.CanConfirm)
+                return;
+            _sim.Confirm();
+            ApplyNew();
+            Paint();
         }
 
         private void BuildLog(Transform root)

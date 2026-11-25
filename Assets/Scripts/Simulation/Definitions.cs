@@ -45,6 +45,22 @@ namespace Echoes.Simulation
         public int Hp;
         public int MaxHp;
         public int Shield;
+        public bool IsAlly;
+        public string Role;
+        public decimal Attack;
+        public decimal Armor;
+        public decimal Energy;
+        public int Keen;
+        public decimal SkillDamageMultiplier;
+        public int IntervalMs;
+    }
+
+    public sealed class FaceEffectSpec
+    {
+        public string FaceId;
+        public string TargetKind;
+        public string HeroId;
+        public string HeroId2;
     }
 
     public sealed class Placement
@@ -80,5 +96,6 @@ namespace Echoes.Simulation
         public int WildTokens;
         public int WildUsed;
         public string WildFace = "none";
+        public FaceEffectSpec[] Effects = new FaceEffectSpec[0];
     }
 }
