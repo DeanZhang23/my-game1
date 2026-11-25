@@ -198,6 +198,12 @@ MonoBehaviour:
   - key: log.unit_spawned
     zhHans: "{0} {1}"
     en: "{0} {1}"
+  - key: log.unit_target
+    zhHans: "{0} {1} → {2}"
+    en: "{0} {1} -> {2}"
+  - key: log.unit_engage
+    zhHans: "{0} {1} → {2}"
+    en: "{0} {1} -> {2}"
   - key: log.damage
     zhHans: "{0} {1} → {2} {3}  {4}{5}"
     en: "{0} {1} -> {2} {3}  {4}{5}"

@@ -15,8 +15,6 @@ namespace Echoes.Presentation
     {
         public string id;
         public float countdownSeconds = 3f;
-        public float tacticalWindowDelaySeconds = 8f;
-        public float tacticalWindowDurationSeconds = 8f;
         public float timeoutSeconds = 150f;
         public PlacementEntry[] allies;
         public PlacementEntry[] enemies;

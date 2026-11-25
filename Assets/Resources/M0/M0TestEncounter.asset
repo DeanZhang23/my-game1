@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: M0TestEncounter
   id: encounter_m0_test
   countdownSeconds: 3
-  tacticalWindowDelaySeconds: 8
-  tacticalWindowDurationSeconds: 8
   timeoutSeconds: 150
   allies:
   - slotId: ally_c2

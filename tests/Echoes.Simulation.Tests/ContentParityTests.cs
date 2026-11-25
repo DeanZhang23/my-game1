@@ -23,6 +23,9 @@ namespace Echoes.Simulation.Tests
             Assert.Equal(1.20m, Field(melee, "baseAttackInterval"));
             Assert.Equal(8m, Field(melee, "energyPerSecond"));
             Assert.Equal(100m, Field(melee, "maxEnergy"));
+            Assert.Contains("role: melee", melee);
+            Assert.Equal(3m, Field(melee, "moveSpeed"));
+            Assert.Equal(0.9m, Field(melee, "attackRange"));
             Assert.Contains("id: unit_placeholder_melee", melee);
 
             string caster = Read(root, "Assets/Resources/M0/Units/unit_placeholder_caster.asset");
@@ -35,11 +38,17 @@ namespace Echoes.Simulation.Tests
             Assert.Equal(0.50m, Field(caster, "critDamage"));
             Assert.Equal(1.50m, Field(caster, "baseAttackInterval"));
             Assert.Equal(10m, Field(caster, "energyPerSecond"));
+            Assert.Contains("role: ranged", caster);
+            Assert.Equal(2.5m, Field(caster, "moveSpeed"));
+            Assert.Equal(3.5m, Field(caster, "attackRange"));
 
             string enemy = Read(root, "Assets/Resources/M0/Units/unit_placeholder_enemy.asset");
             Assert.Equal(100m, Field(enemy, "maxHp"));
             Assert.Equal(14m, Field(enemy, "attack"));
             Assert.Equal(8m, Field(enemy, "armor"));
+            Assert.Contains("role: melee", enemy);
+            Assert.Equal(3m, Field(enemy, "moveSpeed"));
+            Assert.Equal(0.9m, Field(enemy, "attackRange"));
             Assert.Contains("skill: {fileID: 0}", enemy);
 
             string cleave = Read(root, "Assets/Resources/M0/Skills/skill_placeholder_cleave.asset");
@@ -56,9 +65,8 @@ namespace Echoes.Simulation.Tests
             string encounter = Read(root, "Assets/Resources/M0/M0TestEncounter.asset");
             Assert.Contains("id: encounter_m0_test", encounter);
             Assert.Equal(3m, Field(encounter, "countdownSeconds"));
-            Assert.Equal(8m, Field(encounter, "tacticalWindowDelaySeconds"));
-            Assert.Equal(8m, Field(encounter, "tacticalWindowDurationSeconds"));
             Assert.Equal(150m, Field(encounter, "timeoutSeconds"));
+            Assert.DoesNotContain("tacticalWindow", encounter);
             Assert.Contains("slotId: ally_c2", encounter);
             Assert.Contains("slotId: ally_a2", encounter);
             Assert.Contains("slotId: enemy_c1", encounter);
