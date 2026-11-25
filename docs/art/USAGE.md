@@ -66,3 +66,5 @@ IDs: `ashguard` (灰烬卫士), `oathblade` (烬誓剑士), `lampsister` (墓灯
 | Ground ring | Grave-lamp gold `#C9A227` |
 
 Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These are idle stills only — no animation sets in this pack.
+
+Official idles use stronger per-role accent colors (linings, sashes, cloak panels, weapon glow) so the roster is not a single navy mass, and they are accessory-dense with layered materials and chunky ornaments. Each official idle should show 5–7 fairly obvious gear pieces, readable at 64 px (not tiny trim; the gold ground ring does not count). Palette and import settings are otherwise unchanged. The M0 dice / TestArena pack is not voided.
