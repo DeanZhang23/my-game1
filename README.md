@@ -33,12 +33,15 @@ UPDATE_GOLDEN=1 dotnet test tests/Echoes.Simulation.Tests/Echoes.Simulation.Test
 
 Fixed lineup (no formation UI): melee on `ally_c2`, caster on `ally_a2`, foes on `enemy_c1` and `enemy_c2`.
 
+The battlefield panel is drawn behind the dice and the reroll / march buttons, and it does not receive clicks. Decorative labels do not either.
+
 1. Press Play. Type a seed or leave it blank, then press Begin. Three dice faces appear.
-2. Click one die to lock it, then Reroll. That first reroll is free: crack stays 0 and the locked face does not change. Reroll again for crack 1, then 2, then 3. The fourth paid reroll shows corrosion. A fifth reroll stays at crack 3 with corrosion still on.
-3. Lock all three dice and reroll: nothing changes, and the free reroll is not spent.
-4. Attunement: enter seed `79` (three shields) or `223` (three swords), Begin, and March without rerolling. The log shows attunement. About 8 seconds into combat the tactical window opens. Confirm or Skip (or wait 8 seconds). The log records `tactical_window_opened` and then `confirmed` or `skipped`. There is no six-face tactic in this slice.
-5. March on any roll and let the fight finish. Kills or the 150 second timeout enter Resolve and show victory or defeat, plus gold. Coin gold is paid only on a win.
-6. The Golden Seed script (seed `424242`, lock the first die, one free reroll, skip the window if it opens) ends in victory at 12.5s with 8 gold. That replay is what `dotnet test` locks.
+2. Click one die to lock it. The free-reroll count is still 1. Click Reroll (重掷). The count goes from 1 to 0, the log gains a reroll line, the locked face stays, and at least the unlocked faces are rerolled. Then click March (出征). Countdown starts and the fight proceeds.
+3. From a fresh Begin, reroll again after the free one: crack goes to 1, then 2, then 3 with corrosion. A fifth reroll stays at crack 3 with corrosion still on.
+4. Lock all three dice and reroll: nothing changes, and the free reroll is not spent.
+5. Attunement: enter seed `79` (three shields) or `223` (three swords), Begin, and March without rerolling. The log shows attunement. About 8 seconds into combat the tactical window opens. Confirm or Skip (or wait 8 seconds). The log records `tactical_window_opened` and then `confirmed` or `skipped`. There is no six-face tactic in this slice.
+6. March on any roll and let the fight finish. Kills or the 150 second timeout enter Resolve and show victory or defeat, plus gold. Coin gold is paid only on a win.
+7. The Golden Seed script (seed `424242`, lock the first die, one free reroll, skip the window if it opens) ends in victory at 12.5s with 8 gold. That replay is what `dotnet test` locks.
 
 ## Content
 

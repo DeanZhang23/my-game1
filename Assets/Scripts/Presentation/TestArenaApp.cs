@@ -398,6 +398,9 @@ namespace Echoes.Presentation
             _beginLabel = MakeText(ButtonBox(root, "Begin", new Vector2(180f, 340f), new Vector2(160f, 40f), BeginBattle), 20);
             _beginButton = _beginLabel.transform.parent.gameObject;
 
+            Box(root, "Midline", new Vector2(-80f, -20f), new Vector2(520f, 2f), new Color(0.55f, 0.55f, 0.6f, 0.8f));
+            _board = Box(root, "Board", new Vector2(-80f, -20f), new Vector2(640f, 460f), new Color(0.10f, 0.11f, 0.14f, 0.35f));
+
             for (int i = 0; i < 3; i++)
             {
                 int index = i;
@@ -415,9 +418,6 @@ namespace Echoes.Presentation
 
             _status = MakeText(Box(root, "Status", new Vector2(0f, 115f), new Vector2(1100f, 32f), new Color(0f, 0f, 0f, 0f)), 16);
             _result = MakeText(Box(root, "Result", new Vector2(0f, -360f), new Vector2(700f, 36f), new Color(0f, 0f, 0f, 0f)), 26);
-
-            Box(root, "Midline", new Vector2(-80f, -20f), new Vector2(520f, 2f), new Color(0.55f, 0.55f, 0.6f, 0.8f));
-            _board = Box(root, "Board", new Vector2(-80f, -20f), new Vector2(640f, 460f), new Color(0.10f, 0.11f, 0.14f, 0.35f));
 
             BuildLog(root);
             BuildTactical(root);
@@ -652,14 +652,14 @@ namespace Echoes.Presentation
 
         private RectTransform ButtonBox(Transform parent, string name, Vector2 pos, Vector2 size, UnityEngine.Events.UnityAction click)
         {
-            RectTransform rt = Box(parent, name, pos, size, new Color(0.30f, 0.36f, 0.32f, 1f));
+            RectTransform rt = Box(parent, name, pos, size, new Color(0.30f, 0.36f, 0.32f, 1f), true);
             var button = rt.gameObject.AddComponent<Button>();
             button.targetGraphic = rt.GetComponent<Image>();
             button.onClick.AddListener(click);
             return rt;
         }
 
-        private RectTransform Box(Transform parent, string name, Vector2 pos, Vector2 size, Color color)
+        private RectTransform Box(Transform parent, string name, Vector2 pos, Vector2 size, Color color, bool raycast = false)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             go.transform.SetParent(parent, false);
@@ -669,13 +669,15 @@ namespace Echoes.Presentation
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
-            go.GetComponent<Image>().color = color;
+            Image image = go.GetComponent<Image>();
+            image.color = color;
+            image.raycastTarget = raycast;
             return rt;
         }
 
         private InputField MakeInput(Transform parent, Vector2 pos)
         {
-            RectTransform rt = Box(parent, "Seed", pos, new Vector2(180f, 36f), new Color(0.16f, 0.17f, 0.2f, 1f));
+            RectTransform rt = Box(parent, "Seed", pos, new Vector2(180f, 36f), new Color(0.16f, 0.17f, 0.2f, 1f), true);
             Text text = MakeText(rt, 18);
             text.alignment = TextAnchor.MiddleLeft;
             text.raycastTarget = true;
