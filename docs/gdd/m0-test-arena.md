@@ -1,5 +1,7 @@
 # GDD M0：Test Arena（测试场）
 
+> 补丁（待批准）：放置自动战与战斗中骰子能量规则见 [m0-test-arena-placement.md](./m0-test-arena-placement.md)，骰子效果的作用对象亦见该补丁，与本文冲突时以补丁为准。
+
 **项目：** 命运残响 / Echoes of Fate  
 **切片：** M0（第 1–2 周）  
 **引擎：** Unity 6 LTS + URP 2D Renderer  
