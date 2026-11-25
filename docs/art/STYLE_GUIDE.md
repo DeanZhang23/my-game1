@@ -1,4 +1,4 @@
-# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0)
+# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles)
 
 **Style lock: Q 版暗黑 (chibi dark-fantasy).** This is the source of truth for Echoes of Fate production.  
 **Supersedes** the withdrawn realistic / painterly / low-poly-realistic M0 draft on PR #10. Those assets are **void** — do not patch or ship them.  
@@ -109,11 +109,12 @@ env_riftarena_{bg_far|bg_mid|ground|fg}.png
 chr_ally_placeholder_melee_{anim}.png
 chr_ally_placeholder_caster_{anim}.png
 chr_enemy_placeholder_{anim}.png
+chr_ally_{ashguard|oathblade|lampsister|riftmage|misthunter|boneapostle|chainjudge|bloodacolyte}_idle_01.png
 ```
 
-M0 ships `idle` only.
+M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
-IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `enemy` → the matching `chr_*` files.
+IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `enemy` → the matching `chr_*` files; official allies use the stable IDs in the table below.
 
 ## Forbidden
 
@@ -121,6 +122,29 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - 3D meshes, perspective cameras, photo-rock / photo-fabric
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
-- 8 official roster units, Boss, route / shop / rest UI, full VFX, 80 icons (out of M0 scope)
+- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Still out of scope: 6 enemies, Boss, per-unit animation sets, Grave-Lamp Village, shop or large-map UI, full VFX, audio, 80 icons
 
 See `docs/art/USAGE.md`.
+
+## Official 8-ally idle roster
+
+One orthogonal isometric idle per playable ally, style-locked to this Q 版暗黑 guide. Canvas **128×128** RGBA, PPU **64**, filter **bilinear**, pivot at the feet / gold ring (about **0.5, 0.12–0.18**). Allies face right. Every ally has a grave-lamp gold ground ring `#C9A227`. Cloak, pointed hood, lantern, and polearm are kit pieces used or omitted per role — do not palette-swap the same pose. Silhouettes must stay distinct at 64 px.
+
+| ID | Name | Role read | Signature kit |
+|----|------|-----------|----------------|
+| `ashguard` | 灰烬卫士 | Front tank, guard / counter | Visor-hood, ash-gray plate, large remnant-ember shield, short mace, knee-length cloak |
+| `oathblade` | 烬誓剑士 | Front-mid burst, warrior / bleed | Shallower hood, long oath-sword in a ready slash, tattered mid cloak, rust-red sash, no shield |
+| `lampsister` | 墓灯修女 | Back healer, holy / prayer | Softer tall hood, large held grave-lamp, prayer beads, long modest cloak, parchment lining, no weapon |
+| `riftmage` | 裂隙术士 | Back AoE, arcane / curse | Tallest sharp hood, long staff with cyan fate-sigil crystal, cyan cloak cracks, optional tiny belt lantern |
+| `misthunter` | 雾行猎手 | Back mobile, ranger / combo | Hood down, tall longbow, quiver, short fog-gray cape, light leather |
+| `boneapostle` | 骨匣使徒 | Mid-back summoner, deathrattle | Bone casket on the back, bone staff, ashen parchment robes, skull motifs (no separate familiar) |
+| `chainjudge` | 锁链判官 | Front-mid control, guard / curse | Hooked chain, judicial cloak with rust lining, scale charm, planted stance |
+| `bloodacolyte` | 血契侍从 | Mid-back risk, sacrifice / bleed | Smallish hood, ritual knife and blood chalice (not a lantern), rust-stained thinner cloak, pact marks |
+
+Path: `Assets/_Project/Art/Characters/chr_ally_{id}_idle_01.png`
+
+**Color pass:** Official idles use stronger per-role accent colors — large linings, sashes, cloak panels, and weapon glow, not hairline trim — so the eight read as chromatically distinct at 64 px and not as a single navy-blue mass. Accents stay inside the locked palette (grave-lamp gold, rust red, parchment, fate-crack cyan, ash / bone ivory, blood rust). Cloak base colors may differ by role. Do not add colors outside the palette (no pink, lime, or pure-white armor).
+
+**Density pass:** Official idles should be accessory-dense and color-complex: layered materials (cloth, metal, bone, rust, gold trim, lamp glow, ash, blood, cyan cracks) and several chunky, toy-like ornaments per unit (clasps, seals, vials, charms, pouches, scabbards, hanging tags). Prefer a few large readable accessories over many tiny specks. Kits must still read at 64 px and keep distinct silhouettes; do not hide the gold ally ring under props. The M0 dice and TestArena environment pack is unchanged and is not voided.
+
+**Gear quota pass:** Official idles must show **5 to 7 fairly obvious gear pieces** on each unit — chunky, countable objects (weapon, shield, lantern, book, scabbard, quiver, vials, seals, charms, pouches, pauldrons, and similar) that you can point at in the 128 px sprite and still notice at 64 px. Do not count tiny trim, stitching, or a 2 px clasp. Do not count the cloak as a whole unless it is a clearly separate layered garment, and do not count the gold ground ring. Prefer large toyshop ornaments over speck noise; if packing would muddy the 64 px read, enlarge pieces rather than adding more tiny ones. The M0 dice and TestArena environment pack is unchanged and is not voided.
