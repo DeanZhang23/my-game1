@@ -13,6 +13,8 @@ namespace Echoes.Presentation
         public EncounterDefinitionAsset encounter;
         public LocalizationTableAsset localization;
         public FaceCatalogAsset faces;
+        // Idle stills only. Melee shows ashguard, caster shows riftmage, enemies show the placeholder.
+        public UnitSpriteCatalog sprites;
         public int fixedSeed;
 
         private BattleSimulator _sim;
@@ -83,6 +85,7 @@ namespace Echoes.Presentation
         private static readonly Color TokenColor = new Color(0.28f, 0.38f, 0.34f, 1f);
         private static readonly Color TokenSelected = new Color(0.62f, 0.52f, 0.22f, 1f);
         private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
+        private const float PortraitSize = 56f;
 
         private void Awake()
         {
@@ -138,6 +141,8 @@ namespace Echoes.Presentation
                 localization = Resources.Load<LocalizationTableAsset>("M0/M0Localization");
             if (faces == null)
                 faces = Resources.Load<FaceCatalogAsset>("M0/M0FaceCatalog");
+            if (sprites == null)
+                sprites = Resources.Load<UnitSpriteCatalog>("M0/M0UnitSprites");
             try
             {
                 _def = encounter != null ? ContentMapper.ToEncounter(encounter) : null;
@@ -598,10 +603,15 @@ namespace Echoes.Presentation
             RectTransform panel = Box(_board, slot, SlotLocal(slot), new Vector2(CellW, CellH), color);
             var widget = new UnitWidget();
             widget.root = panel.gameObject;
-            widget.nameText = MakeText(Box(panel, "Name", new Vector2(0f, 12f), new Vector2(124f, 14f), Clear), 13);
             widget.unitId = unitId;
-            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, -4f), new Vector2(124f, 12f), Clear), 11);
-            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -18f), new Vector2(116f, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
+            widget.portrait = AddPortrait(panel, SpriteFor(unitId), new Vector2(-36f, 12f), 52f);
+            float textX = widget.portrait != null ? 24f : 0f;
+            float textW = widget.portrait != null ? 80f : 124f;
+            widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 12f), new Vector2(textW, 14f), Clear), 13);
+            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(textX, -4f), new Vector2(textW, 12f), Clear), 11);
+            float barX = widget.portrait != null ? 24f : 0f;
+            float barW = widget.portrait != null ? 78f : 116f;
+            RectTransform bar = Box(panel, "Bar", new Vector2(barX, -18f), new Vector2(barW, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
             widget.fill = Box(bar, "Fill", Vector2.zero, new Vector2(116f, 6f), new Color(0.45f, 0.75f, 0.42f, 1f)).GetComponent<Image>();
             RectTransform fillRt = widget.fill.rectTransform;
             fillRt.anchorMin = new Vector2(0f, 0f);
@@ -682,18 +692,23 @@ namespace Echoes.Presentation
         private void BuildCell(string slotId, bool ally)
         {
             RectTransform rect = Box(_board, slotId, SlotLocal(slotId), new Vector2(CellW, CellH), ally ? AllyCellEmpty : EnemyCell, ally);
-            Text slotText = PlaceLabel(rect, "SlotId", new Vector2(0f, -16f), new Vector2(124f, 14f), 11);
+            RectTransform slotBar = Box(rect, "SlotId", new Vector2(0f, -18f), new Vector2(120f, 12f), new Color(0.04f, 0.05f, 0.06f, 0.82f), false);
+            Text slotText = MakeText(slotBar, 11);
             slotText.text = slotId;
-            slotText.color = new Color(0.62f, 0.66f, 0.7f, 1f);
+            slotText.color = new Color(0.90f, 0.86f, 0.72f, 1f);
             var cell = new CellView();
             cell.slotId = slotId;
             cell.ally = ally;
             cell.rect = rect;
             cell.image = rect.GetComponent<Image>();
+            cell.slotBar = slotBar;
             if (!ally)
             {
-                cell.occupant = PlaceLabel(rect, "Occupant", new Vector2(0f, 8f), new Vector2(124f, 22f), 14);
                 cell.unitId = EnemyOn(slotId);
+                cell.portrait = AddPortrait(rect, SpriteFor(cell.unitId), new Vector2(-26f, -2f), PortraitSize);
+                Vector2 namePos = cell.portrait != null ? new Vector2(28f, -6f) : new Vector2(0f, 4f);
+                Vector2 nameSize = cell.portrait != null ? new Vector2(68f, 28f) : new Vector2(124f, 22f);
+                cell.occupant = PlaceLabel(rect, "Occupant", namePos, nameSize, 13);
             }
             _cells[slotId] = cell;
             if (!ally)
@@ -735,12 +750,26 @@ namespace Echoes.Presentation
                 if (FindToken(placement.Unit.Id) != null)
                     continue;
                 string unitId = placement.Unit.Id;
-                RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(124f, 28f), TokenColor, true);
+                Sprite sprite = SpriteFor(unitId);
+                RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(112f, sprite != null ? 62f : 28f), TokenColor, true);
                 var view = new TokenView();
                 view.unitId = unitId;
                 view.rect = rect;
                 view.image = rect.GetComponent<Image>();
-                view.label = MakeText(rect, 14);
+                view.portrait = AddPortrait(rect, sprite, new Vector2(-26f, 6f), PortraitSize);
+                if (view.portrait != null)
+                {
+                    view.image.color = Clear;
+                    RectTransform namePlate = Box(rect, "NamePlate", new Vector2(28f, -4f), new Vector2(50f, 28f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
+                    view.label = MakeText(namePlate, 12);
+                    Outline outline = view.label.gameObject.AddComponent<Outline>();
+                    outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                    outline.effectDistance = new Vector2(1f, -1f);
+                }
+                else
+                {
+                    view.label = MakeText(rect, 14);
+                }
                 _tokens.Add(view);
                 Listen(rect.gameObject, EventTriggerType.PointerClick, delegate (BaseEventData data) { NotifyTokenClick(unitId); });
                 Listen(rect.gameObject, EventTriggerType.BeginDrag, delegate (BaseEventData data) { BeginTokenDrag(unitId, (PointerEventData)data); });
@@ -784,23 +813,35 @@ namespace Echoes.Presentation
 
                 RectTransform parent;
                 Vector2 pos;
+                bool hasPortrait = token.portrait != null;
                 if (!string.IsNullOrEmpty(slot) && _cells.ContainsKey(slot))
                 {
                     parent = _cells[slot].rect;
-                    pos = new Vector2(0f, 8f);
+                    pos = hasPortrait ? new Vector2(0f, 1f) : new Vector2(0f, 8f);
                     occupied.Add(slot);
                 }
                 else
                 {
                     parent = _bench;
-                    pos = new Vector2(0f, 44f - stacked * 30f);
+                    pos = hasPortrait ? new Vector2(0f, 18f - stacked * 66f) : new Vector2(0f, 44f - stacked * 30f);
                     stacked++;
                 }
                 if (parent != null && token.rect.parent != parent)
                     token.rect.SetParent(parent, false);
                 token.rect.anchoredPosition = pos;
-                token.rect.sizeDelta = new Vector2(124f, 28f);
-                token.image.color = token.unitId == _selectedUnitId ? TokenSelected : TokenColor;
+                token.rect.sizeDelta = hasPortrait ? new Vector2(112f, 62f) : new Vector2(124f, 28f);
+                bool selected = token.unitId == _selectedUnitId;
+                if (hasPortrait)
+                {
+                    token.image.color = selected
+                        ? new Color(0.62f, 0.48f, 0.16f, 0.55f)
+                        : new Color(0.05f, 0.06f, 0.07f, 0.35f);
+                    token.portrait.color = selected ? new Color(1f, 0.84f, 0.48f, 1f) : Color.white;
+                }
+                else
+                {
+                    token.image.color = selected ? TokenSelected : TokenColor;
+                }
                 token.image.raycastTarget = setup;
                 token.label.text = UnitName(token.unitId);
                 token.rect.gameObject.SetActive(showRoster);
@@ -814,11 +855,42 @@ namespace Echoes.Presentation
                     cell.image.raycastTarget = false;
                     if (cell.occupant != null)
                         cell.occupant.text = string.IsNullOrEmpty(cell.unitId) ? "" : UnitName(cell.unitId);
-                    continue;
                 }
-                cell.image.raycastTarget = setup;
-                cell.image.color = occupied.Contains(cell.slotId) ? AllyCell : AllyCellEmpty;
+                else
+                {
+                    cell.image.raycastTarget = setup;
+                    bool selectedHere = !string.IsNullOrEmpty(_selectedUnitId) && DisplaySlot(_selectedUnitId) == cell.slotId;
+                    if (occupied.Contains(cell.slotId))
+                        cell.image.color = selectedHere ? new Color(0.55f, 0.42f, 0.16f, 1f) : AllyCell;
+                    else
+                        cell.image.color = AllyCellEmpty;
+                }
+                if (cell.portrait != null)
+                    cell.portrait.gameObject.SetActive(FindWidget(cell.slotId) == null);
+                if (cell.occupant != null)
+                    cell.occupant.transform.parent.SetAsLastSibling();
+                if (cell.slotBar != null)
+                    cell.slotBar.SetAsLastSibling();
             }
+        }
+
+        private Sprite SpriteFor(string unitId)
+        {
+            if (sprites == null)
+                return null;
+            return sprites.SpriteFor(unitId);
+        }
+
+        private Image AddPortrait(RectTransform parent, Sprite sprite, Vector2 pos, float size)
+        {
+            if (sprite == null || parent == null)
+                return null;
+            RectTransform rt = Box(parent, "Portrait", pos, new Vector2(size, size), Color.white, false);
+            Image image = rt.GetComponent<Image>();
+            image.sprite = sprite;
+            image.preserveAspect = true;
+            image.color = Color.white;
+            return image;
         }
 
         private string DisplaySlot(string unitId)
@@ -1159,6 +1231,7 @@ namespace Echoes.Presentation
             public Text nameText;
             public Text hpText;
             public Image fill;
+            public Image portrait;
             public int hp;
             public int maxHp;
             public int shield;
@@ -1185,6 +1258,8 @@ namespace Echoes.Presentation
             public RectTransform rect;
             public Image image;
             public Text occupant;
+            public RectTransform slotBar;
+            public Image portrait;
         }
 
         private sealed class TokenView
@@ -1193,6 +1268,7 @@ namespace Echoes.Presentation
             public RectTransform rect;
             public Image image;
             public Text label;
+            public Image portrait;
         }
     }
 }

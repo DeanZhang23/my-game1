@@ -250,6 +250,7 @@ MonoBehaviour:
   encounter: {fileID: 11400000, guid: e1b00021e1b00021e1b00021e1b00021, type: 2}
   localization: {fileID: 11400000, guid: e1b00022e1b00022e1b00022e1b00022, type: 2}
   faces: {fileID: 11400000, guid: e1b00023e1b00023e1b00023e1b00023, type: 2}
+  sprites: {fileID: 11400000, guid: e1b00024e1b00024e1b00024e1b00024, type: 2}
   fixedSeed: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
