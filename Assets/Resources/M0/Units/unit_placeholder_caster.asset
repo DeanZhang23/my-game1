@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1a00002e1a00002e1a00002e1a00002, type: 3}
+  m_Name: unit_placeholder_caster
+  id: unit_placeholder_caster
+  nameKey: unit.placeholder_caster.name
+  maxHp: 80
+  attack: 4
+  spellPower: 22
+  armor: 2
+  magicResist: 8
+  critRate: 0.05
+  critDamage: 0.5
+  baseAttackInterval: 1.5
+  energyPerSecond: 10
+  maxEnergy: 100
+  basicAttack: {fileID: 11400000, guid: e1b00003e1b00003e1b00003e1b00003, type: 2}
+  skill: {fileID: 11400000, guid: e1b00004e1b00004e1b00004e1b00004, type: 2}

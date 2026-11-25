@@ -1,0 +1,230 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1a00005e1a00005e1a00005e1a00005, type: 3}
+  m_Name: M0Localization
+  entries:
+  - key: ui.test_arena.title
+    zhHans: "命运残响 · 测试场"
+    en: "Echoes of Fate · Test Arena"
+  - key: ui.begin
+    zhHans: "开始"
+    en: "Begin"
+  - key: ui.seed
+    zhHans: "种子"
+    en: "Seed"
+  - key: ui.reroll
+    zhHans: "重掷"
+    en: "Reroll"
+  - key: ui.commit
+    zhHans: "出征"
+    en: "March"
+  - key: ui.confirm
+    zhHans: "确认"
+    en: "Confirm"
+  - key: ui.skip
+    zhHans: "跳过"
+    en: "Skip"
+  - key: ui.locale
+    zhHans: "语言"
+    en: "Locale"
+  - key: ui.crack
+    zhHans: "裂纹"
+    en: "Crack"
+  - key: ui.corrosion.on
+    zhHans: "腐蚀"
+    en: "Corrosion"
+  - key: ui.corrosion.off
+    zhHans: "无腐蚀"
+    en: "No corrosion"
+  - key: ui.free_reroll
+    zhHans: "免费"
+    en: "Free"
+  - key: ui.phase.setup
+    zhHans: "整备"
+    en: "Setup"
+  - key: ui.phase.countdown
+    zhHans: "倒计时"
+    en: "Countdown"
+  - key: ui.phase.autocombat
+    zhHans: "交战"
+    en: "Combat"
+  - key: ui.phase.tactical
+    zhHans: "战术"
+    en: "Tactical"
+  - key: ui.phase.resolve
+    zhHans: "结算"
+    en: "Resolve"
+  - key: ui.result.victory
+    zhHans: "胜利"
+    en: "Victory"
+  - key: ui.result.defeat
+    zhHans: "失败"
+    en: "Defeat"
+  - key: ui.result.timeout
+    zhHans: "超时"
+    en: "Timeout"
+  - key: ui.tactical.title
+    zhHans: "同调"
+    en: "Attunement"
+  - key: ui.tactical.body
+    zhHans: "暂停。确认或跳过。"
+    en: "Paused. Confirm or skip."
+  - key: ui.gold
+    zhHans: "金币"
+    en: "Gold"
+  - key: ui.hp
+    zhHans: "生命"
+    en: "HP"
+  - key: ui.shield
+    zhHans: "护盾"
+    en: "Shield"
+  - key: ui.locked
+    zhHans: "已锁"
+    en: "Locked"
+  - key: ui.unlocked
+    zhHans: "未锁"
+    en: "Open"
+  - key: ui.log
+    zhHans: "日志"
+    en: "Log"
+  - key: ui.combo
+    zhHans: "组合"
+    en: "Combo"
+  - key: log.crit_mark
+    zhHans: "暴击"
+    en: "Crit"
+  - key: ui.error.catalog_fallback
+    zhHans: "内容回退"
+    en: "Content fallback"
+  - key: face.sword.name
+    zhHans: "剑 / 锋刃"
+    en: "Sword / Edge"
+  - key: face.shield.name
+    zhHans: "盾 / 壁垒"
+    en: "Shield / Bulwark"
+  - key: face.star.name
+    zhHans: "星 / 秘仪"
+    en: "Star / Arcana"
+  - key: face.feather.name
+    zhHans: "羽 / 疾行"
+    en: "Feather / Swift"
+  - key: face.coin.name
+    zhHans: "币 / 贪欲"
+    en: "Coin / Greed"
+  - key: face.skull.name
+    zhHans: "颅 / 献祭"
+    en: "Skull / Offering"
+  - key: face.sword.desc
+    zhHans: "全队攻击，前排锐意"
+    en: "Team attack, front keen"
+  - key: face.shield.desc
+    zhHans: "全队护甲，前排护盾"
+    en: "Team armor, front shield"
+  - key: face.star.desc
+    zhHans: "后排能量，技能伤害"
+    en: "Back energy, skill damage"
+  - key: face.feather.desc
+    zhHans: "攻速，技能冷却"
+    en: "Attack speed, cooldown"
+  - key: face.coin.desc
+    zhHans: "胜利金币"
+    en: "Gold on victory"
+  - key: face.skull.desc
+    zhHans: "献祭生命，万能符印"
+    en: "Sacrifice, wild token"
+  - key: combo.attunement.name
+    zhHans: "同调"
+    en: "Attunement"
+  - key: combo.twin.name
+    zhHans: "双生"
+    en: "Twin"
+  - key: combo.none.name
+    zhHans: "无组合"
+    en: "No combo"
+  - key: unit.placeholder_melee.name
+    zhHans: "近战"
+    en: "Melee"
+  - key: unit.placeholder_caster.name
+    zhHans: "法师"
+    en: "Caster"
+  - key: unit.placeholder_enemy.name
+    zhHans: "敌占位"
+    en: "Foe"
+  - key: skill.placeholder_melee_basic.name
+    zhHans: "斩击"
+    en: "Strike"
+  - key: skill.placeholder_cleave.name
+    zhHans: "横扫"
+    en: "Cleave"
+  - key: skill.placeholder_caster_basic.name
+    zhHans: "飞弹"
+    en: "Bolt"
+  - key: skill.placeholder_bolt.name
+    zhHans: "奥术箭"
+    en: "Arc bolt"
+  - key: skill.placeholder_enemy_basic.name
+    zhHans: "撞击"
+    en: "Hit"
+  - key: log.battle_start
+    zhHans: "种子 {0}"
+    en: "Seed {0}"
+  - key: log.dice_roll
+    zhHans: "{0} / {1} / {2}"
+    en: "{0} / {1} / {2}"
+  - key: log.dice_lock
+    zhHans: "#{0} {1}"
+    en: "#{0} {1}"
+  - key: log.dice_reroll
+    zhHans: "重掷"
+    en: "Reroll"
+  - key: log.crack_gained
+    zhHans: "裂纹 {0}"
+    en: "Crack {0}"
+  - key: log.dice_commit
+    zhHans: "出征 {0} / {1} / {2}"
+    en: "March {0} / {1} / {2}"
+  - key: log.combo_resolved
+    zhHans: "{0}"
+    en: "{0}"
+  - key: log.unit_spawned
+    zhHans: "{0} {1}"
+    en: "{0} {1}"
+  - key: log.damage
+    zhHans: "{0} → {1}  {2}{3}"
+    en: "{0} -> {1}  {2}{3}"
+  - key: log.shield_applied
+    zhHans: "{0} +{1}"
+    en: "{0} +{1}"
+  - key: log.shield_expired
+    zhHans: "{0}"
+    en: "{0}"
+  - key: log.hp_loss
+    zhHans: "{0} {1}"
+    en: "{0} {1}"
+  - key: log.skill_cast
+    zhHans: "{0} {1}"
+    en: "{0} {1}"
+  - key: log.tactical_opened
+    zhHans: "战术窗口开启"
+    en: "Tactical window opened"
+  - key: log.tactical_confirmed
+    zhHans: "战术窗口确认"
+    en: "Tactical window confirmed"
+  - key: log.tactical_skipped
+    zhHans: "战术窗口跳过"
+    en: "Tactical window skipped"
+  - key: log.unit_death
+    zhHans: "{0} {1}"
+    en: "{0} {1}"
+  - key: log.battle_end
+    zhHans: "{0}  {1}s  {2}"
+    en: "{0}  {1}s  {2}"
