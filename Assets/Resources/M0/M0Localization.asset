@@ -199,8 +199,8 @@ MonoBehaviour:
     zhHans: "{0} {1}"
     en: "{0} {1}"
   - key: log.damage
-    zhHans: "{0} → {1}  {2}{3}"
-    en: "{0} -> {1}  {2}{3}"
+    zhHans: "{0} {1} → {2} {3}  {4}{5}"
+    en: "{0} {1} -> {2} {3}  {4}{5}"
   - key: log.shield_applied
     zhHans: "{0} +{1}"
     en: "{0} +{1}"
@@ -228,3 +228,24 @@ MonoBehaviour:
   - key: log.battle_end
     zhHans: "{0}  {1}s  {2}"
     en: "{0}  {1}s  {2}"
+  - key: ui.formation.bench
+    zhHans: "待命"
+    en: "Reserve"
+  - key: ui.formation.front
+    zhHans: "前排"
+    en: "Front"
+  - key: ui.formation.mid
+    zhHans: "中排"
+    en: "Mid"
+  - key: ui.formation.back
+    zhHans: "后排"
+    en: "Back"
+  - key: ui.formation.illegal
+    zhHans: "空阵不可出征"
+    en: "Empty formation"
+  - key: ui.formation.ally
+    zhHans: "我方"
+    en: "Allies"
+  - key: ui.formation.enemy
+    zhHans: "敌方"
+    en: "Foes"

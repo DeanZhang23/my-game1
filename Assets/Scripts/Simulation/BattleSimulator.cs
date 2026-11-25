@@ -7,6 +7,7 @@ namespace Echoes.Simulation
     {
         private readonly List<BattleEvent> _events = new List<BattleEvent>();
         private readonly List<Combatant> _units = new List<Combatant>();
+        private readonly List<RosterUnit> _roster = new List<RosterUnit>();
         private EncounterDef _encounter;
         private DeterministicRng _rng;
         private string[] _faces = new string[3];
@@ -30,6 +31,26 @@ namespace Echoes.Simulation
         public int Seed { get { return _seed; } }
         public IList<BattleEvent> Events { get { return _events; } }
         public string ComboId { get { return _resolution.ComboId; } }
+        public int AllyRosterCount { get { return _roster.Count; } }
+
+        public int PlacedAllyCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < _roster.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(_roster[i].SlotId))
+                        count++;
+                }
+                return count;
+            }
+        }
+
+        public bool CanCommit
+        {
+            get { return Phase == BattlePhase.Setup && PlacedAllyCount > 0; }
+        }
 
         public string Face(int index)
         {
@@ -50,12 +71,11 @@ namespace Echoes.Simulation
         {
             if (encounter == null)
                 throw new ArgumentNullException("encounter");
-            if (encounter.Allies == null || encounter.Allies.Count < 1)
-                throw new InvalidOperationException("Encounter needs at least one ally.");
-            if (encounter.Allies.Count > 5)
-                throw new InvalidOperationException("Ally cap is 5.");
+            List<RosterUnit> roster = CopyRoster(encounter);
 
             _encounter = encounter;
+            _roster.Clear();
+            _roster.AddRange(roster);
             _seed = seed;
             _rng = new DeterministicRng(seed);
             _events.Clear();
@@ -158,9 +178,59 @@ namespace Echoes.Simulation
             LogDice("reroll");
         }
 
+        public string AllyUnitIdAt(int index)
+        {
+            return _roster[index].Def.Id;
+        }
+
+        public string AllySlotAt(int index)
+        {
+            return _roster[index].SlotId;
+        }
+
+        // First roster entry with this unit id. Null when that entry is benched or the id is absent.
+        // M0 allies have distinct ids. Duplicate ids stay as separate roster rows for spawn.
+        public string AllySlotOf(string unitId)
+        {
+            int index = FindRosterIndex(unitId);
+            if (index < 0)
+                return null;
+            return _roster[index].SlotId;
+        }
+
+        // Setup only. An empty slot id benches the unit. An occupied ally slot swaps.
+        // Does not mutate the encounter, and does not write a log line. Slot ids are logged at spawn.
+        public bool TrySetAllySlot(string unitId, string slotId)
+        {
+            if (Phase != BattlePhase.Setup)
+                return false;
+            int index = FindRosterIndex(unitId);
+            if (index < 0)
+                return false;
+            if (string.IsNullOrEmpty(slotId))
+            {
+                _roster[index].SlotId = null;
+                return true;
+            }
+            if (!Slots.IsAllySlot(slotId))
+                return false;
+
+            for (int i = 0; i < _roster.Count; i++)
+            {
+                if (i == index || _roster[i].SlotId != slotId)
+                    continue;
+                _roster[i].SlotId = _roster[index].SlotId;
+                break;
+            }
+            _roster[index].SlotId = slotId;
+            return true;
+        }
+
         public void Commit()
         {
             RequireSetup();
+            if (PlacedAllyCount < 1)
+                throw new InvalidOperationException("Formation needs at least one ally.");
             _resolution = FaceEffects.Resolve(_faces[0], _faces[1], _faces[2]);
             _attunement = _resolution.ComboId == ComboIds.Attunement;
             _goldOnWin = _resolution.Gold;
@@ -342,7 +412,15 @@ namespace Echoes.Simulation
         private void SpawnUnits()
         {
             _units.Clear();
-            AddSide(_encounter.Allies, true);
+            var allies = new List<Placement>();
+            for (int i = 0; i < _roster.Count; i++)
+            {
+                RosterUnit unit = _roster[i];
+                if (string.IsNullOrEmpty(unit.SlotId))
+                    continue;
+                allies.Add(new Placement { SlotId = unit.SlotId, Unit = unit.Def });
+            }
+            AddSide(allies, true);
             AddSide(_encounter.Enemies, false);
             _units.Sort(delegate (Combatant a, Combatant b)
             {
@@ -747,6 +825,41 @@ namespace Echoes.Simulation
                 throw new InvalidOperationException("Dice can change only during Setup.");
         }
 
+        private static List<RosterUnit> CopyRoster(EncounterDef encounter)
+        {
+            if (encounter.Allies == null || encounter.Allies.Count < 1)
+                throw new InvalidOperationException("Encounter needs at least one ally.");
+            if (encounter.Allies.Count > 5)
+                throw new InvalidOperationException("Ally cap is 5.");
+
+            var roster = new List<RosterUnit>();
+            var seen = new HashSet<string>();
+            for (int i = 0; i < encounter.Allies.Count; i++)
+            {
+                Placement placement = encounter.Allies[i];
+                if (placement == null || placement.Unit == null || string.IsNullOrEmpty(placement.Unit.Id) || string.IsNullOrEmpty(placement.SlotId))
+                    throw new InvalidOperationException("Placement is incomplete.");
+                if (!Slots.IsAllySlot(placement.SlotId))
+                    throw new InvalidOperationException("Slot team does not match the side: " + placement.SlotId);
+                if (!seen.Add(placement.SlotId))
+                    throw new InvalidOperationException("Duplicate slot: " + placement.SlotId);
+                roster.Add(new RosterUnit { Def = placement.Unit, SlotId = placement.SlotId });
+            }
+            return roster;
+        }
+
+        private int FindRosterIndex(string unitId)
+        {
+            if (string.IsNullOrEmpty(unitId))
+                return -1;
+            for (int i = 0; i < _roster.Count; i++)
+            {
+                if (_roster[i].Def.Id == unitId)
+                    return i;
+            }
+            return -1;
+        }
+
         private void Log(string type, List<KeyValuePair<string, string>> fields)
         {
             _events.Add(new BattleEvent(_events.Count, type, fields));
@@ -760,6 +873,12 @@ namespace Echoes.Simulation
         private static void Add(List<KeyValuePair<string, string>> fields, string key, string value)
         {
             fields.Add(new KeyValuePair<string, string>(key, value));
+        }
+
+        private sealed class RosterUnit
+        {
+            public UnitDef Def;
+            public string SlotId;
         }
 
         private sealed class Combatant

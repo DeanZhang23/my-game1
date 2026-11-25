@@ -113,6 +113,13 @@ namespace Echoes.Simulation
         public const string Combo = "ui.combo";
         public const string CritMark = "log.crit_mark";
         public const string Fallback = "ui.error.catalog_fallback";
+        public const string FormationBench = "ui.formation.bench";
+        public const string FormationFront = "ui.formation.front";
+        public const string FormationMid = "ui.formation.mid";
+        public const string FormationBack = "ui.formation.back";
+        public const string FormationIllegal = "ui.formation.illegal";
+        public const string FormationAlly = "ui.formation.ally";
+        public const string FormationEnemy = "ui.formation.enemy";
     }
 
     public enum FormationRow
@@ -146,24 +153,70 @@ namespace Echoes.Simulation
 
     public static class Slots
     {
+        // Back, mid, front. Column 1 then 2 then 3. Visual order is not this array:
+        // allies read back-to-front toward the center; enemies read front-to-back away from it.
+        public static readonly string[] AllyIds =
+        {
+            "ally_a1", "ally_a2", "ally_a3",
+            "ally_b1", "ally_b2", "ally_b3",
+            "ally_c1", "ally_c2", "ally_c3"
+        };
+
+        public static readonly string[] EnemyIds =
+        {
+            "enemy_a1", "enemy_a2", "enemy_a3",
+            "enemy_b1", "enemy_b2", "enemy_b3",
+            "enemy_c1", "enemy_c2", "enemy_c3"
+        };
+
         public static FormationRow RowOf(string slotId)
         {
-            int split = slotId.IndexOf('_');
-            if (split < 0 || split + 1 >= slotId.Length)
+            bool ally;
+            FormationRow row;
+            int column;
+            if (!TryParse(slotId, out ally, out row, out column))
                 throw new ArgumentException("Bad slot id: " + slotId);
-            char row = slotId[split + 1];
-            if (row == 'a')
-                return FormationRow.Back;
-            if (row == 'b')
-                return FormationRow.Mid;
-            if (row == 'c')
-                return FormationRow.Front;
-            throw new ArgumentException("Bad slot id: " + slotId);
+            return row;
         }
 
         public static bool IsAlly(string slotId)
         {
-            return slotId.StartsWith("ally_", StringComparison.Ordinal);
+            return slotId != null && slotId.StartsWith("ally_", StringComparison.Ordinal);
+        }
+
+        public static bool IsAllySlot(string slotId)
+        {
+            return IndexOf(AllyIds, slotId) >= 0;
+        }
+
+        public static bool IsEnemySlot(string slotId)
+        {
+            return IndexOf(EnemyIds, slotId) >= 0;
+        }
+
+        public static bool TryParse(string slotId, out bool ally, out FormationRow row, out int column)
+        {
+            ally = false;
+            row = FormationRow.Back;
+            column = 0;
+            int index = IndexOf(AllyIds, slotId);
+            if (index >= 0)
+                ally = true;
+            else
+            {
+                index = IndexOf(EnemyIds, slotId);
+                if (index < 0)
+                    return false;
+            }
+
+            if (index < 3)
+                row = FormationRow.Back;
+            else if (index < 6)
+                row = FormationRow.Mid;
+            else
+                row = FormationRow.Front;
+            column = (index % 3) + 1;
+            return true;
         }
 
         public static string RowName(FormationRow row)
@@ -173,6 +226,18 @@ namespace Echoes.Simulation
             if (row == FormationRow.Mid)
                 return "mid";
             return "front";
+        }
+
+        private static int IndexOf(string[] ids, string slotId)
+        {
+            if (slotId == null)
+                return -1;
+            for (int i = 0; i < ids.Length; i++)
+            {
+                if (ids[i] == slotId)
+                    return i;
+            }
+            return -1;
         }
     }
 }
