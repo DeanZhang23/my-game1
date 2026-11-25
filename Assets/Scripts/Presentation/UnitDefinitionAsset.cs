@@ -17,6 +17,9 @@ namespace Echoes.Presentation
         public float baseAttackInterval;
         public float energyPerSecond;
         public int maxEnergy = 100;
+        public string role = "melee";
+        public float moveSpeed = 3f;
+        public float attackRange = 0.9f;
         public SkillDefinitionAsset basicAttack;
         public SkillDefinitionAsset skill;
     }

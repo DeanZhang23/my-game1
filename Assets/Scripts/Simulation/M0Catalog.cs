@@ -92,6 +92,9 @@ namespace Echoes.Simulation
                 BaseAttackInterval = 1.20m,
                 EnergyPerSecond = 8m,
                 MaxEnergy = 100,
+                Role = UnitRoles.Melee,
+                MoveSpeed = 3.0m,
+                AttackRange = 0.9m,
                 Basic = MeleeBasic(),
                 Skill = Cleave()
             };
@@ -113,6 +116,9 @@ namespace Echoes.Simulation
                 BaseAttackInterval = 1.50m,
                 EnergyPerSecond = 10m,
                 MaxEnergy = 100,
+                Role = UnitRoles.Ranged,
+                MoveSpeed = 2.5m,
+                AttackRange = 3.5m,
                 Basic = CasterBasic(),
                 Skill = Bolt()
             };
@@ -134,6 +140,9 @@ namespace Echoes.Simulation
                 BaseAttackInterval = 1.20m,
                 EnergyPerSecond = 8m,
                 MaxEnergy = 100,
+                Role = UnitRoles.Melee,
+                MoveSpeed = 3.0m,
+                AttackRange = 0.9m,
                 Basic = EnemyBasic(),
                 Skill = null
             };
@@ -145,8 +154,6 @@ namespace Echoes.Simulation
             {
                 Id = EncounterId,
                 CountdownMs = 3000,
-                TacticalWindowDelayMs = 8000,
-                TacticalWindowDurationMs = 8000,
                 TimeoutMs = 150000,
                 Allies = new List<Placement>
                 {

@@ -11,7 +11,7 @@ namespace Echoes.Simulation.Tests
         public const int Seed = 424242;
 
         [Fact]
-        public void GoldenSeed_LockFirstDie_RerollOnce_ReplaysExactly()
+        public void GoldenSeed_AutoSeekMoveEngage_ReplaysExactly()
         {
             string actual = Canonical(Play());
             string path = GoldenPath();
@@ -36,11 +36,9 @@ namespace Echoes.Simulation.Tests
         {
             var sim = new BattleSimulator();
             sim.Start(M0Catalog.CreateEncounter(), Seed);
-            sim.SetLock(0, true);
-            sim.Reroll();
             sim.Commit();
             sim.BeginAutoCombat();
-            sim.RunToEnd(TacticalDecision.Skip);
+            sim.RunToEnd();
             return sim;
         }
 
@@ -49,7 +47,7 @@ namespace Echoes.Simulation.Tests
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             while (dir != null)
             {
-                string candidate = Path.Combine(dir.FullName, "tests", "Echoes.Simulation.Tests", "golden", "m0-lock0-reroll.txt");
+                string candidate = Path.Combine(dir.FullName, "tests", "Echoes.Simulation.Tests", "golden", "m0-autocombat.txt");
                 if (File.Exists(candidate) || Directory.Exists(Path.Combine(dir.FullName, "tests")))
                 {
                     if (Directory.Exists(Path.Combine(dir.FullName, "tests")))

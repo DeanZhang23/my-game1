@@ -68,16 +68,28 @@ namespace Echoes.Simulation
         public const string DiceCommit = "dice_commit";
         public const string ComboResolved = "combo_resolved";
         public const string UnitSpawned = "unit_spawned";
+        public const string UnitTarget = "unit_target";
+        public const string UnitEngage = "unit_engage";
         public const string Damage = "damage";
         public const string ShieldApplied = "shield_applied";
         public const string ShieldExpired = "shield_expired";
         public const string HealOrHpLoss = "heal_or_hp_loss";
         public const string SkillCast = "skill_cast";
-        public const string TacticalWindowOpened = "tactical_window_opened";
-        public const string TacticalWindowConfirmed = "tactical_window_confirmed";
-        public const string TacticalWindowSkipped = "tactical_window_skipped";
         public const string UnitDeath = "unit_death";
         public const string BattleEnd = "battle_end";
+    }
+
+    public static class UnitRoles
+    {
+        public const string Melee = "melee";
+        public const string Ranged = "ranged";
+
+        public static string Require(string role)
+        {
+            if (role == Melee || role == Ranged)
+                return role;
+            throw new ArgumentException("Unknown role: " + role);
+        }
     }
 
     public static class LocKeys
@@ -141,14 +153,7 @@ namespace Echoes.Simulation
         Setup = 1,
         Countdown = 2,
         AutoCombat = 3,
-        TacticalWindow = 4,
-        Resolve = 5
-    }
-
-    public enum TacticalDecision
-    {
-        Skip = 0,
-        Confirm = 1
+        Resolve = 4
     }
 
     public static class Slots

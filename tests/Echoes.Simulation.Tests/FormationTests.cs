@@ -5,17 +5,12 @@ namespace Echoes.Simulation.Tests
 {
     public class FormationTests
     {
-        private static readonly string[] PositionFaces =
-        {
-            FaceIds.Sword, FaceIds.Shield, FaceIds.Star
-        };
-
         [Fact]
         public void DefaultLineup_IsTheE1Roster_UntilSetupMovesIt()
         {
             var encounter = M0Catalog.CreateEncounter();
             var sim = new BattleSimulator();
-            sim.Start(encounter, 1, PositionFaces);
+            sim.Start(encounter, 1);
 
             Assert.Equal(2, sim.AllyRosterCount);
             Assert.Equal("ally_c2", sim.AllySlotOf(UnitIds.Melee));
@@ -40,7 +35,7 @@ namespace Echoes.Simulation.Tests
         }
 
         [Fact]
-        public void FrontAndBack_GetPositionEffects_MidRowKeepsTeamEffectsOnly()
+        public void SpawnRows_RecordTheSlot_WithoutPreBattleDiceBonuses()
         {
             Assert.Equal(FormationRow.Front, Slots.RowOf("ally_c1"));
             Assert.Equal(FormationRow.Back, Slots.RowOf("ally_a3"));
@@ -57,20 +52,21 @@ namespace Echoes.Simulation.Tests
             BattleEvent melee = Spawn(placed, "ally_c1");
             BattleEvent caster = Spawn(placed, "ally_a3");
             Assert.Equal("front", melee.Get("row"));
-            Assert.Equal("1", melee.Get("keen"));
+            Assert.Equal("0", melee.Get("keen"));
             Assert.Equal("0", melee.Get("energy"));
+            Assert.Equal("melee", melee.Get("role"));
+            Assert.Equal("0", melee.Get("x"));
+            Assert.Equal("1.5", melee.Get("y"));
             Assert.Equal("back", caster.Get("row"));
             Assert.Equal("0", caster.Get("keen"));
-            Assert.Equal("20", caster.Get("energy"));
-            Assert.Equal(EventFormat.Dec(18m * 1.12m), melee.Get("attack"));
-            Assert.Equal(EventFormat.Dec(16m), melee.Get("armor"));
+            Assert.Equal("0", caster.Get("energy"));
+            Assert.Equal("ranged", caster.Get("role"));
+            Assert.Equal(EventFormat.Dec(18m), melee.Get("attack"));
+            Assert.Equal(EventFormat.Dec(8m), melee.Get("armor"));
             placed.BeginAutoCombat();
             placed.PumpMs(1200);
             Assert.Equal("ally_c1", First(placed, BattleEvents.Damage).Get("sourceSlot"));
-            Assert.Equal(1, Count(placed, BattleEvents.ShieldApplied));
-            BattleEvent shield = First(placed, BattleEvents.ShieldApplied);
-            Assert.Equal("ally_c1", shield.Get("slot"));
-            Assert.Equal("18", shield.Get("amount"));
+            Assert.Equal(0, Count(placed, BattleEvents.ShieldApplied));
 
             BattleSimulator mid = Start();
             Assert.True(mid.TrySetAllySlot(UnitIds.Melee, "ally_b2"));
@@ -84,13 +80,13 @@ namespace Echoes.Simulation.Tests
             Assert.Equal("mid", midMelee.Get("row"));
             Assert.Equal("0", midMelee.Get("keen"));
             Assert.Equal("0", midMelee.Get("energy"));
-            Assert.Equal(EventFormat.Dec(18m * 1.12m), midMelee.Get("attack"));
-            Assert.Equal(EventFormat.Dec(16m), midMelee.Get("armor"));
+            Assert.Equal(EventFormat.Dec(18m), midMelee.Get("attack"));
+            Assert.Equal(EventFormat.Dec(8m), midMelee.Get("armor"));
             Assert.Equal("mid", midCaster.Get("row"));
             Assert.Equal("0", midCaster.Get("keen"));
             Assert.Equal("0", midCaster.Get("energy"));
-            Assert.Equal(EventFormat.Dec(4m * 1.12m), midCaster.Get("attack"));
-            Assert.Equal(EventFormat.Dec(10m), midCaster.Get("armor"));
+            Assert.Equal(EventFormat.Dec(4m), midCaster.Get("attack"));
+            Assert.Equal(EventFormat.Dec(2m), midCaster.Get("armor"));
             mid.BeginAutoCombat();
             Assert.Equal(0, Count(mid, BattleEvents.ShieldApplied));
         }
@@ -107,7 +103,6 @@ namespace Echoes.Simulation.Tests
             Assert.Null(sim.AllySlotOf(UnitIds.Melee));
             Assert.Null(sim.AllySlotOf(UnitIds.Caster));
 
-            sim.Reroll();
             int events = sim.Events.Count;
             InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => sim.Commit());
             Assert.Contains("ally", error.Message, StringComparison.Ordinal);
@@ -164,7 +159,7 @@ namespace Echoes.Simulation.Tests
         private static BattleSimulator Start()
         {
             var sim = new BattleSimulator();
-            sim.Start(M0Catalog.CreateEncounter(), 1, PositionFaces);
+            sim.Start(M0Catalog.CreateEncounter(), 1);
             return sim;
         }
 

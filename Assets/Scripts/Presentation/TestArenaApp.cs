@@ -28,34 +28,19 @@ namespace Echoes.Presentation
         private Text _title;
         private Text _seedLabel;
         private Text _beginLabel;
-        private Text _rerollLabel;
         private Text _commitLabel;
-        private Text _confirmLabel;
-        private Text _skipLabel;
         private Text _localeLabel;
         private Text _status;
         private Text _result;
-        private Text _tacticalTitle;
-        private Text _tacticalBody;
         private Text _log;
         private RectTransform _logContent;
         private ScrollRect _logScroll;
         private GameObject _beginButton;
-        private GameObject _rerollButton;
         private GameObject _commitButton;
-        private GameObject _tacticalPanel;
-        private readonly Text[] _dice = new Text[3];
-        private readonly Image[] _diceImage = new Image[3];
         private readonly Dictionary<string, UnitWidget> _units = new Dictionary<string, UnitWidget>();
         private readonly StringBuilder _logBuilder = new StringBuilder();
         private Transform _board;
-        private int _free = 1;
-        private int _crack;
-        private bool _corrosion;
-        private string _comboId = ComboIds.None;
         private int _logChars;
-        private readonly string[] _facesShown = new string[3];
-        private readonly bool[] _locksShown = new bool[3];
         private readonly Dictionary<string, CellView> _cells = new Dictionary<string, CellView>();
         private readonly List<TokenView> _tokens = new List<TokenView>();
         private readonly Dictionary<GameObject, string> _allyDrops = new Dictionary<GameObject, string>();
@@ -75,17 +60,15 @@ namespace Echoes.Presentation
         private bool _fromDrag;
 
         // Reference canvas 1600x900, origin at center, +y up.
-        // Left: ally 3x3. Center: enemy 3x3. Right: seed, dice, reroll, march, log below them.
-        // Front (*_c*) is the inner column and faces the vertical midline. Back (*_a*) is outer.
-        // Column 1 is the top file. Slot ids are not mirrored.
-        // Board, midline, captions, and portraits do not raycast. The right column is built
-        // after the board and the log so those controls stay clickable.
-        private const float CellW = 128f;
-        private const float CellH = 84f;
-        private const float ColPitch = 92f;
-        private const float RowPitch = 136f;
-        private static readonly Vector2 AllyOrigin = new Vector2(-480f, 40f);
-        private static readonly Vector2 EnemyOrigin = new Vector2(0f, 40f);
+        // Left: ally 3x3. Center: enemy 3x3. Right: seed and March. The log sits under that column.
+        // Sim (0, 0) is the ally front-file center. 64 px is one sim unit, so the 1.5 pitch is 96 px
+        // and the 4.0 front gap is 256 px. The gap midpoint stays on the board center.
+        // Front (*_c*) faces the midline. Back (*_a*) is outer. Column 1 is the top file.
+        // Board, midline, captions, and portraits do not raycast. March is built after the board.
+        private const float PixelsPerUnit = 64f;
+        private const float CellW = 90f;
+        private const float CellH = 78f;
+        private static readonly Vector2 SimAnchor = new Vector2(-368f, 40f);
         private static readonly Vector2 BoardPos = new Vector2(-240f, 40f);
         private const float BoardW = 896f;
         private const float BoardH = 284f;
@@ -116,7 +99,7 @@ namespace Echoes.Presentation
                 if (_countdown <= 0f)
                     _sim.BeginAutoCombat();
             }
-            else if (_sim.Phase == BattlePhase.AutoCombat || _sim.Phase == BattlePhase.TacticalWindow)
+            else if (_sim.Phase == BattlePhase.AutoCombat)
             {
                 _sim.PumpSeconds(Time.deltaTime);
             }
@@ -184,16 +167,7 @@ namespace Echoes.Presentation
             _sim = new BattleSimulator();
             _sim.Start(_def, seed);
             _applied = 0;
-            _free = 1;
-            _crack = 0;
-            _corrosion = false;
-            _comboId = ComboIds.None;
             _logChars = 0;
-            for (int i = 0; i < 3; i++)
-            {
-                _facesShown[i] = null;
-                _locksShown[i] = false;
-            }
             _logBuilder.Length = 0;
             if (_usedFallback)
                 _logBuilder.AppendLine(L(LocKeys.Fallback));
@@ -212,33 +186,7 @@ namespace Echoes.Presentation
 
         private void Apply(BattleEvent evt)
         {
-            if (evt.Type == BattleEvents.DiceRoll)
-            {
-                _facesShown[0] = evt.Get("die0");
-                _facesShown[1] = evt.Get("die1");
-                _facesShown[2] = evt.Get("die2");
-            }
-            else if (evt.Type == BattleEvents.DiceLock)
-            {
-                int index = Parse(evt.Get("index"));
-                if (index >= 0 && index < 3)
-                    _locksShown[index] = evt.Get("locked") == "true";
-            }
-            else if (evt.Type == BattleEvents.DiceReroll)
-            {
-                if (evt.Get("freeUsed") == "true")
-                    _free = 0;
-            }
-            else if (evt.Type == BattleEvents.CrackGained)
-            {
-                int.TryParse(evt.Get("stacks"), NumberStyles.Integer, CultureInfo.InvariantCulture, out _crack);
-                _corrosion = evt.Get("corrosion") == "true";
-            }
-            else if (evt.Type == BattleEvents.ComboResolved)
-            {
-                _comboId = evt.Get("combo");
-            }
-            else if (evt.Type == BattleEvents.UnitSpawned)
+            if (evt.Type == BattleEvents.UnitSpawned)
             {
                 UnitWidget widget = Widget(evt.Get("slot"), evt.Get("unitId"));
                 widget.maxHp = Parse(evt.Get("maxHp"));
@@ -294,6 +242,8 @@ namespace Echoes.Presentation
                 return F("log.combo_resolved", ComboName(evt.Get("combo")));
             if (evt.Type == BattleEvents.UnitSpawned)
                 return F("log.unit_spawned", UnitName(evt.Get("unitId")), evt.Get("slot"));
+            if (evt.Type == BattleEvents.UnitTarget || evt.Type == BattleEvents.UnitEngage)
+                return F(evt.Type == BattleEvents.UnitTarget ? "log.unit_target" : "log.unit_engage", UnitName(evt.Get("unitId")), evt.Get("slot"), evt.Get("targetSlot"));
             if (evt.Type == BattleEvents.Damage)
             {
                 string crit = evt.Get("crit") == "true" ? " " + L(LocKeys.CritMark) : "";
@@ -314,12 +264,6 @@ namespace Echoes.Presentation
                 return F("log.hp_loss", evt.Get("slot"), evt.Get("delta"));
             if (evt.Type == BattleEvents.SkillCast)
                 return F("log.skill_cast", SkillName(evt.Get("skillId")), evt.Get("slot"));
-            if (evt.Type == BattleEvents.TacticalWindowOpened)
-                return L("log.tactical_opened");
-            if (evt.Type == BattleEvents.TacticalWindowConfirmed)
-                return L("log.tactical_confirmed");
-            if (evt.Type == BattleEvents.TacticalWindowSkipped)
-                return L("log.tactical_skipped");
             if (evt.Type == BattleEvents.UnitDeath)
                 return F("log.unit_death", UnitName(evt.Get("unitId")), evt.Get("slot"));
             if (evt.Type == BattleEvents.BattleEnd)
@@ -332,52 +276,19 @@ namespace Echoes.Presentation
             _title.text = L(LocKeys.Title);
             _seedLabel.text = L(LocKeys.Seed);
             _beginLabel.text = L(LocKeys.Begin);
-            _rerollLabel.text = L(LocKeys.Reroll);
             _commitLabel.text = L(LocKeys.Commit);
-            _confirmLabel.text = L(LocKeys.Confirm);
-            _skipLabel.text = L(LocKeys.Skip);
             _localeLabel.text = L(LocKeys.Locale);
-            _tacticalTitle.text = L(LocKeys.TacticalTitle);
-            _tacticalBody.text = L(LocKeys.TacticalBody);
 
             bool setup = _sim != null && _sim.Phase == BattlePhase.Setup;
             bool countdown = _sim != null && _sim.Phase == BattlePhase.Countdown;
-            bool window = _sim != null && _sim.Phase == BattlePhase.TacticalWindow;
             _beginButton.SetActive(_sim == null);
-            _rerollButton.SetActive(setup);
             _commitButton.SetActive(setup);
-            _tacticalPanel.SetActive(window);
             _seedInput.interactable = _sim == null;
-
-            for (int i = 0; i < 3; i++)
-            {
-                if (_sim == null)
-                {
-                    _dice[i].text = "";
-                    _diceImage[i].color = new Color(0.22f, 0.24f, 0.28f, 1f);
-                    continue;
-                }
-                string face = FaceName(_facesShown[i]);
-                string mark = _locksShown[i] ? L(LocKeys.Locked) : L(LocKeys.Unlocked);
-                _dice[i].text = face + "\n" + mark;
-                _diceImage[i].color = _locksShown[i]
-                    ? new Color(0.45f, 0.36f, 0.16f, 1f)
-                    : new Color(0.24f, 0.28f, 0.34f, 1f);
-            }
 
             string phase = PhaseLabel();
             if (countdown)
                 phase = phase + " " + Mathf.CeilToInt(Mathf.Max(0f, _countdown)).ToString(CultureInfo.InvariantCulture);
-            string corrosion = _corrosion ? L(LocKeys.CorrosionOn) : L(LocKeys.CorrosionOff);
-            _status.text = phase
-                + "   "
-                + L(LocKeys.Crack) + " " + _crack.ToString(CultureInfo.InvariantCulture)
-                + "   "
-                + corrosion
-                + "   "
-                + L(LocKeys.FreeReroll) + " " + _free.ToString(CultureInfo.InvariantCulture)
-                + "   "
-                + L(LocKeys.Combo) + " " + ComboName(_comboId);
+            _status.text = phase;
             if (setup && !_sim.CanCommit)
                 _status.text = _status.text + "   " + L(LocKeys.FormationIllegal);
             if (_commitButton != null)
@@ -414,6 +325,7 @@ namespace Echoes.Presentation
                 _logScroll.verticalNormalizedPosition = 0f;
             }
             LayoutFormation();
+            SyncCombatTokens();
         }
 
         private string PhaseLabel()
@@ -426,8 +338,6 @@ namespace Echoes.Presentation
                 return L(LocKeys.PhaseCountdown);
             if (_sim.Phase == BattlePhase.AutoCombat)
                 return L(LocKeys.PhaseAuto);
-            if (_sim.Phase == BattlePhase.TacticalWindow)
-                return L(LocKeys.PhaseTactical);
             if (_sim.Phase == BattlePhase.Resolve)
                 return L(LocKeys.PhaseResolve);
             return "";
@@ -462,9 +372,8 @@ namespace Echoes.Presentation
             _result = MakeText(Box(root, "Result", new Vector2(-420f, -376f), new Vector2(520f, 30f), new Color(0f, 0f, 0f, 0f)), 24);
 
             BuildLog(root);
-            BuildTactical(root);
 
-            // Right column, after the board and the log. Seed, dice, reroll, and march stay on top.
+            // Right column, after the board and the log, so March stays clickable.
             _seedLabel = MakeText(Box(root, "SeedLabel", new Vector2(360f, 336f), new Vector2(72f, 32f), new Color(0f, 0f, 0f, 0f)), 18);
             _seedInput = MakeInput(root, new Vector2(520f, 336f));
             if (fixedSeed != 0)
@@ -472,19 +381,8 @@ namespace Echoes.Presentation
             _beginLabel = MakeText(ButtonBox(root, "Begin", new Vector2(706f, 336f), new Vector2(140f, 40f), BeginBattle), 20);
             _beginButton = _beginLabel.transform.parent.gameObject;
 
-            for (int i = 0; i < 3; i++)
-            {
-                int index = i;
-                RectTransform die = ButtonBox(root, "Die" + i.ToString(CultureInfo.InvariantCulture), new Vector2(395f + i * 158f, 250f), new Vector2(150f, 74f), delegate { ToggleDie(index); });
-                _diceImage[i] = die.GetComponent<Image>();
-                _dice[i] = MakeText(die, 16);
-            }
-
-            _rerollLabel = MakeText(ButtonBox(root, "Reroll", new Vector2(453f, 168f), new Vector2(180f, 42f), OnReroll), 20);
-            _rerollButton = _rerollLabel.transform.parent.gameObject;
             _commitLabel = MakeText(ButtonBox(root, "Commit", new Vector2(653f, 168f), new Vector2(180f, 42f), OnCommit), 20);
             _commitButton = _commitLabel.transform.parent.gameObject;
-            _rerollButton.SetActive(false);
             _commitButton.SetActive(false);
             Button commit = _commitButton.GetComponent<Button>();
             ColorBlock colors = commit.colors;
@@ -531,26 +429,6 @@ namespace Echoes.Presentation
             _logScroll.movementType = ScrollRect.MovementType.Clamped;
         }
 
-        private void BuildTactical(Transform root)
-        {
-            RectTransform panel = Box(root, "Tactical", new Vector2(-240f, 40f), new Vector2(400f, 168f), new Color(0.12f, 0.10f, 0.08f, 0.96f));
-            _tacticalPanel = panel.gameObject;
-            _tacticalTitle = MakeText(Box(panel, "TacticalTitle", new Vector2(0f, 50f), new Vector2(380f, 36f), new Color(0f, 0f, 0f, 0f)), 22);
-            _tacticalBody = MakeText(Box(panel, "TacticalBody", new Vector2(0f, 10f), new Vector2(380f, 36f), new Color(0f, 0f, 0f, 0f)), 16);
-            _confirmLabel = MakeText(ButtonBox(panel, "Confirm", new Vector2(-90f, -50f), new Vector2(140f, 36f), OnConfirm), 18);
-            _skipLabel = MakeText(ButtonBox(panel, "Skip", new Vector2(90f, -50f), new Vector2(140f, 36f), OnSkip), 18);
-            _tacticalPanel.SetActive(false);
-        }
-
-        private void OnReroll()
-        {
-            if (_sim == null || _sim.Phase != BattlePhase.Setup)
-                return;
-            _sim.Reroll();
-            ApplyNew();
-            Paint();
-        }
-
         private void OnCommit()
         {
             if (_sim == null || !_sim.CanCommit)
@@ -559,33 +437,6 @@ namespace Echoes.Presentation
             _dragUnitId = null;
             _sim.Commit();
             _countdown = _def.CountdownMs / 1000f;
-            ApplyNew();
-            Paint();
-        }
-
-        private void OnConfirm()
-        {
-            if (_sim == null || _sim.Phase != BattlePhase.TacticalWindow)
-                return;
-            _sim.ConfirmTacticalWindow();
-            ApplyNew();
-            Paint();
-        }
-
-        private void OnSkip()
-        {
-            if (_sim == null || _sim.Phase != BattlePhase.TacticalWindow)
-                return;
-            _sim.SkipTacticalWindow();
-            ApplyNew();
-            Paint();
-        }
-
-        private void ToggleDie(int index)
-        {
-            if (_sim == null || _sim.Phase != BattlePhase.Setup)
-                return;
-            _sim.SetLock(index, !_sim.IsLocked(index));
             ApplyNew();
             Paint();
         }
@@ -616,12 +467,12 @@ namespace Echoes.Presentation
             var widget = new UnitWidget();
             widget.root = panel.gameObject;
             widget.unitId = unitId;
-            widget.portrait = AddPortrait(panel, SpriteFor(unitId), new Vector2(-38f, 18f), 40f);
-            float textX = widget.portrait != null ? 22f : 0f;
-            float textW = widget.portrait != null ? 72f : 116f;
-            widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 24f), new Vector2(textW, 16f), Clear), 13);
-            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, -12f), new Vector2(116f, 14f), Clear), 11);
-            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -28f), new Vector2(112f, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
+            widget.portrait = AddPortrait(panel, SpriteFor(unitId), new Vector2(-26f, 12f), 32f);
+            float textX = widget.portrait != null ? 14f : 0f;
+            float textW = widget.portrait != null ? 58f : 82f;
+            widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 18f), new Vector2(textW, 16f), Clear), 12);
+            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, -8f), new Vector2(82f, 14f), Clear), 11);
+            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -24f), new Vector2(80f, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
             widget.fill = Box(bar, "Fill", Vector2.zero, new Vector2(116f, 6f), new Color(0.45f, 0.75f, 0.42f, 1f)).GetComponent<Image>();
             RectTransform fillRt = widget.fill.rectTransform;
             fillRt.anchorMin = new Vector2(0f, 0f);
@@ -655,22 +506,41 @@ namespace Echoes.Presentation
             return SlotAbsolute(slot) - BoardPos;
         }
 
-        // Allies face right toward the midline. Enemies face left toward it.
-        // *_c* is the inner column, *_a* the outer column, *_b* between them.
+        // Linear map of the simulation plane. Spawn cells and moving tokens share it.
         private static Vector2 SlotAbsolute(string slot)
         {
-            bool ally;
-            FormationRow row;
-            int column;
-            if (!Slots.TryParse(slot, out ally, out row, out column))
+            decimal x;
+            decimal y;
+            if (!Slots.IsAllySlot(slot) && !Slots.IsEnemySlot(slot))
                 return Vector2.zero;
-            int rowIndex = row == FormationRow.Back ? 0 : row == FormationRow.Mid ? 1 : 2;
-            int colIndex = column - 1;
-            Vector2 origin = ally ? AllyOrigin : EnemyOrigin;
-            float depth = (rowIndex - 1) * RowPitch;
-            float x = origin.x + (ally ? depth : -depth);
-            float y = origin.y + (1 - colIndex) * ColPitch;
-            return new Vector2(x, y);
+            FieldLayout.PositionOf(slot, out x, out y);
+            return SimToScreen(x, y);
+        }
+
+        private static Vector2 SimToScreen(decimal x, decimal y)
+        {
+            return new Vector2(
+                SimAnchor.x + (float)x * PixelsPerUnit,
+                SimAnchor.y + (float)y * PixelsPerUnit);
+        }
+
+        private void SyncCombatTokens()
+        {
+            if (_sim == null)
+                return;
+            for (int i = 0; i < _sim.CombatantCount; i++)
+            {
+                CombatantView view;
+                if (!_sim.TryGetCombatant(i, out view))
+                    continue;
+                UnitWidget widget = FindWidget(view.SlotId);
+                if (widget == null || widget.root == null)
+                    continue;
+                RectTransform rt = widget.root.GetComponent<RectTransform>();
+                Vector2 screen = SimToScreen(view.X, view.Y);
+                rt.anchoredPosition = screen - BoardPos;
+                rt.SetAsLastSibling();
+            }
         }
 
         private void BuildFormation(Transform root)
@@ -686,7 +556,7 @@ namespace Echoes.Presentation
             for (int i = 0; i < Slots.EnemyIds.Length; i++)
                 BuildCell(Slots.EnemyIds[i], false);
 
-            float labelY = AllyOrigin.y + ColPitch + CellH * 0.5f + 28f;
+            float labelY = SimAnchor.y + (float)FieldLayout.CellPitch * PixelsPerUnit + CellH * 0.5f + 28f;
             string[] samples = { "ally_a2", "ally_b2", "ally_c2", "enemy_c2", "enemy_b2", "enemy_a2" };
             for (int i = 0; i < samples.Length; i++)
             {
@@ -695,11 +565,11 @@ namespace Echoes.Presentation
             }
 
             float captionY = labelY + 32f;
-            _allyCaption = PlaceLabel(root, "AllyCaption", new Vector2(AllyOrigin.x, captionY), new Vector2(80f, 22f), 16);
-            _enemyCaption = PlaceLabel(root, "EnemyCaption", new Vector2(EnemyOrigin.x, captionY), new Vector2(80f, 22f), 16);
+            _allyCaption = PlaceLabel(root, "AllyCaption", new Vector2(SlotAbsolute("ally_b2").x, captionY), new Vector2(80f, 22f), 16);
+            _enemyCaption = PlaceLabel(root, "EnemyCaption", new Vector2(SlotAbsolute("enemy_b2").x, captionY), new Vector2(80f, 22f), 16);
 
-            float benchH = CellH + ColPitch * 2f;
-            _bench = Box(root, "Bench", new Vector2(-740f, AllyOrigin.y), new Vector2(88f, benchH), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
+            float benchH = CellH + (float)FieldLayout.CellPitch * PixelsPerUnit * 2f;
+            _bench = Box(root, "Bench", new Vector2(-740f, SimAnchor.y), new Vector2(88f, benchH), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
             _benchLabel = PlaceLabel(_bench, "BenchLabel", new Vector2(0f, benchH * 0.5f - 16f), new Vector2(80f, 18f), 13);
             Listen(_bench.gameObject, EventTriggerType.PointerClick, delegate { NotifyBenchClick(); });
             _bench.gameObject.SetActive(false);

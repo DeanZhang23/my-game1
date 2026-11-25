@@ -23,5 +23,8 @@ MonoBehaviour:
   baseAttackInterval: 1.5
   energyPerSecond: 10
   maxEnergy: 100
+  role: ranged
+  moveSpeed: 2.5
+  attackRange: 3.5
   basicAttack: {fileID: 11400000, guid: e1b00003e1b00003e1b00003e1b00003, type: 2}
   skill: {fileID: 11400000, guid: e1b00004e1b00004e1b00004e1b00004, type: 2}

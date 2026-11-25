@@ -18,8 +18,6 @@ namespace Echoes.Presentation
             var encounter = new EncounterDef();
             encounter.Id = asset.id;
             encounter.CountdownMs = CombatFormulas.SecondsToMs(Round(asset.countdownSeconds));
-            encounter.TacticalWindowDelayMs = CombatFormulas.SecondsToMs(Round(asset.tacticalWindowDelaySeconds));
-            encounter.TacticalWindowDurationMs = CombatFormulas.SecondsToMs(Round(asset.tacticalWindowDurationSeconds));
             encounter.TimeoutMs = CombatFormulas.SecondsToMs(Round(asset.timeoutSeconds));
             encounter.Allies = ToPlacements(asset.allies);
             encounter.Enemies = ToPlacements(asset.enemies);
@@ -61,6 +59,9 @@ namespace Echoes.Presentation
                 BaseAttackInterval = Round(asset.baseAttackInterval),
                 EnergyPerSecond = Round(asset.energyPerSecond),
                 MaxEnergy = asset.maxEnergy,
+                Role = UnitRoles.Require(string.IsNullOrEmpty(asset.role) ? UnitRoles.Melee : asset.role),
+                MoveSpeed = Round(asset.moveSpeed),
+                AttackRange = Round(asset.attackRange),
                 Basic = ToSkill(asset.basicAttack),
                 Skill = ToSkill(asset.skill)
             };

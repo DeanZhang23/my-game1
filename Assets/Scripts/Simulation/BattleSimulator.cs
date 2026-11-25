@@ -10,28 +10,17 @@ namespace Echoes.Simulation
         private readonly List<RosterUnit> _roster = new List<RosterUnit>();
         private EncounterDef _encounter;
         private DeterministicRng _rng;
-        private string[] _faces = new string[3];
-        private bool[] _locked = new bool[3];
         private int _seed;
-        private int _crack;
-        private int _free = 1;
         private int _nowMs;
-        private int _goldOnWin;
-        private int _windowRemainingMs;
-        private bool _corrosion;
-        private bool _attunement;
-        private bool _windowUsed;
-        private FaceResolution _resolution = new FaceResolution();
+        private int _nextRetargetMs;
+        private int _bankMs;
 
         public BattlePhase Phase { get; private set; }
-        public int Crack { get { return _crack; } }
-        public bool CorrosionActive { get { return _corrosion; } }
-        public int FreeRerollsRemaining { get { return _free; } }
         public int NowMs { get { return _nowMs; } }
         public int Seed { get { return _seed; } }
         public IList<BattleEvent> Events { get { return _events; } }
-        public string ComboId { get { return _resolution.ComboId; } }
         public int AllyRosterCount { get { return _roster.Count; } }
+        public int CombatantCount { get { return _units.Count; } }
 
         public int PlacedAllyCount
         {
@@ -52,22 +41,7 @@ namespace Echoes.Simulation
             get { return Phase == BattlePhase.Setup && PlacedAllyCount > 0; }
         }
 
-        public string Face(int index)
-        {
-            return _faces[index];
-        }
-
-        public bool IsLocked(int index)
-        {
-            return _locked[index];
-        }
-
         public void Start(EncounterDef encounter, int seed)
-        {
-            Start(encounter, seed, null);
-        }
-
-        public void Start(EncounterDef encounter, int seed, string[] presetFaces)
         {
             if (encounter == null)
                 throw new ArgumentNullException("encounter");
@@ -81,101 +55,14 @@ namespace Echoes.Simulation
             _events.Clear();
             _units.Clear();
             Phase = BattlePhase.Setup;
-            _crack = 0;
-            _corrosion = false;
-            _free = 1;
-            _locked = new bool[3];
-            _faces = new string[3];
-            _windowUsed = false;
             _nowMs = 0;
-            _goldOnWin = 0;
-            _attunement = false;
-            _resolution = new FaceResolution();
+            _nextRetargetMs = 0;
+            _bankMs = 0;
 
             var start = Fields();
             Add(start, "seed", EventFormat.Int(seed));
             Add(start, "encounter", encounter.Id);
             Log(BattleEvents.BattleStart, start);
-
-            if (presetFaces != null)
-            {
-                if (presetFaces.Length != 3)
-                    throw new ArgumentException("Preset faces must be 3.");
-                for (int i = 0; i < 3; i++)
-                {
-                    if (FaceIds.IndexOf(presetFaces[i]) < 0)
-                        throw new ArgumentException("Unknown face: " + presetFaces[i]);
-                    _faces[i] = presetFaces[i];
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 3; i++)
-                    _faces[i] = RollFace();
-            }
-
-            LogDice("initial");
-        }
-
-        public void SetLock(int index, bool locked)
-        {
-            RequireSetup();
-            if (index < 0 || index > 2)
-                throw new ArgumentOutOfRangeException("index");
-            if (_locked[index] == locked)
-                return;
-            _locked[index] = locked;
-            var fields = Fields();
-            Add(fields, "index", EventFormat.Int(index));
-            Add(fields, "locked", EventFormat.Bool(locked));
-            Log(BattleEvents.DiceLock, fields);
-        }
-
-        public void Reroll()
-        {
-            RequireSetup();
-            bool any = false;
-            for (int i = 0; i < 3; i++)
-            {
-                if (!_locked[i])
-                    any = true;
-            }
-
-            var reroll = Fields();
-            Add(reroll, "ineffective", EventFormat.Bool(!any));
-            if (!any)
-            {
-                Add(reroll, "freeUsed", EventFormat.Bool(false));
-                Add(reroll, "crack", EventFormat.Int(_crack));
-                Log(BattleEvents.DiceReroll, reroll);
-                return;
-            }
-
-            bool freeUsed = _free > 0;
-            if (freeUsed)
-                _free--;
-            Add(reroll, "freeUsed", EventFormat.Bool(freeUsed));
-            Add(reroll, "crack", EventFormat.Int(_crack));
-            Log(BattleEvents.DiceReroll, reroll);
-
-            if (!freeUsed && _crack < 3)
-            {
-                _crack++;
-                if (_crack >= 3)
-                    _corrosion = true;
-                var crack = Fields();
-                Add(crack, "stacks", EventFormat.Int(_crack));
-                Add(crack, "corrosion", EventFormat.Bool(_corrosion));
-                Log(BattleEvents.CrackGained, crack);
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                if (!_locked[i])
-                    _faces[i] = RollFace();
-            }
-
-            LogDice("reroll");
         }
 
         public string AllyUnitIdAt(int index)
@@ -226,34 +113,29 @@ namespace Echoes.Simulation
             return true;
         }
 
+        public bool TryGetCombatant(int index, out CombatantView view)
+        {
+            view = new CombatantView();
+            if (index < 0 || index >= _units.Count)
+                return false;
+            Combatant unit = _units[index];
+            view.SlotId = unit.SlotId;
+            view.UnitId = unit.UnitId;
+            view.X = unit.X;
+            view.Y = unit.Y;
+            view.Alive = unit.Alive;
+            view.Hp = unit.Hp;
+            view.MaxHp = unit.MaxHp;
+            view.Shield = unit.Shield;
+            return true;
+        }
+
         public void Commit()
         {
             RequireSetup();
             if (PlacedAllyCount < 1)
                 throw new InvalidOperationException("Formation needs at least one ally.");
-            _resolution = FaceEffects.Resolve(_faces[0], _faces[1], _faces[2]);
-            _attunement = _resolution.ComboId == ComboIds.Attunement;
-            _goldOnWin = _resolution.Gold;
-
-            var commit = Fields();
-            Add(commit, "die0", _faces[0]);
-            Add(commit, "die1", _faces[1]);
-            Add(commit, "die2", _faces[2]);
-            Add(commit, "crack", EventFormat.Int(_crack));
-            Add(commit, "corrosion", EventFormat.Bool(_corrosion));
-            Log(BattleEvents.DiceCommit, commit);
-
-            var combo = Fields();
-            Add(combo, "combo", _resolution.ComboId);
-            Add(combo, "face", _resolution.ComboFace);
-            Add(combo, "multiplier", EventFormat.Dec(_resolution.Coefficient));
-            Add(combo, "wildFace", _resolution.WildFace);
-            Add(combo, "wildUsed", EventFormat.Int(_resolution.WildUsed));
-            Add(combo, "wildIdle", EventFormat.Int(_resolution.WildTokens - _resolution.WildUsed));
-            Log(BattleEvents.ComboResolved, combo);
-
             SpawnUnits();
-            ApplySacrifice();
             Phase = BattlePhase.Countdown;
         }
 
@@ -263,60 +145,24 @@ namespace Echoes.Simulation
                 throw new InvalidOperationException("Countdown is required before combat.");
 
             _nowMs = 0;
+            _bankMs = 0;
+            _nextRetargetMs = 0;
             for (int i = 0; i < _units.Count; i++)
             {
                 Combatant unit = _units[i];
                 unit.NextAttackMs = unit.IntervalMs;
                 unit.NextSkillReadyMs = 0;
-                if (!unit.IsAlly || unit.Row != FormationRow.Front || _resolution.ShieldLifeRatio <= 0m)
-                    continue;
-                int amount = CombatFormulas.ShieldAmount(unit.MaxHp, _resolution.ShieldLifeRatio);
-                if (amount <= 0)
-                    continue;
-                unit.Shield = amount;
-                unit.ShieldTracked = true;
-                unit.ShieldExpired = false;
-                unit.ShieldExpireMs = CombatFormulas.ShieldDurationMs;
-                var shield = Fields();
-                Add(shield, "time", EventFormat.Ms(_nowMs));
-                Add(shield, "slot", unit.SlotId);
-                Add(shield, "amount", EventFormat.Int(amount));
-                Add(shield, "expire", EventFormat.Ms(unit.ShieldExpireMs));
-                Log(BattleEvents.ShieldApplied, shield);
+                unit.Target = null;
+                unit.Engaged = false;
             }
 
+            // Lock the opening target before any movement. The 0.25s clock starts after this pass.
+            RetargetAll();
             Phase = BattlePhase.AutoCombat;
             if (CheckEnd())
                 return;
             if (_nowMs >= _encounter.TimeoutMs)
                 EndBattle("defeat", "timeout", 0);
-        }
-
-        public void ConfirmTacticalWindow()
-        {
-            if (Phase != BattlePhase.TacticalWindow)
-                throw new InvalidOperationException("Not in a tactical window.");
-            Log(BattleEvents.TacticalWindowConfirmed, Fields());
-            Phase = BattlePhase.AutoCombat;
-        }
-
-        public void SkipTacticalWindow()
-        {
-            if (Phase != BattlePhase.TacticalWindow)
-                throw new InvalidOperationException("Not in a tactical window.");
-            Log(BattleEvents.TacticalWindowSkipped, Fields());
-            Phase = BattlePhase.AutoCombat;
-        }
-
-        public void TickTacticalWindow(int deltaMs)
-        {
-            if (Phase != BattlePhase.TacticalWindow)
-                return;
-            if (deltaMs < 0)
-                deltaMs = 0;
-            _windowRemainingMs -= deltaMs;
-            if (_windowRemainingMs <= 0)
-                SkipTacticalWindow();
         }
 
         private decimal _pumpRemainder;
@@ -333,80 +179,113 @@ namespace Echoes.Simulation
             PumpMs(whole);
         }
 
+        // Sim time advances in whole milliseconds. While anyone is out of range, movement
+        // integrates on a fixed 50ms lattice so the path does not depend on how the caller
+        // slices the budget. In-range stretches jump to the next attack, skill, retarget, or timeout.
+        // A due swing stays armed while the target is out of range and fires on the lattice step
+        // that enters range. It does not spend the interval during the walk.
         public void PumpMs(int budgetMs)
         {
             if (budgetMs < 0)
                 budgetMs = 0;
-            if (Phase == BattlePhase.TacticalWindow)
-            {
-                TickTacticalWindow(budgetMs);
+            if (Phase != BattlePhase.AutoCombat)
                 return;
-            }
-            if (Phase != BattlePhase.AutoCombat || budgetMs == 0)
-                return;
-
-            int spent = 0;
+            _bankMs += budgetMs;
             int guard = 0;
-            while (Phase == BattlePhase.AutoCombat && spent < budgetMs)
+            while (Phase == BattlePhase.AutoCombat)
             {
-                if (++guard > 100000)
+                if (++guard > 200000)
                     throw new InvalidOperationException("Combat pump did not advance.");
 
-                int next = PeekNextMs();
-                int limit = _nowMs + (budgetMs - spent);
-                if (next > limit)
-                {
-                    AdvanceEnergy(limit - _nowMs);
-                    _nowMs = limit;
-                    return;
-                }
-
-                int delta = next - _nowMs;
-                if (delta > 0)
-                {
-                    AdvanceEnergy(delta);
-                    _nowMs = next;
-                    spent += delta;
-                }
-
-                bool acted = ResolveDue();
+                if (_nowMs >= _nextRetargetMs)
+                    RetargetAll();
                 if (Phase != BattlePhase.AutoCombat)
                     return;
-                if (!acted && delta == 0)
+
+                if (DueNow())
+                {
+                    bool acted = ResolveDue();
+                    if (Phase != BattlePhase.AutoCombat)
+                        return;
+                    if (!acted)
+                        throw new InvalidOperationException("Combat clock stalled at " + _nowMs + ".");
+                    continue;
+                }
+
+                bool moving = AnyoneNeedsToMove();
+                int horizon = NextHorizon(moving);
+                if (horizon <= _nowMs)
                     throw new InvalidOperationException("Combat clock stalled at " + _nowMs + ".");
+                int need = horizon - _nowMs;
+                if (_bankMs < need)
+                    return;
+
+                bool moveStep = moving && need == LatticeGap(_nowMs) && _encounter.TimeoutMs >= horizon;
+                _bankMs -= need;
+                AdvanceEnergy(need);
+                _nowMs = horizon;
+                if (moveStep)
+                {
+                    MoveAll(need);
+                    RefreshEngagement();
+                }
             }
         }
 
-        public void RunToEnd(TacticalDecision decision)
+        public void RunToEnd()
         {
             int guard = 0;
             while (Phase != BattlePhase.Resolve)
             {
                 if (++guard > 100000)
                     throw new InvalidOperationException("Battle did not finish.");
-                if (Phase == BattlePhase.TacticalWindow)
-                {
-                    if (decision == TacticalDecision.Confirm)
-                        ConfirmTacticalWindow();
-                    else
-                        SkipTacticalWindow();
-                    continue;
-                }
                 if (Phase != BattlePhase.AutoCombat)
                     throw new InvalidOperationException("Unexpected phase " + Phase + ".");
                 PumpMs(1000);
             }
         }
 
-        internal void SetCrackStacksForTest(int stacks)
+        private int NextHorizon(bool moving)
         {
-            RequireSetup();
-            if (stacks < 0)
-                stacks = 0;
-            if (stacks > 3)
-                stacks = 3;
-            _crack = stacks;
-            _corrosion = stacks >= 3;
+            if (moving)
+            {
+                int lattice = _nowMs + LatticeGap(_nowMs);
+                if (_encounter.TimeoutMs < lattice)
+                    return _encounter.TimeoutMs;
+                return lattice;
+            }
+
+            int next = PeekNextActionMs();
+            if (_nextRetargetMs < next)
+                next = _nextRetargetMs;
+            return next;
+        }
+
+        private static int LatticeGap(int now)
+        {
+            int mod = now % FieldLayout.MoveStepMs;
+            if (mod == 0)
+                return FieldLayout.MoveStepMs;
+            return FieldLayout.MoveStepMs - mod;
+        }
+
+        private bool DueNow()
+        {
+            if (_nowMs >= _encounter.TimeoutMs)
+                return true;
+            for (int i = 0; i < _units.Count; i++)
+            {
+                Combatant unit = _units[i];
+                if (unit.ShieldTracked && !unit.ShieldExpired && unit.ShieldExpireMs <= _nowMs)
+                    return true;
+                if (!unit.Alive || !IsInRange(unit))
+                    continue;
+                if (unit.NextAttackMs <= _nowMs)
+                    return true;
+                if (unit.NextSkillMs(_nowMs) <= _nowMs)
+                    return true;
+            }
+            return false;
         }
 
         private void SpawnUnits()
@@ -443,12 +322,20 @@ namespace Echoes.Simulation
 
                 UnitDef def = placement.Unit;
                 FormationRow row = Slots.RowOf(placement.SlotId);
+                decimal x;
+                decimal y;
+                FieldLayout.PositionOf(placement.SlotId, out x, out y);
                 var unit = new Combatant();
                 unit.SlotId = placement.SlotId;
                 unit.UnitId = def.Id;
                 unit.NameKey = def.NameKey;
                 unit.IsAlly = ally;
                 unit.Row = row;
+                unit.X = x;
+                unit.Y = y;
+                unit.Role = UnitRoles.Require(def.Role);
+                unit.MoveSpeed = def.MoveSpeed;
+                unit.AttackRange = def.AttackRange;
                 unit.MaxHp = def.MaxHp;
                 unit.Hp = def.MaxHp;
                 unit.SpellPower = def.SpellPower;
@@ -462,33 +349,19 @@ namespace Echoes.Simulation
                 unit.BasicRatio = def.Basic.Ratio;
                 unit.Alive = true;
                 unit.SkillDamageMultiplier = 1m;
-
-                if (ally)
-                {
-                    unit.Attack = def.Attack * _resolution.AttackMultiplier;
-                    unit.Armor = def.Armor + _resolution.ArmorBonus;
-                    unit.IntervalMs = CombatFormulas.IntervalMs(def.BaseAttackInterval, _resolution.AttackSpeedBonus);
-                    unit.SkillDamageMultiplier = _resolution.SkillDamageMultiplier;
-                    unit.Energy = row == FormationRow.Back ? _resolution.BackEnergy : 0;
-                    unit.Keen = row == FormationRow.Front ? _resolution.KeenPerFront : 0;
-                }
-                else
-                {
-                    unit.Attack = def.Attack;
-                    unit.Armor = def.Armor;
-                    unit.IntervalMs = CombatFormulas.IntervalMs(def.BaseAttackInterval, 0m);
-                    unit.Energy = 0;
-                    unit.Keen = 0;
-                }
-
-                if (unit.Energy > unit.MaxEnergy)
-                    unit.Energy = unit.MaxEnergy;
+                unit.Shield = 0;
+                unit.ShieldExpireMs = 0;
+                unit.ShieldTracked = false;
+                unit.ShieldExpired = true;
+                unit.Attack = def.Attack;
+                unit.Armor = def.Armor;
+                unit.IntervalMs = CombatFormulas.IntervalMs(def.BaseAttackInterval, 0m);
+                unit.Energy = 0m;
+                unit.Keen = 0;
 
                 if (def.Skill != null)
                 {
                     decimal cooldown = def.Skill.CooldownSeconds;
-                    if (ally)
-                        cooldown -= _resolution.CooldownReductionSeconds;
                     if (cooldown < 0m)
                         cooldown = 0m;
                     unit.HasSkill = true;
@@ -504,6 +377,11 @@ namespace Echoes.Simulation
                 Add(spawned, "slot", unit.SlotId);
                 Add(spawned, "unitId", unit.UnitId);
                 Add(spawned, "row", Slots.RowName(unit.Row));
+                Add(spawned, "x", EventFormat.Dec(unit.X));
+                Add(spawned, "y", EventFormat.Dec(unit.Y));
+                Add(spawned, "role", unit.Role);
+                Add(spawned, "moveSpeed", EventFormat.Dec(unit.MoveSpeed));
+                Add(spawned, "attackRange", EventFormat.Dec(unit.AttackRange));
                 Add(spawned, "hp", EventFormat.Int(unit.Hp));
                 Add(spawned, "maxHp", EventFormat.Int(unit.MaxHp));
                 Add(spawned, "energy", EventFormat.Int((int)unit.Energy));
@@ -515,48 +393,22 @@ namespace Echoes.Simulation
             }
         }
 
-        private void ApplySacrifice()
-        {
-            if (_resolution.SacrificeFraction <= 0m)
-                return;
-            for (int i = 0; i < _units.Count; i++)
-            {
-                Combatant unit = _units[i];
-                if (!unit.IsAlly || !unit.Alive)
-                    continue;
-                int loss = CombatFormulas.SacrificeLoss(unit.Hp, _resolution.SacrificeFraction);
-                unit.Hp -= loss;
-                if (unit.Hp < 1)
-                    unit.Hp = 1;
-                var fields = Fields();
-                Add(fields, "slot", unit.SlotId);
-                Add(fields, "unitId", unit.UnitId);
-                Add(fields, "delta", EventFormat.Int(-loss));
-                Add(fields, "hp", EventFormat.Int(unit.Hp));
-                Add(fields, "reason", "sacrifice");
-                Log(BattleEvents.HealOrHpLoss, fields);
-            }
-        }
-
-        private int PeekNextMs()
+        private int PeekNextActionMs()
         {
             int next = _encounter.TimeoutMs;
             for (int i = 0; i < _units.Count; i++)
             {
                 Combatant unit = _units[i];
-                if (!unit.Alive)
+                if (unit.ShieldTracked && !unit.ShieldExpired && unit.ShieldExpireMs < next)
+                    next = unit.ShieldExpireMs;
+                if (!unit.Alive || !IsInRange(unit))
                     continue;
                 if (unit.NextAttackMs < next)
                     next = unit.NextAttackMs;
                 int skillAt = unit.NextSkillMs(_nowMs);
                 if (skillAt < next)
                     next = skillAt;
-                if (unit.ShieldTracked && !unit.ShieldExpired && unit.ShieldExpireMs < next)
-                    next = unit.ShieldExpireMs;
             }
-
-            if (_attunement && !_windowUsed && _encounter.TacticalWindowDelayMs < next)
-                next = _encounter.TacticalWindowDelayMs;
             return next;
         }
 
@@ -589,7 +441,7 @@ namespace Echoes.Simulation
             for (int i = 0; i < _units.Count; i++)
             {
                 Combatant unit = _units[i];
-                if (!unit.Alive || unit.NextSkillMs(_nowMs) > _nowMs)
+                if (!unit.Alive || !IsInRange(unit) || unit.NextSkillMs(_nowMs) > _nowMs)
                     continue;
                 CastSkill(unit);
                 acted = true;
@@ -600,7 +452,7 @@ namespace Echoes.Simulation
             for (int i = 0; i < _units.Count; i++)
             {
                 Combatant unit = _units[i];
-                if (!unit.Alive || unit.NextAttackMs > _nowMs)
+                if (!unit.Alive || !IsInRange(unit) || unit.NextAttackMs > _nowMs)
                     continue;
                 BasicAttack(unit);
                 acted = true;
@@ -614,29 +466,25 @@ namespace Echoes.Simulation
                 return true;
             }
 
-            if (_attunement && !_windowUsed && _nowMs >= _encounter.TacticalWindowDelayMs)
-            {
-                OpenWindow();
-                return true;
-            }
-
             return acted;
         }
 
         private void CastSkill(Combatant unit)
         {
+            if (!IsInRange(unit))
+                return;
             if (unit.Energy + 0.001m < unit.SkillCost)
             {
                 unit.NextSkillReadyMs = _nowMs + 1;
                 return;
             }
 
-            Combatant target = SelectTarget(unit);
+            Combatant target = unit.Target;
             unit.Energy -= unit.SkillCost;
             if (unit.Energy < 0m)
                 unit.Energy = 0m;
             unit.NextSkillReadyMs = _nowMs + unit.CooldownMs;
-            if (target == null)
+            if (target == null || !target.Alive)
                 return;
 
             var fields = Fields();
@@ -651,9 +499,11 @@ namespace Echoes.Simulation
 
         private void BasicAttack(Combatant unit)
         {
+            if (!IsInRange(unit))
+                return;
             unit.NextAttackMs = _nowMs + unit.IntervalMs;
-            Combatant target = SelectTarget(unit);
-            if (target == null)
+            Combatant target = unit.Target;
+            if (target == null || !target.Alive)
                 return;
             DealDamage(unit, target, false);
         }
@@ -673,8 +523,6 @@ namespace Echoes.Simulation
                 mod *= CombatFormulas.KeenPerStack;
                 source.Keen -= 1;
             }
-            if (_corrosion)
-                mod *= CombatFormulas.Corrosion;
 
             bool crit = _rng.NextUnit() < source.CritRate;
             int pre = CombatFormulas.PreCrit(stat, ratio, defense, mod);
@@ -716,25 +564,182 @@ namespace Echoes.Simulation
                 Add(death, "slot", target.SlotId);
                 Add(death, "unitId", target.UnitId);
                 Log(BattleEvents.UnitDeath, death);
+                RetargetLockedOn(target);
             }
         }
 
+        // Distance, then current HP, then slot id. Squared distance keeps the same order and the same ties.
         private Combatant SelectTarget(Combatant attacker)
         {
             Combatant best = null;
+            decimal bestDist = 0m;
             for (int i = 0; i < _units.Count; i++)
             {
                 Combatant candidate = _units[i];
                 if (!candidate.Alive || candidate.IsAlly == attacker.IsAlly)
                     continue;
+                decimal dist = DistanceSquared(attacker, candidate);
                 if (best == null
-                    || candidate.Hp < best.Hp
-                    || (candidate.Hp == best.Hp && string.CompareOrdinal(candidate.SlotId, best.SlotId) < 0))
+                    || dist < bestDist
+                    || (dist == bestDist && candidate.Hp < best.Hp)
+                    || (dist == bestDist && candidate.Hp == best.Hp && string.CompareOrdinal(candidate.SlotId, best.SlotId) < 0))
                 {
                     best = candidate;
+                    bestDist = dist;
                 }
             }
             return best;
+        }
+
+        private void RetargetAll()
+        {
+            for (int i = 0; i < _units.Count; i++)
+            {
+                if (_units[i].Alive)
+                    LockTarget(_units[i]);
+            }
+            _nextRetargetMs = ((_nowMs / FieldLayout.RetargetIntervalMs) + 1) * FieldLayout.RetargetIntervalMs;
+        }
+
+        private void RetargetLockedOn(Combatant dead)
+        {
+            for (int i = 0; i < _units.Count; i++)
+            {
+                Combatant unit = _units[i];
+                if (unit.Alive && unit.Target == dead)
+                    LockTarget(unit);
+            }
+        }
+
+        private void LockTarget(Combatant unit)
+        {
+            if (!unit.Alive)
+                return;
+            Combatant next = SelectTarget(unit);
+            if (unit.Target == next)
+            {
+                UpdateEngaged(unit);
+                return;
+            }
+            unit.Target = next;
+            unit.Engaged = false;
+            if (next != null)
+                LogAim(BattleEvents.UnitTarget, unit, next);
+            UpdateEngaged(unit);
+        }
+
+        private void RefreshEngagement()
+        {
+            for (int i = 0; i < _units.Count; i++)
+            {
+                if (_units[i].Alive)
+                    UpdateEngaged(_units[i]);
+            }
+        }
+
+        private void UpdateEngaged(Combatant unit)
+        {
+            bool inRange = IsInRange(unit);
+            if (inRange && !unit.Engaged)
+            {
+                unit.Engaged = true;
+                LogAim(BattleEvents.UnitEngage, unit, unit.Target);
+            }
+            else if (!inRange)
+            {
+                unit.Engaged = false;
+            }
+        }
+
+        private bool AnyoneNeedsToMove()
+        {
+            for (int i = 0; i < _units.Count; i++)
+            {
+                Combatant unit = _units[i];
+                if (!unit.Alive || unit.Target == null || !unit.Target.Alive)
+                    continue;
+                if (!IsInRange(unit))
+                    return true;
+            }
+            return false;
+        }
+
+        private bool IsInRange(Combatant unit)
+        {
+            if (unit.Target == null || !unit.Target.Alive)
+                return false;
+            decimal range = unit.AttackRange;
+            if (range < 0m)
+                range = 0m;
+            return DistanceSquared(unit, unit.Target) <= range * range + 0.0000001m;
+        }
+
+        private static decimal DistanceSquared(Combatant a, Combatant b)
+        {
+            decimal dx = a.X - b.X;
+            decimal dy = a.Y - b.Y;
+            return dx * dx + dy * dy;
+        }
+
+        // Simultaneous step. Each unit aims at its target's position at the start of the step
+        // and will not step closer than attackRange to that snapshot.
+        private void MoveAll(int deltaMs)
+        {
+            if (deltaMs <= 0)
+                return;
+            decimal dt = deltaMs / 1000m;
+            int count = _units.Count;
+            var sx = new decimal[count];
+            var sy = new decimal[count];
+            for (int i = 0; i < count; i++)
+            {
+                sx[i] = _units[i].X;
+                sy[i] = _units[i].Y;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                Combatant unit = _units[i];
+                if (!unit.Alive || unit.Target == null || !unit.Target.Alive)
+                    continue;
+                int targetIndex = IndexOf(unit.Target);
+                if (targetIndex < 0)
+                    continue;
+                decimal dx = sx[targetIndex] - sx[i];
+                decimal dy = sy[targetIndex] - sy[i];
+                decimal dist2 = dx * dx + dy * dy;
+                decimal range = unit.AttackRange;
+                if (range < 0m)
+                    range = 0m;
+                if (dist2 <= range * range)
+                    continue;
+                decimal dist = FieldLayout.Sqrt(dist2);
+                if (dist <= 0m)
+                    continue;
+                decimal gap = dist - range;
+                if (gap < 0m)
+                    gap = 0m;
+                decimal travel = unit.MoveSpeed * dt;
+                if (travel > gap)
+                    travel = gap;
+                if (travel <= 0m)
+                    continue;
+                decimal nx = sx[i] + dx / dist * travel;
+                decimal ny = sy[i] + dy / dist * travel;
+                FieldLayout.Clamp(ref nx, ref ny);
+                unit.X = FieldLayout.RoundPos(nx);
+                unit.Y = FieldLayout.RoundPos(ny);
+            }
+        }
+
+        private int IndexOf(Combatant unit)
+        {
+            for (int i = 0; i < _units.Count; i++)
+            {
+                if (_units[i] == unit)
+                    return i;
+            }
+            return -1;
         }
 
         private void AdvanceEnergy(int deltaMs)
@@ -777,20 +782,10 @@ namespace Echoes.Simulation
             }
             if (!enemy)
             {
-                EndBattle("victory", "enemy_wiped", _goldOnWin);
+                EndBattle("victory", "enemy_wiped", 0);
                 return true;
             }
             return false;
-        }
-
-        private void OpenWindow()
-        {
-            _windowUsed = true;
-            Phase = BattlePhase.TacticalWindow;
-            _windowRemainingMs = _encounter.TacticalWindowDurationMs;
-            var fields = Fields();
-            Add(fields, "time", EventFormat.Ms(_nowMs));
-            Log(BattleEvents.TacticalWindowOpened, fields);
         }
 
         private void EndBattle(string outcome, string reason, int gold)
@@ -804,25 +799,10 @@ namespace Echoes.Simulation
             Log(BattleEvents.BattleEnd, fields);
         }
 
-        private string RollFace()
-        {
-            return FaceIds.Order[_rng.NextInt(FaceIds.Order.Length)];
-        }
-
-        private void LogDice(string kind)
-        {
-            var fields = Fields();
-            Add(fields, "kind", kind);
-            Add(fields, "die0", _faces[0]);
-            Add(fields, "die1", _faces[1]);
-            Add(fields, "die2", _faces[2]);
-            Log(BattleEvents.DiceRoll, fields);
-        }
-
         private void RequireSetup()
         {
             if (Phase != BattlePhase.Setup)
-                throw new InvalidOperationException("Dice can change only during Setup.");
+                throw new InvalidOperationException("March is only available during Setup.");
         }
 
         private static List<RosterUnit> CopyRoster(EncounterDef encounter)
@@ -860,6 +840,17 @@ namespace Echoes.Simulation
             return -1;
         }
 
+        private void LogAim(string type, Combatant unit, Combatant target)
+        {
+            var fields = Fields();
+            Add(fields, "time", EventFormat.Ms(_nowMs));
+            Add(fields, "slot", unit.SlotId);
+            Add(fields, "unitId", unit.UnitId);
+            Add(fields, "targetSlot", target.SlotId);
+            Add(fields, "targetUnit", target.UnitId);
+            Log(type, fields);
+        }
+
         private void Log(string type, List<KeyValuePair<string, string>> fields)
         {
             _events.Add(new BattleEvent(_events.Count, type, fields));
@@ -888,6 +879,13 @@ namespace Echoes.Simulation
             public string NameKey;
             public bool IsAlly;
             public FormationRow Row;
+            public decimal X;
+            public decimal Y;
+            public string Role;
+            public decimal MoveSpeed;
+            public decimal AttackRange;
+            public Combatant Target;
+            public bool Engaged;
             public int MaxHp;
             public int Hp;
             public int Shield;

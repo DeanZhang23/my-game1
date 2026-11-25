@@ -28,8 +28,23 @@ namespace Echoes.Simulation
         public decimal BaseAttackInterval;
         public decimal EnergyPerSecond;
         public int MaxEnergy;
+        public string Role;
+        public decimal MoveSpeed;
+        public decimal AttackRange;
         public SkillDef Basic;
         public SkillDef Skill;
+    }
+
+    public struct CombatantView
+    {
+        public string SlotId;
+        public string UnitId;
+        public decimal X;
+        public decimal Y;
+        public bool Alive;
+        public int Hp;
+        public int MaxHp;
+        public int Shield;
     }
 
     public sealed class Placement
@@ -42,8 +57,6 @@ namespace Echoes.Simulation
     {
         public string Id;
         public int CountdownMs;
-        public int TacticalWindowDelayMs;
-        public int TacticalWindowDurationMs;
         public int TimeoutMs;
         public List<Placement> Allies = new List<Placement>();
         public List<Placement> Enemies = new List<Placement>();
