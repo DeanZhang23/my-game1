@@ -54,6 +54,35 @@ namespace Echoes.Presentation
         private int _logChars;
         private readonly string[] _facesShown = new string[3];
         private readonly bool[] _locksShown = new bool[3];
+        private readonly Dictionary<string, CellView> _cells = new Dictionary<string, CellView>();
+        private readonly List<TokenView> _tokens = new List<TokenView>();
+        private readonly Dictionary<GameObject, string> _allyDrops = new Dictionary<GameObject, string>();
+        private readonly Text[] _rowLabels = new Text[6];
+        private readonly string[] _rowKeys =
+        {
+            LocKeys.FormationBack, LocKeys.FormationMid, LocKeys.FormationFront,
+            LocKeys.FormationFront, LocKeys.FormationMid, LocKeys.FormationBack
+        };
+        private RectTransform _bench;
+        private RectTransform _dragLayer;
+        private Text _benchLabel;
+        private Text _allyCaption;
+        private Text _enemyCaption;
+        private string _selectedUnitId;
+        private string _dragUnitId;
+        private bool _fromDrag;
+
+        // Reference-pixel rects. Interactive formation stays below the dice (y 214-286)
+        // and the reroll / march buttons (y 150-190), and left of the log (x >= 350).
+        private const float CellW = 132f;
+        private const float CellH = 48f;
+        private static readonly Vector2 BoardPos = new Vector2(0f, -95f);
+        private static readonly Color AllyCell = new Color(0.18f, 0.24f, 0.21f, 1f);
+        private static readonly Color AllyCellEmpty = new Color(0.12f, 0.14f, 0.13f, 1f);
+        private static readonly Color EnemyCell = new Color(0.28f, 0.16f, 0.16f, 1f);
+        private static readonly Color TokenColor = new Color(0.28f, 0.38f, 0.34f, 1f);
+        private static readonly Color TokenSelected = new Color(0.62f, 0.52f, 0.22f, 1f);
+        private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
 
         private void Awake()
         {
@@ -81,6 +110,12 @@ namespace Echoes.Presentation
 
             ApplyNew();
             Paint();
+        }
+
+        private void LateUpdate()
+        {
+            if (_dragUnitId == null)
+                _fromDrag = false;
         }
 
         private static bool FaceCatalogMatches(FaceCatalogAsset catalog)
@@ -128,6 +163,9 @@ namespace Echoes.Presentation
             if (seed == 0)
                 seed = System.Environment.TickCount;
             _seedInput.text = seed.ToString(CultureInfo.InvariantCulture);
+            _selectedUnitId = null;
+            _dragUnitId = null;
+            _fromDrag = false;
             _sim = new BattleSimulator();
             _sim.Start(_def, seed);
             _applied = 0;
@@ -244,7 +282,14 @@ namespace Echoes.Presentation
             if (evt.Type == BattleEvents.Damage)
             {
                 string crit = evt.Get("crit") == "true" ? " " + L(LocKeys.CritMark) : "";
-                return F("log.damage", UnitName(evt.Get("sourceUnit")), UnitName(evt.Get("targetUnit")), evt.Get("amount"), crit);
+                return F(
+                    "log.damage",
+                    UnitName(evt.Get("sourceUnit")),
+                    evt.Get("sourceSlot"),
+                    UnitName(evt.Get("targetUnit")),
+                    evt.Get("targetSlot"),
+                    evt.Get("amount"),
+                    crit);
             }
             if (evt.Type == BattleEvents.ShieldApplied)
                 return F("log.shield_applied", evt.Get("slot"), evt.Get("amount"));
@@ -318,6 +363,10 @@ namespace Echoes.Presentation
                 + L(LocKeys.FreeReroll) + " " + _free.ToString(CultureInfo.InvariantCulture)
                 + "   "
                 + L(LocKeys.Combo) + " " + ComboName(_comboId);
+            if (setup && !_sim.CanCommit)
+                _status.text = _status.text + "   " + L(LocKeys.FormationIllegal);
+            if (_commitButton != null)
+                _commitButton.GetComponent<Button>().interactable = setup && _sim.CanCommit;
 
             if (_sim != null && _sim.Phase == BattlePhase.Resolve)
             {
@@ -349,6 +398,7 @@ namespace Echoes.Presentation
                 Canvas.ForceUpdateCanvases();
                 _logScroll.verticalNormalizedPosition = 0f;
             }
+            LayoutFormation();
         }
 
         private string PhaseLabel()
@@ -398,8 +448,7 @@ namespace Echoes.Presentation
             _beginLabel = MakeText(ButtonBox(root, "Begin", new Vector2(180f, 340f), new Vector2(160f, 40f), BeginBattle), 20);
             _beginButton = _beginLabel.transform.parent.gameObject;
 
-            Box(root, "Midline", new Vector2(-80f, -20f), new Vector2(520f, 2f), new Color(0.55f, 0.55f, 0.6f, 0.8f));
-            _board = Box(root, "Board", new Vector2(-80f, -20f), new Vector2(640f, 460f), new Color(0.10f, 0.11f, 0.14f, 0.35f));
+            BuildFormation(root);
 
             for (int i = 0; i < 3; i++)
             {
@@ -415,12 +464,18 @@ namespace Echoes.Presentation
             _commitButton = _commitLabel.transform.parent.gameObject;
             _rerollButton.SetActive(false);
             _commitButton.SetActive(false);
+            Button commit = _commitButton.GetComponent<Button>();
+            ColorBlock colors = commit.colors;
+            colors.disabledColor = new Color(0.25f, 0.25f, 0.28f, 0.75f);
+            commit.colors = colors;
 
             _status = MakeText(Box(root, "Status", new Vector2(0f, 115f), new Vector2(1100f, 32f), new Color(0f, 0f, 0f, 0f)), 16);
             _result = MakeText(Box(root, "Result", new Vector2(0f, -360f), new Vector2(700f, 36f), new Color(0f, 0f, 0f, 0f)), 26);
 
             BuildLog(root);
             BuildTactical(root);
+            BuildDragLayer(root);
+            EnsureTokens();
         }
 
         private void BuildLog(Transform root)
@@ -481,8 +536,10 @@ namespace Echoes.Presentation
 
         private void OnCommit()
         {
-            if (_sim == null || _sim.Phase != BattlePhase.Setup)
+            if (_sim == null || !_sim.CanCommit)
                 return;
+            _selectedUnitId = null;
+            _dragUnitId = null;
             _sim.Commit();
             _countdown = _def.CountdownMs / 1000f;
             ApplyNew();
@@ -538,14 +595,14 @@ namespace Echoes.Presentation
             Color color = slot.StartsWith("ally_")
                 ? new Color(0.28f, 0.38f, 0.34f, 1f)
                 : new Color(0.42f, 0.26f, 0.26f, 1f);
-            RectTransform panel = Box(_board, slot, SlotPosition(slot), new Vector2(150f, 78f), color);
+            RectTransform panel = Box(_board, slot, SlotLocal(slot), new Vector2(CellW, CellH), color);
             var widget = new UnitWidget();
             widget.root = panel.gameObject;
-            widget.nameText = MakeText(Box(panel, "Name", new Vector2(0f, 24f), new Vector2(140f, 22f), new Color(0f, 0f, 0f, 0f)), 14);
+            widget.nameText = MakeText(Box(panel, "Name", new Vector2(0f, 12f), new Vector2(124f, 14f), Clear), 13);
             widget.unitId = unitId;
-            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, 4f), new Vector2(140f, 18f), new Color(0f, 0f, 0f, 0f)), 12);
-            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -22f), new Vector2(130f, 10f), new Color(0.08f, 0.08f, 0.08f, 1f));
-            widget.fill = Box(bar, "Fill", Vector2.zero, new Vector2(130f, 10f), new Color(0.45f, 0.75f, 0.42f, 1f)).GetComponent<Image>();
+            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, -4f), new Vector2(124f, 12f), Clear), 11);
+            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -18f), new Vector2(116f, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
+            widget.fill = Box(bar, "Fill", Vector2.zero, new Vector2(116f, 6f), new Color(0.45f, 0.75f, 0.42f, 1f)).GetComponent<Image>();
             RectTransform fillRt = widget.fill.rectTransform;
             fillRt.anchorMin = new Vector2(0f, 0f);
             fillRt.anchorMax = new Vector2(1f, 1f);
@@ -573,17 +630,391 @@ namespace Echoes.Presentation
             _units.Clear();
         }
 
-        private static Vector2 SlotPosition(string slot)
+        private static Vector2 SlotLocal(string slot)
         {
-            int split = slot.IndexOf('_');
-            char row = slot[split + 1];
-            char col = slot[split + 2];
-            int colIndex = col - '1';
-            int rowIndex = row == 'a' ? 0 : row == 'b' ? 1 : 2;
-            bool ally = slot.StartsWith("ally_");
-            float x = (colIndex - 1) * 170f + (ally ? rowIndex * 16f : -rowIndex * 16f);
-            float y = ally ? 150f - rowIndex * 78f : -70f - rowIndex * 78f;
+            return SlotAbsolute(slot) - BoardPos;
+        }
+
+        // Allies read back-to-front toward the center. Enemies read front-to-back away from it.
+        private static Vector2 SlotAbsolute(string slot)
+        {
+            bool ally;
+            FormationRow row;
+            int column;
+            if (!Slots.TryParse(slot, out ally, out row, out column))
+                return Vector2.zero;
+            int rowIndex = row == FormationRow.Back ? 0 : row == FormationRow.Mid ? 1 : 2;
+            int colIndex = column - 1;
+            float x = (colIndex - 1) * 148f + (ally ? rowIndex * 10f : -rowIndex * 10f);
+            float y = ally ? 48f - rowIndex * 54f : -128f - (2 - rowIndex) * 54f;
             return new Vector2(x, y);
+        }
+
+        private void BuildFormation(Transform root)
+        {
+            _board = Box(root, "Board", BoardPos, new Vector2(520f, 350f), new Color(0.10f, 0.11f, 0.14f, 0.55f), false);
+            float allyFront = SlotAbsolute("ally_c2").y - CellH * 0.5f;
+            float enemyFront = SlotAbsolute("enemy_c2").y + CellH * 0.5f;
+            float midY = (allyFront + enemyFront) * 0.5f;
+            Box(_board, "Midline", new Vector2(0f, midY - BoardPos.y), new Vector2(440f, 2f), new Color(0.55f, 0.55f, 0.6f, 0.8f), false);
+
+            for (int i = 0; i < Slots.AllyIds.Length; i++)
+                BuildCell(Slots.AllyIds[i], true);
+            for (int i = 0; i < Slots.EnemyIds.Length; i++)
+                BuildCell(Slots.EnemyIds[i], false);
+
+            string[] samples = { "ally_a2", "ally_b2", "ally_c2", "enemy_c2", "enemy_b2", "enemy_a2" };
+            for (int i = 0; i < samples.Length; i++)
+            {
+                Vector2 at = SlotAbsolute(samples[i]);
+                _rowLabels[i] = PlaceLabel(root, "Row" + i.ToString(CultureInfo.InvariantCulture), new Vector2(296f, at.y), new Vector2(68f, 22f), 14);
+            }
+
+            _allyCaption = PlaceLabel(root, "AllyCaption", new Vector2(-330f, SlotAbsolute("ally_a2").y), new Vector2(72f, 22f), 14);
+            _enemyCaption = PlaceLabel(root, "EnemyCaption", new Vector2(-330f, SlotAbsolute("enemy_a2").y), new Vector2(72f, 22f), 14);
+
+            _bench = Box(root, "Bench", new Vector2(-470f, -6f), new Vector2(124f, 184f), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
+            _benchLabel = PlaceLabel(_bench, "BenchLabel", new Vector2(0f, 78f), new Vector2(112f, 18f), 13);
+            Listen(_bench.gameObject, EventTriggerType.PointerClick, delegate { NotifyBenchClick(); });
+            _bench.gameObject.SetActive(false);
+        }
+
+        private void BuildCell(string slotId, bool ally)
+        {
+            RectTransform rect = Box(_board, slotId, SlotLocal(slotId), new Vector2(CellW, CellH), ally ? AllyCellEmpty : EnemyCell, ally);
+            Text slotText = PlaceLabel(rect, "SlotId", new Vector2(0f, -16f), new Vector2(124f, 14f), 11);
+            slotText.text = slotId;
+            slotText.color = new Color(0.62f, 0.66f, 0.7f, 1f);
+            var cell = new CellView();
+            cell.slotId = slotId;
+            cell.ally = ally;
+            cell.rect = rect;
+            cell.image = rect.GetComponent<Image>();
+            if (!ally)
+            {
+                cell.occupant = PlaceLabel(rect, "Occupant", new Vector2(0f, 8f), new Vector2(124f, 22f), 14);
+                cell.unitId = EnemyOn(slotId);
+            }
+            _cells[slotId] = cell;
+            if (!ally)
+                return;
+            _allyDrops[rect.gameObject] = slotId;
+            string captured = slotId;
+            Listen(rect.gameObject, EventTriggerType.PointerClick, delegate { NotifyCellClick(captured); });
+        }
+
+        private string EnemyOn(string slotId)
+        {
+            if (_def == null || _def.Enemies == null)
+                return null;
+            for (int i = 0; i < _def.Enemies.Count; i++)
+            {
+                Placement placement = _def.Enemies[i];
+                if (placement != null && placement.SlotId == slotId && placement.Unit != null)
+                    return placement.Unit.Id;
+            }
+            return null;
+        }
+
+        private void BuildDragLayer(Transform root)
+        {
+            var go = new GameObject("DragLayer", typeof(RectTransform));
+            go.transform.SetParent(root, false);
+            _dragLayer = Stretch(go.GetComponent<RectTransform>(), 0f);
+        }
+
+        private void EnsureTokens()
+        {
+            if (_def == null || _def.Allies == null)
+                return;
+            for (int i = 0; i < _def.Allies.Count; i++)
+            {
+                Placement placement = _def.Allies[i];
+                if (placement == null || placement.Unit == null || string.IsNullOrEmpty(placement.Unit.Id))
+                    continue;
+                if (FindToken(placement.Unit.Id) != null)
+                    continue;
+                string unitId = placement.Unit.Id;
+                RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(124f, 28f), TokenColor, true);
+                var view = new TokenView();
+                view.unitId = unitId;
+                view.rect = rect;
+                view.image = rect.GetComponent<Image>();
+                view.label = MakeText(rect, 14);
+                _tokens.Add(view);
+                Listen(rect.gameObject, EventTriggerType.PointerClick, delegate (BaseEventData data) { NotifyTokenClick(unitId); });
+                Listen(rect.gameObject, EventTriggerType.BeginDrag, delegate (BaseEventData data) { BeginTokenDrag(unitId, (PointerEventData)data); });
+                Listen(rect.gameObject, EventTriggerType.Drag, delegate (BaseEventData data) { DragToken(unitId, (PointerEventData)data); });
+                Listen(rect.gameObject, EventTriggerType.EndDrag, delegate (BaseEventData data) { EndTokenDrag(unitId, (PointerEventData)data); });
+            }
+        }
+
+        private void LayoutFormation()
+        {
+            if (_board == null)
+                return;
+            bool setup = FormationEditable();
+            bool showRoster = _sim == null || setup;
+            if (_bench != null)
+                _bench.gameObject.SetActive(setup);
+            if (_benchLabel != null)
+                _benchLabel.text = L(LocKeys.FormationBench);
+            if (_allyCaption != null)
+                _allyCaption.text = L(LocKeys.FormationAlly);
+            if (_enemyCaption != null)
+                _enemyCaption.text = L(LocKeys.FormationEnemy);
+            for (int i = 0; i < _rowLabels.Length; i++)
+            {
+                if (_rowLabels[i] != null)
+                    _rowLabels[i].text = L(_rowKeys[i]);
+            }
+
+            var occupied = new HashSet<string>();
+            int stacked = 0;
+            for (int i = 0; i < _tokens.Count; i++)
+            {
+                TokenView token = _tokens[i];
+                string slot = DisplaySlot(token.unitId);
+                if (token.unitId == _dragUnitId)
+                {
+                    if (!string.IsNullOrEmpty(slot))
+                        occupied.Add(slot);
+                    continue;
+                }
+
+                RectTransform parent;
+                Vector2 pos;
+                if (!string.IsNullOrEmpty(slot) && _cells.ContainsKey(slot))
+                {
+                    parent = _cells[slot].rect;
+                    pos = new Vector2(0f, 8f);
+                    occupied.Add(slot);
+                }
+                else
+                {
+                    parent = _bench;
+                    pos = new Vector2(0f, 44f - stacked * 30f);
+                    stacked++;
+                }
+                if (parent != null && token.rect.parent != parent)
+                    token.rect.SetParent(parent, false);
+                token.rect.anchoredPosition = pos;
+                token.rect.sizeDelta = new Vector2(124f, 28f);
+                token.image.color = token.unitId == _selectedUnitId ? TokenSelected : TokenColor;
+                token.image.raycastTarget = setup;
+                token.label.text = UnitName(token.unitId);
+                token.rect.gameObject.SetActive(showRoster);
+            }
+
+            foreach (KeyValuePair<string, CellView> pair in _cells)
+            {
+                CellView cell = pair.Value;
+                if (!cell.ally)
+                {
+                    cell.image.raycastTarget = false;
+                    if (cell.occupant != null)
+                        cell.occupant.text = string.IsNullOrEmpty(cell.unitId) ? "" : UnitName(cell.unitId);
+                    continue;
+                }
+                cell.image.raycastTarget = setup;
+                cell.image.color = occupied.Contains(cell.slotId) ? AllyCell : AllyCellEmpty;
+            }
+        }
+
+        private string DisplaySlot(string unitId)
+        {
+            if (_sim != null)
+                return _sim.AllySlotOf(unitId);
+            if (_def == null || _def.Allies == null)
+                return null;
+            for (int i = 0; i < _def.Allies.Count; i++)
+            {
+                Placement placement = _def.Allies[i];
+                if (placement != null && placement.Unit != null && placement.Unit.Id == unitId)
+                    return placement.SlotId;
+            }
+            return null;
+        }
+
+        public bool FormationEditable()
+        {
+            return _sim != null && _sim.Phase == BattlePhase.Setup;
+        }
+
+        private void NotifyTokenClick(string unitId)
+        {
+            if (_fromDrag || !FormationEditable())
+                return;
+            if (_selectedUnitId == unitId)
+            {
+                _selectedUnitId = null;
+                LayoutFormation();
+                return;
+            }
+            if (string.IsNullOrEmpty(_selectedUnitId))
+            {
+                _selectedUnitId = unitId;
+                LayoutFormation();
+                return;
+            }
+            Exchange(_selectedUnitId, unitId);
+            _selectedUnitId = null;
+            Paint();
+        }
+
+        private void NotifyCellClick(string slotId)
+        {
+            if (_fromDrag || !FormationEditable() || string.IsNullOrEmpty(_selectedUnitId))
+                return;
+            _sim.TrySetAllySlot(_selectedUnitId, slotId);
+            _selectedUnitId = null;
+            Paint();
+        }
+
+        private void NotifyBenchClick()
+        {
+            if (_fromDrag || !FormationEditable() || string.IsNullOrEmpty(_selectedUnitId))
+                return;
+            _sim.TrySetAllySlot(_selectedUnitId, null);
+            _selectedUnitId = null;
+            Paint();
+        }
+
+        private void BeginTokenDrag(string unitId, PointerEventData eventData)
+        {
+            if (!FormationEditable())
+                return;
+            TokenView token = FindToken(unitId);
+            if (token == null || _dragLayer == null)
+                return;
+            _fromDrag = true;
+            _dragUnitId = unitId;
+            token.image.raycastTarget = false;
+            token.rect.SetParent(_dragLayer, true);
+        }
+
+        private void DragToken(string unitId, PointerEventData eventData)
+        {
+            if (_dragUnitId != unitId)
+                return;
+            TokenView token = FindToken(unitId);
+            if (token == null)
+                return;
+            token.rect.position = eventData.position;
+        }
+
+        private void EndTokenDrag(string unitId, PointerEventData eventData)
+        {
+            if (_dragUnitId != unitId)
+                return;
+            _fromDrag = true;
+            _dragUnitId = null;
+            ApplyDrop(unitId, eventData);
+            _selectedUnitId = null;
+            Paint();
+        }
+
+        private void ApplyDrop(string unitId, PointerEventData eventData)
+        {
+            if (_sim == null || _sim.Phase != BattlePhase.Setup || EventSystem.current == null)
+                return;
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, hits);
+            for (int i = 0; i < hits.Count; i++)
+            {
+                GameObject go = hits[i].gameObject;
+                string other;
+                if (TryToken(go, out other))
+                {
+                    if (other != unitId)
+                        Exchange(unitId, other);
+                    return;
+                }
+                string slot;
+                if (_allyDrops.TryGetValue(go, out slot))
+                {
+                    _sim.TrySetAllySlot(unitId, slot);
+                    return;
+                }
+                if (go == _bench.gameObject)
+                {
+                    _sim.TrySetAllySlot(unitId, null);
+                    return;
+                }
+                return;
+            }
+        }
+
+        private void Exchange(string unitId, string otherId)
+        {
+            if (_sim == null)
+                return;
+            string dest = _sim.AllySlotOf(otherId);
+            if (string.IsNullOrEmpty(dest))
+            {
+                string from = _sim.AllySlotOf(unitId);
+                _sim.TrySetAllySlot(unitId, null);
+                if (!string.IsNullOrEmpty(from))
+                    _sim.TrySetAllySlot(otherId, from);
+                return;
+            }
+            _sim.TrySetAllySlot(unitId, dest);
+        }
+
+        private bool TryToken(GameObject go, out string unitId)
+        {
+            unitId = null;
+            if (MatchToken(go, out unitId))
+                return true;
+            if (go != null && go.transform.parent != null && MatchToken(go.transform.parent.gameObject, out unitId))
+                return true;
+            unitId = null;
+            return false;
+        }
+
+        private bool MatchToken(GameObject go, out string unitId)
+        {
+            unitId = null;
+            if (go == null)
+                return false;
+            for (int i = 0; i < _tokens.Count; i++)
+            {
+                if (_tokens[i].rect != null && _tokens[i].rect.gameObject == go)
+                {
+                    unitId = _tokens[i].unitId;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private TokenView FindToken(string unitId)
+        {
+            for (int i = 0; i < _tokens.Count; i++)
+            {
+                if (_tokens[i].unitId == unitId)
+                    return _tokens[i];
+            }
+            return null;
+        }
+
+        private static void Listen(GameObject go, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> call)
+        {
+            var trigger = go.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = go.AddComponent<EventTrigger>();
+            if (trigger.triggers == null)
+                trigger.triggers = new List<EventTrigger.Entry>();
+            var entry = new EventTrigger.Entry();
+            entry.eventID = type;
+            entry.callback = new EventTrigger.TriggerEvent();
+            entry.callback.AddListener(call);
+            trigger.triggers.Add(entry);
+        }
+
+        private Text PlaceLabel(Transform parent, string name, Vector2 pos, Vector2 size, int fontSize)
+        {
+            return MakeText(Box(parent, name, pos, size, Clear, false), fontSize);
         }
 
         private string L(string key)
@@ -744,6 +1175,24 @@ namespace Echoes.Presentation
                 rt.offsetMin = Vector2.zero;
                 rt.offsetMax = Vector2.zero;
             }
+        }
+
+        private sealed class CellView
+        {
+            public string slotId;
+            public bool ally;
+            public string unitId;
+            public RectTransform rect;
+            public Image image;
+            public Text occupant;
+        }
+
+        private sealed class TokenView
+        {
+            public string unitId;
+            public RectTransform rect;
+            public Image image;
+            public Text label;
         }
     }
 }
