@@ -151,14 +151,14 @@ MonoBehaviour:
     zhHans: "无组合"
     en: "No combo"
   - key: unit.placeholder_melee.name
-    zhHans: "近战"
-    en: "Melee"
+    zhHans: "灰烬卫士"
+    en: "Ashguard"
   - key: unit.placeholder_caster.name
-    zhHans: "法师"
-    en: "Caster"
+    zhHans: "裂隙术士"
+    en: "Riftmage"
   - key: unit.placeholder_enemy.name
-    zhHans: "敌占位"
-    en: "Foe"
+    zhHans: "锈蚀步卒"
+    en: "Rustsoldier"
   - key: skill.placeholder_melee_basic.name
     zhHans: "斩击"
     en: "Strike"

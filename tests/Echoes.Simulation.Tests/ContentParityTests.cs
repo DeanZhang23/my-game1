@@ -75,6 +75,38 @@ namespace Echoes.Simulation.Tests
         }
 
         [Fact]
+        public void Localization_UsesOfficialDisplayNames()
+        {
+            string root = RepoRoot();
+            string loc = Read(root, "Assets/Resources/M0/M0Localization.asset");
+            int melee = loc.IndexOf("key: unit.placeholder_melee.name", StringComparison.Ordinal);
+            int caster = loc.IndexOf("key: unit.placeholder_caster.name", StringComparison.Ordinal);
+            int enemy = loc.IndexOf("key: unit.placeholder_enemy.name", StringComparison.Ordinal);
+            int next = loc.IndexOf("key: skill.placeholder_melee_basic.name", StringComparison.Ordinal);
+            Assert.True(melee >= 0 && melee < caster && caster < enemy && enemy < next);
+
+            string meleeBlock = loc.Substring(melee, caster - melee);
+            string casterBlock = loc.Substring(caster, enemy - caster);
+            string enemyBlock = loc.Substring(enemy, next - enemy);
+            Assert.Contains("zhHans: \"灰烬卫士\"", meleeBlock);
+            Assert.Contains("en: \"Ashguard\"", meleeBlock);
+            Assert.Contains("zhHans: \"裂隙术士\"", casterBlock);
+            Assert.Contains("en: \"Riftmage\"", casterBlock);
+            Assert.Contains("zhHans: \"锈蚀步卒\"", enemyBlock);
+            Assert.Contains("en: \"Rustsoldier\"", enemyBlock);
+
+            string meleeUnit = Read(root, "Assets/Resources/M0/Units/unit_placeholder_melee.asset");
+            string casterUnit = Read(root, "Assets/Resources/M0/Units/unit_placeholder_caster.asset");
+            string enemyUnit = Read(root, "Assets/Resources/M0/Units/unit_placeholder_enemy.asset");
+            Assert.Contains("id: unit_placeholder_melee", meleeUnit);
+            Assert.Contains("nameKey: unit.placeholder_melee.name", meleeUnit);
+            Assert.Contains("id: unit_placeholder_caster", casterUnit);
+            Assert.Contains("nameKey: unit.placeholder_caster.name", casterUnit);
+            Assert.Contains("id: unit_placeholder_enemy", enemyUnit);
+            Assert.Contains("nameKey: unit.placeholder_enemy.name", enemyUnit);
+        }
+
+        [Fact]
         public void UnitSprites_MapTheDefaultRosterToOfficialIdles()
         {
             string root = RepoRoot();

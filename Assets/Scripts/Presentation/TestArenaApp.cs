@@ -776,7 +776,7 @@ namespace Echoes.Presentation
                 if (view.portrait != null)
                 {
                     view.image.color = Clear;
-                    RectTransform namePlate = Box(rect, "NamePlate", new Vector2(28f, 0f), new Vector2(52f, 26f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
+                    RectTransform namePlate = Box(rect, "NamePlate", new Vector2(26f, 0f), new Vector2(60f, 26f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
                     view.label = MakeText(namePlate, 12);
                     Outline outline = view.label.gameObject.AddComponent<Outline>();
                     outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
