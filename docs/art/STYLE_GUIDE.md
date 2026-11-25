@@ -1,0 +1,126 @@
+# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0)
+
+**Style lock: Q 版暗黑 (chibi dark-fantasy).** This is the source of truth for Echoes of Fate production.  
+**Supersedes** the withdrawn realistic / painterly / low-poly-realistic M0 draft on PR #10. Those assets are **void** — do not patch or ship them.  
+Prior Nia Island / Cthulhu sheets are also legacy and are not for this mode.
+
+**Engine:** Unity 6 LTS + URP 2D Renderer. Pure 2D / 2.5D isometric. **No** 3D models, UVs, 3D scenes, or 3D pipelines.  
+**Camera:** Orthogonal isometric.  
+**Mood:** dark fantasy with a cute, graphic, toy-like read. Palette stays grave-lamp gold, cold blue-black, rust red, wet stone, parchment, ash — but forms are rounded, simplified, and readable, never photoreal.
+
+The PRD visual reference board is **color and material law only**. It is not a license to render realistic stone, rust, or cloaks.
+
+## What “Q 版暗黑” means
+
+| Rule | Value |
+|------|--------|
+| Proportions | Big head, short body, short limbs, rounded readable masses |
+| Head : body | About **1 : 1.5** to **1 : 2** (head is large; body is compact) |
+| Surface | Flat / graphic paint, soft cel or simple planes, toy-like |
+| Forbidden finish | Realistic oil painting, photo materials, sculpted relief, low-poly realism, heavy pore/fabric/rock photography |
+
+At **64 px** unit height, a character must be recognizable in one second from silhouette alone.
+
+## Specs (defaults)
+
+| Item | Value |
+|------|--------|
+| Unit sprite height | 64 px (body + head); canvas 96×96 or 128×128 for cloak / weapon overflow |
+| Dice face | 64×64 px (authored at 128×128) |
+| Ground cell | Isometric diamond; arena ground shows a clear **3×3 vs 3×3** grid |
+| Pixels Per Unit | 64 |
+| Filter | Bilinear (graphic paint), not photoreal detail |
+
+## Locked palette
+
+| Hex | Role |
+|-----|------|
+| `#0B1220` | Void / far night / UI base |
+| `#152038` | Cold blue-black, far fog |
+| `#1E2C4A` | Wet-slate mid (stylized, not photo stone) |
+| `#3A4A66` | Wet-stone highlight |
+| `#8A9BB0` | Cold metal / low fog |
+| `#C9A227` | Grave-lamp gold — lamps, ally ring, UI accent |
+| `#E8C547` | Gold highlight — **spot only** |
+| `#5C1C22` | Rust-blood shadow |
+| `#8B2E32` | Rust red — blood, enemy ring, danger |
+| `#B84A3E` | Rust highlight |
+| `#4A7A9A` | Fate-crack mid |
+| `#7EB3C9` | Fate-crack light — **spot only** |
+| `#C9B89A` | Parchment mid |
+| `#E8DCC4` | Parchment highlight |
+| `#6B6560` | Ash mid |
+| `#9A938A` | Ash highlight |
+| `#2A2420` | Crevice / cloak core |
+
+**Discipline:** Large areas = cold blue-black, stylized wet stone, rust, ash. Gold and fate-crack cyan are accents. Parchment is for UI / dice.
+
+## Character silhouette (kept)
+
+Large **cloak**, **pointed hood**, **lantern**, and/or **polearm**. Cute and rounded, but still dark-fantasy — not pastoral, not animal-mascot cute.
+
+## Ally vs enemy
+
+- Ally: grave-lamp **gold** ground ring and a thin gold edge; cold blue-black cloak; gold lantern.
+- Enemy: **rust-red** ground ring and rust edge; ash / rust cloak; **no** grave-lamp gold.
+- **Do not** ship melee and enemy as a palette-swap of the same pose. At 64 px they must still differ by silhouette (hood shape, weapon shape, stance, or cloak cut).
+- E1 may place two enemies (`enemy_c1`, `enemy_c2`) from the same enemy sprite.
+
+## Dice (UI)
+
+Faces, left to right in sheets: **sword, shield, star, feather, coin, skull**.
+
+- Flat, iconic, graphic. Parchment tile, gold rim, clear symbol.
+- **Star (`face_star`):** a clear **magic / occult star** (e.g. a simple 4- or 8-point spark or rune-star). **Do not** use a hexagram / Star of David / Seal of Solomon.
+- **Coin (`face_coin`):** must read as a **gold coin** in one glance (round coin, rim, maybe a simple stamp). **Do not** use a compass rose or medallion-badge.
+- **Locked:** a padlock or clasp drawn **fully inside** that face’s own square. Never in the gutter between tiles (slicing must not drop the lock).
+- **Cracked:** graphic rust-red cracks on the face; symbol stays readable.
+
+Naming: `ui_dice_{sword|shield|star|feather|coin|skull}_{normal|locked|cracked}.png`
+
+## TestArena — Rift Battlefield (not Grave-Lamp Village)
+
+- `env_riftarena_ground`: stylized **Q-version** isometric brick / tile grid, **3×3 ally vs 3×3 enemy**, visible mid-line. Graphic rust stains, fate-crack cyan, ash. No photoreal rubble.
+- `env_riftarena_bg_mid`: a **backdrop layer** (distant stylized ridges, a rift in the dark, hanging ash). **Not** a second complete battlefield that competes with the playable ground.
+- `env_riftarena_bg_far`: far void / sky / distant graphic cracks. **Not** another ground texture.
+- `env_riftarena_fg` (optional): near-edge stylized stones / ash along the bottom only; must not hide footholds.
+
+## Layers and pivots
+
+```
+BGFar < BGMid < Ground < UnitsRing < Units < FG < UI
+```
+
+| Asset | Pivot |
+|-------|--------|
+| Characters | Feet, center of the ground ring (about 0.5, 0.12–0.18) |
+| Dice faces | Center (0.5, 0.5) |
+| Ground | Geometric center of the isometric field |
+| BG Far / Mid | Center |
+| FG | Center or bottom |
+
+Y-sort units within `Units` by foot pivot.
+
+## Naming
+
+```
+ui_dice_{sword|shield|star|feather|coin|skull}_{normal|locked|cracked}.png
+env_riftarena_{bg_far|bg_mid|ground|fg}.png
+chr_ally_placeholder_melee_{anim}.png
+chr_ally_placeholder_caster_{anim}.png
+chr_enemy_placeholder_{anim}.png
+```
+
+M0 ships `idle` only.
+
+IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `enemy` → the matching `chr_*` files.
+
+## Forbidden
+
+- Shipping or iterating the withdrawn realistic M0 draft
+- 3D meshes, perspective cameras, photo-rock / photo-fabric
+- Pixel-art nearest look for this pack
+- Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
+- 8 official roster units, Boss, route / shop / rest UI, full VFX, 80 icons (out of M0 scope)
+
+See `docs/art/USAGE.md`.
