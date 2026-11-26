@@ -120,6 +120,7 @@ namespace Echoes.Presentation
         {
             _font = font;
             _kit = kit;
+            EnsureAudioListener();
             if (host != null)
             {
                 _audio = host.GetComponent<AudioSource>();
@@ -422,7 +423,23 @@ namespace Echoes.Presentation
             if (clip == null || _audio == null)
                 return;
             // Overlapping hits may overlap. PlayOneShot does not loop.
+            // The listener is attached in Install, before the first one-shot.
             _audio.PlayOneShot(clip, volume);
+        }
+
+        // PlayOneShot is silent when the scene has no AudioListener. Main Camera
+        // carries one. If it is missing, add a single listener there and do not
+        // add a second when one already exists.
+        private static void EnsureAudioListener()
+        {
+            if (UnityEngine.Object.FindAnyObjectByType<AudioListener>() != null)
+                return;
+            Camera camera = Camera.main;
+            if (camera == null)
+                camera = UnityEngine.Object.FindAnyObjectByType<Camera>();
+            if (camera == null || camera.GetComponent<AudioListener>() != null)
+                return;
+            camera.AddComponent<AudioListener>();
         }
 
         private void Spawn(Image portrait, Sprite[] frames, bool death, bool enemy)

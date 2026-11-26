@@ -229,6 +229,20 @@ namespace Echoes.Simulation.Tests
             Assert.Contains("LocKeys.Confirm", app);
             Assert.Contains("LocKeys.Commit", app);
             Assert.Contains("PlayOneShot", chrome);
+            Assert.Contains("EnsureAudioListener()", chrome);
+            int listener = chrome.IndexOf("EnsureAudioListener();", StringComparison.Ordinal);
+            int source = chrome.IndexOf("AddComponent<AudioSource>()", StringComparison.Ordinal);
+            Assert.True(listener >= 0 && source > listener);
+            Assert.Contains("FindAnyObjectByType<AudioListener>() != null", chrome);
+            Assert.Contains("AddComponent<AudioListener>()", chrome);
+
+            string scene = Read(root, "Assets/Scenes/TestArena.unity");
+            int camera = scene.IndexOf("m_Name: Main Camera", StringComparison.Ordinal);
+            Assert.True(camera > 0);
+            int listenerBlock = scene.IndexOf("AudioListener:", StringComparison.Ordinal);
+            Assert.True(listenerBlock > camera);
+            Assert.Contains("m_GameObject: {fileID: 100001}", scene.Substring(listenerBlock, Math.Min(200, scene.Length - listenerBlock)));
+            Assert.Equal(1, Count(scene, "!u!81"));
             Assert.Contains("raycastTarget = false", chrome);
             Assert.Contains("env_riftarena_prop_dressing.png", app);
             Assert.Contains("env_riftarena_ground.png", chrome);
@@ -299,6 +313,20 @@ namespace Echoes.Simulation.Tests
             if (next < 0)
                 next = catalog.Length;
             return catalog.Substring(at, next - at);
+        }
+
+        private static int Count(string text, string needle)
+        {
+            int count = 0;
+            int at = 0;
+            while (true)
+            {
+                at = text.IndexOf(needle, at, StringComparison.Ordinal);
+                if (at < 0)
+                    return count;
+                count++;
+                at += needle.Length;
+            }
         }
 
         private static string Read(string root, string relative)
