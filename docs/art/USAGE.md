@@ -264,7 +264,18 @@ This is an art lock only. TestArena keeps playing the existing idle, walk, and a
 
 | Clip | Count | Naming |
 |------|-------|--------|
-| Death | 4-frame one-shot fall / collapse at 8 frames per second (0.5 s). The clip does not loop. The sequence is a fall, not an attack that returns toward idle. Frame 01 is a standing hurt beat in the locked idle stance. Frames 02–03 are the fall. Frame 04 is a downed / fallen hold pose, meant to be held until settlement. | `chr_ally_{oathblade\|lampsister\|misthunter\|boneapostle\|chainjudge\|bloodacolyte}_death_01.png` … `_death_04.png` |
+| Death | 4-frame one-shot fall at 8 frames per second (0.5 s). The clip does not loop. The six falls do not share one pose or one timing. Frame 04 is the held downed pose on the flat gold ring. | `chr_ally_{oathblade\|lampsister\|misthunter\|boneapostle\|chainjudge\|bloodacolyte}_death_01.png` … `_death_04.png` |
+
+Beat sheets, so a row of all six at 8 fps is not in lockstep. The prop leads and the body follows. Misthunter is the first clearly down. Lampsister is the last to go fully down.
+
+| Ally | Tempo | Frames |
+|------|--------|--------|
+| `oathblade` (烬誓剑士) | Mid, sword leads | 01 sword dips, still mostly up. 02 forward onto one knee, sword tip toward the ring. 03 collapses forward, sword along the ground. 04 side-lie, sword with the body. |
+| `lampsister` (墓灯修女) | Late, lantern leads | 01 still upright, lantern arm low. 02 kneels, torso still tall, lantern near the ring, robe off the ring. 03 folds sideways, lantern set on the ring. 04 curled side-lie, lantern in front of the hands and face. |
+| `misthunter` (雾行猎手) | Early, bow leaves the hand | 01 already breaking the draw, bow lowering. 02 already falling, bow leaving the hands. 03 down on his hands, bow on the ground. 04 prone, bow along the ring. |
+| `boneapostle` (骨匣使徒) | Staff and reliquary lead | 01 staff tilting, body still up. 02 staff planted, body starts to kneel. 03 body falls around the staff and casket. 04 side-lie, staff and skulls readable on the ring. |
+| `chainjudge` (锁链判官) | Heavy, chain leads | 01 chain arm drops slack. 02 chain piles on the ring, one knee down, cloak open. 03 heavy sit, gold ring stays readable. 04 side-lie, chain in front of the body. |
+| `bloodacolyte` (血契侍从) | Mid-late, cup and dagger lead | 01 cup tilts, still up. 02 cup and dagger leave a stable hold, body twists down. 03 down, cup on the ring, dagger nearby. 04 side-lie, face kept with the locked idle, cup and dagger readable. |
 
 | Setting | Value |
 |---------|--------|
