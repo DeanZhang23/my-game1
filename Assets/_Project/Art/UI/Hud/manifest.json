@@ -1,0 +1,480 @@
+{
+  "kit": "m0-testarena-hud",
+  "style": "Q 版暗黑",
+  "canvas_reference": "1616×909 TestArena graybox (1080p-ish)",
+  "import": {
+    "texture_type": "Sprite (2D and UI)",
+    "mesh_type": "Full Rect",
+    "filter": "Bilinear",
+    "compression": "None or High Quality",
+    "generate_mipmaps": false,
+    "pixels_per_unit": 64,
+    "alpha": "PNG RGBA, no baked #0B1220 void background on slices"
+  },
+  "typography_px": {
+    "button_label": 14,
+    "energy_label": 12,
+    "energy_value": 11,
+    "nameplate_name": 11,
+    "nameplate_numbers": 9,
+    "combo_badge": 11
+  },
+  "items": [
+    {
+      "file": "ui_btn_primary_{normal,hover,pressed,disabled}.png",
+      "size": [
+        208,
+        36
+      ],
+      "nine_slice": {
+        "left": 18,
+        "right": 14,
+        "top": 10,
+        "bottom": 10
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Carved dark shell + 2px gold rim, chipped corners. 16px skull baked in the left endcap, bone in the right. NO baked label. Runtime text: loc ui.testarena.btn_march (出征), 14px #0B1220 (disabled #6B6560)."
+    },
+    {
+      "file": "ui_btn_secondary_{normal,hover,pressed,disabled}.png",
+      "size": [
+        100,
+        32
+      ],
+      "nine_slice": {
+        "left": 14,
+        "right": 12,
+        "top": 10,
+        "bottom": 10
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Carved shell + 2px gold rim, chipped corners. 12px skull in the left endcap, bone knuckle on the right. NO baked label. Runtime text: ui.testarena.btn_roll (掷骰) / ui.testarena.btn_confirm (确认), 14px #E8DCC4 (disabled #6B6560)."
+    },
+    {
+      "file": "ui_bar_track.png",
+      "size": [
+        32,
+        16
+      ],
+      "nine_slice": {
+        "left": 6,
+        "right": 6,
+        "top": 6,
+        "bottom": 6
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "display": {
+        "fate": [
+          240,
+          16
+        ]
+      },
+      "notes": "Carved fate track, cold rim. Display at 240×16. Overlay ui_bar_endcap_left/right.png on the ends (do not 9-slice the skull). Tick stays at 50%."
+    },
+    {
+      "file": "ui_bar_track_ready.png",
+      "size": [
+        32,
+        16
+      ],
+      "nine_slice": {
+        "left": 6,
+        "right": 6,
+        "top": 6,
+        "bottom": 6
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "display": {
+        "fate": [
+          240,
+          16
+        ]
+      },
+      "notes": "Ready track with gold carved rim. Use ui_bar_endcap_left_ready.png / ui_bar_endcap_right_ready.png."
+    },
+    {
+      "file": "ui_bar_track_vital.png",
+      "size": [
+        32,
+        8
+      ],
+      "nine_slice": {
+        "left": 4,
+        "right": 4,
+        "top": 3,
+        "bottom": 3
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Optional standalone #2A2420 underlay for HP/shield if not using the tracks baked into the nameplate chrome. Nameplates already include empty tracks."
+    },
+    {
+      "file": "ui_bar_tick.png",
+      "size": [
+        3,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Place at 50% of the fate track (center x = track_x + 120 on a 240px bar). Use ui_bar_tick_ready.png when in 可掷骰 state."
+    },
+    {
+      "file": "ui_bar_tick_ready.png",
+      "size": [
+        3,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Emphasized 50 tick, #E8C547, ready / 可掷骰 only."
+    },
+    {
+      "file": "ui_bar_fill_fate.png",
+      "size": [
+        32,
+        12
+      ],
+      "nine_slice": {
+        "left": 2,
+        "right": 2,
+        "top": 2,
+        "bottom": 2
+      },
+      "pivot": [
+        0.0,
+        0.5
+      ],
+      "image_type": "Filled (Horizontal, Origin Left) or Sliced + width",
+      "notes": "Gold #C9A227. In ready state, add a 2–3px #E8C547 leading edge on the fill's right end (runtime, not baked)."
+    },
+    {
+      "file": "ui_bar_fill_hp.png",
+      "size": [
+        32,
+        12
+      ],
+      "nine_slice": {
+        "left": 2,
+        "right": 2,
+        "top": 2,
+        "bottom": 2
+      },
+      "pivot": [
+        0.0,
+        0.5
+      ],
+      "image_type": "Filled (Horizontal, Origin Left)",
+      "notes": "Rust #8B2E32. Default Unity green is forbidden. Overlay on nameplate HP track rect (4,17,84,24) with 1px inset if needed."
+    },
+    {
+      "file": "ui_bar_fill_shield.png",
+      "size": [
+        32,
+        6
+      ],
+      "nine_slice": {
+        "left": 2,
+        "right": 2,
+        "top": 2,
+        "bottom": 2
+      },
+      "pivot": [
+        0.0,
+        0.5
+      ],
+      "image_type": "Filled (Horizontal, Origin Left)",
+      "notes": "Grave-lamp gold #C9A227. Overlay on nameplate shield track rect (4,26,84,31)."
+    },
+    {
+      "file": "ui_nameplate_ally.png",
+      "size": [
+        88,
+        38
+      ],
+      "nine_slice": {
+        "left": 10,
+        "right": 10,
+        "top": 10,
+        "bottom": 10
+      },
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "content_rects": {
+        "name": {
+          "x0": 4,
+          "y0": 3,
+          "x1": 84,
+          "y1": 16
+        },
+        "hp": {
+          "x0": 4,
+          "y0": 18,
+          "x1": 58,
+          "y1": 26
+        },
+        "hp_num": {
+          "x0": 60,
+          "y0": 18,
+          "x1": 84,
+          "y1": 26
+        },
+        "shield": {
+          "x0": 4,
+          "y0": 28,
+          "x1": 58,
+          "y1": 35
+        },
+        "shield_num": {
+          "x0": 60,
+          "y0": 28,
+          "x1": 84,
+          "y1": 35
+        }
+      },
+      "notes": "88×38 carved gold frame, chipped corners. Stamp ui_ornament_bone_corner.png on the frame (not in the stretchable center). Runtime name 11px #E8DCC4. Pivot top-center."
+    },
+    {
+      "file": "ui_nameplate_enemy.png",
+      "size": [
+        88,
+        38
+      ],
+      "nine_slice": {
+        "left": 10,
+        "right": 10,
+        "top": 10,
+        "bottom": 10
+      },
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "content_rects": {
+        "name": {
+          "x0": 4,
+          "y0": 3,
+          "x1": 84,
+          "y1": 16
+        },
+        "hp": {
+          "x0": 4,
+          "y0": 18,
+          "x1": 58,
+          "y1": 26
+        },
+        "hp_num": {
+          "x0": 60,
+          "y0": 18,
+          "x1": 84,
+          "y1": 26
+        },
+        "shield": {
+          "x0": 4,
+          "y0": 28,
+          "x1": 58,
+          "y1": 35
+        },
+        "shield_num": {
+          "x0": 60,
+          "y0": 28,
+          "x1": 84,
+          "y1": 35
+        }
+      },
+      "notes": "Carved rust rim, chipped corners. Stamp ui_ornament_skull_rust.png at (1,1) and ui_ornament_blood.png (12px) at (74,1), in the frame, not over numbers. No 生命/护盾 words."
+    },
+    {
+      "file": "ui_nameplate_dead.png",
+      "size": [
+        88,
+        38
+      ],
+      "nine_slice": {
+        "left": 10,
+        "right": 10,
+        "top": 10,
+        "bottom": 10
+      },
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "notes": "Carved ash rim, cracks, empty tracks. Stamp ui_ornament_skull_ash.png at (1,1) and ui_ornament_blood.png (12px) at (74,1). Runtime name #6B6560, CanvasGroup 50% fade."
+    },
+    {
+      "file": "ui_dice_slot_empty.png",
+      "size": [
+        48,
+        48
+      ],
+      "nine_slice": {
+        "left": 12,
+        "right": 12,
+        "top": 12,
+        "bottom": 12
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Carved 48×48 well, 2px gold rim, bone-corner brackets baked in the four 12px corners (safe to 9-slice). Rolled faces: scale ui_dice_*_normal.png into the well. M0 has no lock/crack in this flow."
+    },
+    {
+      "file": "ui_badge_combo.png",
+      "size": [
+        52,
+        22
+      ],
+      "nine_slice": {
+        "left": 16,
+        "right": 8,
+        "top": 6,
+        "bottom": 6
+      },
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Carved chrome, 12px skull baked in the left 16px endcap. Runtime text 11px #E8DCC4 in the field to the right, via combo.twin / combo.attunement. Hide when there is no combo."
+    },
+    {
+      "file": "ui_dice_pending_glow.png",
+      "size": [
+        180,
+        68
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Soft gold aura, place behind the three 48×48 slots during the 6s pending-confirm window. Not neon."
+    },
+    {
+      "file": "ui_ornament_skull.png",
+      "size": [
+        16,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Bone/parchment skull overlay. Also baked into primary-button left endcaps. Never place in a stretchable 9-slice center."
+    },
+    {
+      "file": "ui_ornament_skull_rust.png",
+      "size": [
+        16,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Same skull with a rust drip from the right socket. Stamp on enemy nameplates at (1,1) (or 12px)."
+    },
+    {
+      "file": "ui_ornament_skull_ash.png",
+      "size": [
+        16,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Ash skull with a cranium crack. Dead plates and disabled endcaps."
+    },
+    {
+      "file": "ui_ornament_bone.png",
+      "size": [
+        16,
+        8
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Horizontal bone knuckle. Baked into button right endcaps."
+    },
+    {
+      "file": "ui_ornament_bone_corner.png",
+      "size": [
+        12,
+        12
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.0,
+        0.0
+      ],
+      "notes": "Top-left L-shaped bone bracket. Rotate 90/180/270 for the other corners. Baked into dice-slot corners; stamp on ally nameplate corners."
+    },
+    {
+      "file": "ui_ornament_blood.png",
+      "size": [
+        16,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "notes": "Rust #8B2E32 spatters. Stamp on enemy/dead nameplates (e.g. 70,20) and sparingly on a spent fate track. Do not 9-slice."
+    },
+    {
+      "file": "ui_bar_endcap_left.png / ui_bar_endcap_left_ready.png",
+      "size": [
+        16,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        0.0,
+        0.5
+      ],
+      "notes": "Skull set into a carved cap. Overlay at the left end of the 240×16 fate track. Ready variant uses a gold bezel."
+    },
+    {
+      "file": "ui_bar_endcap_right.png / ui_bar_endcap_right_ready.png",
+      "size": [
+        14,
+        16
+      ],
+      "nine_slice": null,
+      "pivot": [
+        1.0,
+        0.5
+      ],
+      "notes": "Bone knuckle cap. Overlay at the right end of the fate track."
+    }
+  ]
+}

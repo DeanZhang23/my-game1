@@ -78,6 +78,17 @@ Faces, left to right in sheets: **sword, shield, star, feather, coin, skull**.
 
 Naming: `ui_dice_{sword|shield|star|feather|coin|skull}_{normal|locked|cracked}.png`
 
+## TestArena HUD (M0 graybox)
+
+A small component kit that polishes the *existing* TestArena graybox rail and unit plates. Full spec, states, loc keys, and 9-slice notes: [`docs/ui/m0-testarena-hud.md`](../ui/m0-testarena-hud.md). Slices: `Assets/_Project/Art/UI/Hud/`. Manifest: `Assets/_Project/Art/UI/Hud/manifest.json`. Previews: `docs/ui/previews/`.
+
+- Fate energy bar (0–100) with a **tick at 50**. Can-roll / 可掷骰 is energy ≥ 50 **and** this battle has not rolled yet — it is not “full 100”. Skull and bone endcaps overlay the 240×16 track.
+- Mid-combat dice result: three 48×48 carved slots with bone-corner brackets + 双生 / 同调 badge (skull chrome, runtime text). Reuse existing `ui_dice_*_normal.png`. M0 has no lock, reroll, or crack in this flow.
+- Unit nameplates 88×38, carved frames (gold ally, rust enemy, ash dead), chipped corners. Enemy/dead stamp a rust or ash skull and a rust blood spatter. HP fill is rust `#8B2E32`. Shield fill is grave-lamp gold `#C9A227`. **Default Unity green HP is forbidden.**
+- Buttons: primary 208×36 parchment (出征), secondary 100×32 cold fill (掷骰 / 确认), carved dark shell + gold band, skull and bone in the 9-slice *endcaps only*. Labels are runtime loc keys, never baked into the 9-slices.
+
+Chrome mood is heavy and carved (skulls, bones, rust blood, chips and cracks) but stays in the locked Q 版暗黑 palette. Do not copy another game’s layout or switch to pastoral green / warm purple-brown / photoreal bevels. Fate-crack cyan `#7EB3C9` remains **spot only**, never a UI fill. Unique ornaments must never sit in a stretchable 9-slice center.
+
 ## TestArena — Rift Battlefield (not Grave-Lamp Village)
 
 - `env_riftarena_ground`: stylized **Q-version** isometric brick / tile grid, **3×3 ally vs 3×3 enemy**, visible mid-line. Graphic rust stains, fate-crack cyan, ash. No photoreal rubble.
@@ -162,7 +173,21 @@ chr_enemy_placeholder_walk_01.png … chr_enemy_placeholder_walk_04.png
 chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
 fx_hit_flash_{ally|enemy}_01.png … fx_hit_flash_{ally|enemy}_04.png
 fx_death_puff_{ally|enemy}_01.png … fx_death_puff_{ally|enemy}_04.png
+ui_btn_{primary|secondary}_{normal|hover|pressed|disabled}.png
+ui_bar_track.png
+ui_bar_track_ready.png
+ui_bar_fill_{hp|shield|fate}.png
+ui_nameplate_{ally|enemy|dead}.png
+ui_dice_slot_empty.png
+ui_badge_combo.png
+ui_ornament_skull{,_rust,_ash}.png
+ui_ornament_bone.png
+ui_ornament_bone_corner.png
+ui_ornament_blood.png
+ui_bar_endcap_{left,right}{_ready,}.png
 ```
+
+Dice files stay `ui_dice_{sword|shield|star|feather|coin|skull}_{normal|locked|cracked}.png`. This kit does not rename them and does not ship locked/cracked usage in the M0 mid-combat flow.
 
 M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Official walk and attack frames are in scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided. TestArena plays these frames for all eight: movement loops the walk, a basic-attack swing plays the attack one-shot, and idle covers reserve, setup, and the wait between swings. Walk and attack frames for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are in scope, shipped, and wired into TestArena (see below). Ally and caster placeholders remain idle-only. Playback is 8 frames per second for every ally (125 ms per frame; walk cycle 0.5 s; attack one-shot 0.5 s), which finishes inside the existing melee 1.2 s and ranged 1.5 s intervals.
 
@@ -175,6 +200,13 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
 - Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: 6 enemies, Boss, Boss VFX, character hit-react loops, character death/down animation frames, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
+- Restyling or shipping 墓灯村, shop UI, world-map UI, or a full official HUD as part of this M0 TestArena kit
+- Default engine-green HP bars (use rust `#8B2E32`)
+- Baking player-visible strings (出征 / 掷骰 / 确认 / 命运能量 / 生命 / 护盾 / 双生 / 同调) into reusable 9-slices
+- Using fate-crack cyan `#7EB3C9` as a UI panel or bar fill
+- Neon UI, cozy pastoral greens, or a new large TestArena chrome that replaces the current rail / 3×3 board
+
+The M0 dice pack and TestArena environment pack remain unchanged and are not voided.
 
 See `docs/art/USAGE.md`.
 
