@@ -47,6 +47,19 @@ namespace Echoes.Simulation
         public const string Melee = "unit_placeholder_melee";
         public const string Caster = "unit_placeholder_caster";
         public const string Enemy = "unit_placeholder_enemy";
+
+        // Official allies that start on the Setup reserve. Not the default encounter.
+        public const string Oathblade = "unit_oathblade";
+        public const string Chainjudge = "unit_chainjudge";
+        public const string Lampsister = "unit_lampsister";
+        public const string Misthunter = "unit_misthunter";
+        public const string Boneapostle = "unit_boneapostle";
+        public const string Bloodacolyte = "unit_bloodacolyte";
+
+        public static readonly string[] Reserve =
+        {
+            Oathblade, Chainjudge, Lampsister, Misthunter, Boneapostle, Bloodacolyte
+        };
     }
 
     public static class SkillIds

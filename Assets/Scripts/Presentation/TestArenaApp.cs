@@ -13,7 +13,8 @@ namespace Echoes.Presentation
         public EncounterDefinitionAsset encounter;
         public LocalizationTableAsset localization;
         public FaceCatalogAsset faces;
-        // Idle stills only. Melee shows ashguard, caster shows riftmage, enemies show the placeholder.
+        // Idle stills only. Default melee shows ashguard, caster shows riftmage,
+        // the six reserve allies show their official idles, enemies show the placeholder.
         public UnitSpriteCatalog sprites;
         public int fixedSeed;
 
@@ -85,6 +86,11 @@ namespace Echoes.Presentation
         private static readonly Color TokenSelected = new Color(0.62f, 0.52f, 0.22f, 1f);
         private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
         private const float PortraitSize = 44f;
+        // Six reserve tokens plus the two starters. The strip stays left of the ally cells
+        // (cell left is about x = -605) and inside the 1600x900 canvas, under the title.
+        private static readonly Vector2 BenchPos = new Vector2(-724f, 16f);
+        private const float BenchW = 88f;
+        private const float BenchH = 520f;
 
         private void Awake()
         {
@@ -172,6 +178,7 @@ namespace Echoes.Presentation
             _fromDrag = false;
             _sim = new BattleSimulator();
             _sim.Start(_def, seed);
+            AddSetupReserve(_sim);
             _applied = 0;
             _logChars = 0;
             _logBuilder.Length = 0;
@@ -644,9 +651,8 @@ namespace Echoes.Presentation
             _allyCaption = PlaceLabel(root, "AllyCaption", new Vector2(SlotAbsolute("ally_b2").x, captionY), new Vector2(80f, 22f), 16);
             _enemyCaption = PlaceLabel(root, "EnemyCaption", new Vector2(SlotAbsolute("enemy_b2").x, captionY), new Vector2(80f, 22f), 16);
 
-            float benchH = CellH + (float)FieldLayout.CellPitch * PixelsPerUnit * 2f;
-            _bench = Box(root, "Bench", new Vector2(-740f, SimAnchor.y), new Vector2(88f, benchH), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
-            _benchLabel = PlaceLabel(_bench, "BenchLabel", new Vector2(0f, benchH * 0.5f - 16f), new Vector2(80f, 18f), 13);
+            _bench = Box(root, "Bench", BenchPos, new Vector2(BenchW, BenchH), new Color(0.14f, 0.15f, 0.18f, 0.95f), true);
+            _benchLabel = PlaceLabel(_bench, "BenchLabel", new Vector2(0f, BenchH * 0.5f - 16f), new Vector2(80f, 18f), 13);
             Listen(_bench.gameObject, EventTriggerType.PointerClick, delegate { NotifyBenchClick(); });
             _bench.gameObject.SetActive(false);
         }
@@ -702,41 +708,67 @@ namespace Echoes.Presentation
 
         private void EnsureTokens()
         {
-            if (_def == null || _def.Allies == null)
+            if (_board == null)
                 return;
-            for (int i = 0; i < _def.Allies.Count; i++)
+            if (_def != null && _def.Allies != null)
             {
-                Placement placement = _def.Allies[i];
-                if (placement == null || placement.Unit == null || string.IsNullOrEmpty(placement.Unit.Id))
-                    continue;
-                if (FindToken(placement.Unit.Id) != null)
-                    continue;
-                string unitId = placement.Unit.Id;
-                Sprite sprite = SpriteFor(unitId);
-                RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(118f, sprite != null ? 56f : 28f), TokenColor, true);
-                var view = new TokenView();
-                view.unitId = unitId;
-                view.rect = rect;
-                view.image = rect.GetComponent<Image>();
-                view.portrait = AddPortrait(rect, sprite, new Vector2(-30f, 2f), PortraitSize);
-                if (view.portrait != null)
+                for (int i = 0; i < _def.Allies.Count; i++)
                 {
-                    view.image.color = Clear;
-                    RectTransform namePlate = Box(rect, "NamePlate", new Vector2(26f, 0f), new Vector2(60f, 26f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
-                    view.label = MakeText(namePlate, 12);
-                    Outline outline = view.label.gameObject.AddComponent<Outline>();
-                    outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-                    outline.effectDistance = new Vector2(1f, -1f);
+                    Placement placement = _def.Allies[i];
+                    if (placement == null || placement.Unit == null)
+                        continue;
+                    EnsureToken(placement.Unit.Id);
                 }
-                else
-                {
-                    view.label = MakeText(rect, 14);
-                }
-                _tokens.Add(view);
-                Listen(rect.gameObject, EventTriggerType.PointerClick, delegate (BaseEventData data) { NotifyTokenClick(unitId); });
-                Listen(rect.gameObject, EventTriggerType.BeginDrag, delegate (BaseEventData data) { BeginTokenDrag(unitId, (PointerEventData)data); });
-                Listen(rect.gameObject, EventTriggerType.Drag, delegate (BaseEventData data) { DragToken(unitId, (PointerEventData)data); });
-                Listen(rect.gameObject, EventTriggerType.EndDrag, delegate (BaseEventData data) { EndTokenDrag(unitId, (PointerEventData)data); });
+            }
+            if (_sim == null)
+                return;
+            for (int i = 0; i < _sim.AllyRosterCount; i++)
+                EnsureToken(_sim.AllyUnitIdAt(i));
+        }
+
+        private void EnsureToken(string unitId)
+        {
+            if (string.IsNullOrEmpty(unitId) || FindToken(unitId) != null)
+                return;
+            Sprite sprite = SpriteFor(unitId);
+            RectTransform rect = Box(_board, "Token" + unitId, Vector2.zero, new Vector2(118f, sprite != null ? 56f : 28f), TokenColor, true);
+            var view = new TokenView();
+            view.unitId = unitId;
+            view.rect = rect;
+            view.image = rect.GetComponent<Image>();
+            view.portrait = AddPortrait(rect, sprite, new Vector2(-30f, 2f), PortraitSize);
+            if (view.portrait != null)
+            {
+                view.image.color = Clear;
+                RectTransform namePlate = Box(rect, "NamePlate", new Vector2(26f, 0f), new Vector2(60f, 26f), new Color(0.05f, 0.06f, 0.08f, 0.78f), false);
+                view.label = MakeText(namePlate, 12);
+                Outline outline = view.label.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                outline.effectDistance = new Vector2(1f, -1f);
+            }
+            else
+            {
+                view.label = MakeText(rect, 14);
+            }
+            _tokens.Add(view);
+            Listen(rect.gameObject, EventTriggerType.PointerClick, delegate (BaseEventData data) { NotifyTokenClick(unitId); });
+            Listen(rect.gameObject, EventTriggerType.BeginDrag, delegate (BaseEventData data) { BeginTokenDrag(unitId, (PointerEventData)data); });
+            Listen(rect.gameObject, EventTriggerType.Drag, delegate (BaseEventData data) { DragToken(unitId, (PointerEventData)data); });
+            Listen(rect.gameObject, EventTriggerType.EndDrag, delegate (BaseEventData data) { EndTokenDrag(unitId, (PointerEventData)data); });
+        }
+
+        // Prefer the unit assets when they load. The catalog copy is the same panel
+        // and is what simulation tests place. Unplaced ids stay off the encounter.
+        private static void AddSetupReserve(BattleSimulator sim)
+        {
+            UnitDef[] reserve = M0Catalog.SetupReserve();
+            for (int i = 0; i < reserve.Length; i++)
+            {
+                UnitDef unit = reserve[i];
+                UnitDefinitionAsset asset = Resources.Load<UnitDefinitionAsset>("M0/Units/" + unit.Id);
+                if (asset != null && asset.id == unit.Id)
+                    unit = ContentMapper.ToUnit(asset);
+                sim.TryAddReserve(unit);
             }
         }
 
@@ -760,7 +792,24 @@ namespace Echoes.Presentation
                     _rowLabels[i].text = L(_rowKeys[i]);
             }
 
+            EnsureTokens();
             var occupied = new HashSet<string>();
+            int benchCount = 0;
+            float benchTokenH = 28f;
+            for (int i = 0; i < _tokens.Count; i++)
+            {
+                TokenView token = _tokens[i];
+                if (token.unitId == _dragUnitId)
+                    continue;
+                string slot = DisplaySlot(token.unitId);
+                if (!string.IsNullOrEmpty(slot) && _cells.ContainsKey(slot))
+                    continue;
+                benchCount++;
+                if (token.portrait != null)
+                    benchTokenH = 56f;
+            }
+            float benchStep = BenchTokenStep(benchCount, benchTokenH);
+            float benchY = BenchTokenFirstY(benchTokenH);
             int stacked = 0;
             for (int i = 0; i < _tokens.Count; i++)
             {
@@ -785,7 +834,8 @@ namespace Echoes.Presentation
                 else
                 {
                     parent = _bench;
-                    pos = hasPortrait ? new Vector2(0f, 36f - stacked * 64f) : new Vector2(0f, 70f - stacked * 32f);
+                    float y = benchY - stacked * benchStep;
+                    pos = new Vector2(0f, y);
                     stacked++;
                 }
                 if (parent != null && token.rect.parent != parent)
@@ -834,6 +884,30 @@ namespace Echoes.Presentation
                 if (cell.slotBar != null)
                     cell.slotBar.SetAsLastSibling();
             }
+        }
+
+        private float BenchTokenFirstY(float tokenH)
+        {
+            if (_bench == null)
+                return 0f;
+            float half = _bench.sizeDelta.y * 0.5f;
+            return half - 32f - tokenH * 0.5f;
+        }
+
+        private float BenchTokenStep(int count, float tokenH)
+        {
+            if (count <= 1 || _bench == null)
+                return 0f;
+            float first = BenchTokenFirstY(tokenH);
+            float half = _bench.sizeDelta.y * 0.5f;
+            float last = -half + 8f + tokenH * 0.5f;
+            float span = first - last;
+            if (span < 0f)
+                return 0f;
+            float step = span / (count - 1);
+            if (step > 64f)
+                step = 64f;
+            return step;
         }
 
         private Sprite SpriteFor(string unitId)
