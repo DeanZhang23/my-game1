@@ -1,4 +1,4 @@
-# Echoes of Fate — art USAGE (M0 + official 8-ally idles + walk & attack)
+# Echoes of Fate — art USAGE (M0 + official 8-ally idles + walk & attack + enemy placeholder walk & attack)
 
 **Style:** Q 版暗黑 (chibi dark-fantasy). See `STYLE_GUIDE.md`.  
 The earlier realistic / painterly M0 draft is **void**. Do not import it into TestArena. Prior Abyss Hook / Cthulhu sheets are also not for this mode.
@@ -32,9 +32,11 @@ Assets/_Project/Art/Characters/chr_enemy_placeholder_idle.png
 Assets/_Project/Art/Characters/chr_ally_{ashguard|oathblade|lampsister|riftmage|misthunter|boneapostle|chainjudge|bloodacolyte}_idle_01.png
 Assets/_Project/Art/Characters/chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_04.png
 Assets/_Project/Art/Characters/chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
+Assets/_Project/Art/Characters/chr_enemy_placeholder_walk_01.png … chr_enemy_placeholder_walk_04.png
+Assets/_Project/Art/Characters/chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
 ```
 
-Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`).
+Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped; they are **not yet wired into TestArena**.
 
 ## Dice
 
@@ -50,7 +52,7 @@ Star is a magic spark-star, not a hexagram. Coin is a gold coin, not a compass.
 
 ## Placeholders
 
-Idle only. All Q-version (big head, short body). Melee = cloak + polearm. Caster = pointed hood + lantern or staff. Enemy uses a **different silhouette** from melee, plus rust ring / rust outline and no gold.
+Ally melee and caster placeholders remain idle-only. The enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) now also has shipped walk and attack frames (see below); those frames are **not yet wired into TestArena**. All Q-version (big head, short body). Melee = cloak + polearm. Caster = pointed hood + lantern or staff. Enemy uses a **different silhouette** from melee, plus rust ring / rust outline and no gold, and faces left.
 
 `chr_ally_placeholder_*` and `chr_enemy_placeholder_idle` remain **temporary stand-ins** until the official 8-ally idles below are approved and merged. Do not delete the M0 dice or TestArena environment pack.
 
@@ -75,7 +77,7 @@ Official idles use stronger per-role accent colors (linings, sashes, cloak panel
 
 ## Official walk + attack (all eight playable allies)
 
-In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). TestArena plays them. Movement loops the walk. A basic-attack swing plays the attack one-shot, then idle while that unit waits for the next swing. Reserve, setup, and units that have not marched stay on idle. The enemy placeholder stays on its idle.
+In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). TestArena plays them. Movement loops the walk. A basic-attack swing plays the attack one-shot, then idle while that unit waits for the next swing. Reserve, setup, and units that have not marched stay on idle. The enemy placeholder still plays its idle in TestArena; its walk and attack frames are shipped separately below and are **not yet wired**.
 
 Playback is one constant set for every ally (`AllyPoseClock`): 8 frames per second, 125 ms per frame. The walk cycle is 0.5 s. The attack one-shot is 0.5 s and finishes inside the existing melee 1.2 s and ranged 1.5 s intervals. Those combat numbers are unchanged.
 
@@ -98,3 +100,27 @@ All units use this same frame count.
 | Ground ring | Grave-lamp gold `#C9A227` |
 
 Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope. The M0 dice and TestArena environment pack is unchanged and is not voided.
+
+## Enemy placeholder walk + attack (锈蚀步卒 / Rustsoldier)
+
+In scope and shipped for the single M0 enemy (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier). Battlefield slots `enemy_c1` / `enemy_c2` share this one set. Frame counts match the official allies. **Not yet wired into TestArena** — TestArena still plays `chr_enemy_placeholder_idle` for this unit.
+
+| Clip | Count | Naming |
+|------|-------|--------|
+| Walk | 4-frame loop (when wired) | `chr_enemy_placeholder_walk_01.png` … `chr_enemy_placeholder_walk_04.png` |
+| Attack | 4-frame one-shot (when wired): prep, hit, recover, return toward idle | `chr_enemy_placeholder_attack_01.png` … `chr_enemy_placeholder_attack_04.png` |
+| Idle | still | current TestArena playback; the production idle file is unchanged |
+
+| Setting | Value |
+|---------|--------|
+| Canvas | 128×128 RGBA |
+| Texture Type | Sprite (2D and UI) |
+| Pixels Per Unit | 64 |
+| Filter Mode | Bilinear |
+| Pivot | (0.50, 0.15) — matches the existing enemy idle, not the allies' 0.125 |
+| Facing | Left (toward the allies) |
+| Ground ring | Rust red `#8B2E32` (rust outer edge, dark-blue inner). No grave-lamp gold `#C9A227`. |
+
+The existing `chr_enemy_placeholder_idle.png` remains 732×732, pivot (0.50, 0.15), PPU 64. This pass does not replace or rescale it. After wiring, sharpness and on-screen scale may differ from the 732 idle unless engineering accounts for the canvas-size difference.
+
+Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, standalone VFX, Boss, and additional enemy types stay out of scope. Do not delete the official-ally playback notes above. The M0 dice and TestArena environment pack is unchanged and is not voided.

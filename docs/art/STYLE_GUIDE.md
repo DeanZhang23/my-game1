@@ -1,4 +1,4 @@
-# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles + walk & attack)
+# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles + walk & attack + enemy placeholder walk & attack)
 
 **Style lock: Q 版暗黑 (chibi dark-fantasy).** This is the source of truth for Echoes of Fate production.  
 **Supersedes** the withdrawn realistic / painterly / low-poly-realistic M0 draft on PR #10. Those assets are **void** — do not patch or ship them.  
@@ -112,9 +112,11 @@ chr_enemy_placeholder_{anim}.png
 chr_ally_{ashguard|oathblade|lampsister|riftmage|misthunter|boneapostle|chainjudge|bloodacolyte}_idle_01.png
 chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_04.png
 chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
+chr_enemy_placeholder_walk_01.png … chr_enemy_placeholder_walk_04.png
+chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
 ```
 
-M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Official walk and attack frames are in scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided. TestArena plays these frames for all eight: movement loops the walk, a basic-attack swing plays the attack one-shot, and idle covers reserve, setup, and the wait between swings. The enemy placeholder stays on its idle. Playback is 8 frames per second for every ally (125 ms per frame; walk cycle 0.5 s; attack one-shot 0.5 s), which finishes inside the existing melee 1.2 s and ranged 1.5 s intervals.
+M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Official walk and attack frames are in scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided. TestArena plays these frames for all eight: movement loops the walk, a basic-attack swing plays the attack one-shot, and idle covers reserve, setup, and the wait between swings. Walk and attack frames for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are in scope and shipped (see below) but are **not yet wired into TestArena**; TestArena still plays `chr_enemy_placeholder_idle` for that unit. Ally and caster placeholders remain idle-only. Playback is 8 frames per second for every ally (125 ms per frame; walk cycle 0.5 s; attack one-shot 0.5 s), which finishes inside the existing melee 1.2 s and ranged 1.5 s intervals.
 
 IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `enemy` → the matching `chr_*` files; official allies use the stable IDs in the table below.
 
@@ -124,7 +126,7 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - 3D meshes, perspective cameras, photo-rock / photo-fabric
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
-- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Still out of scope: 6 enemies, Boss, hit, death, skill loops, projectile atlases, standalone VFX, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
+- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). Still out of scope: 6 enemies, Boss, hit, death, skill loops, projectile atlases, standalone VFX, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
 
 See `docs/art/USAGE.md`.
 
@@ -161,10 +163,28 @@ Official walk and attack frames are in scope and shipped for all eight playable 
 | Attack | 4 | One-shot on a basic-attack swing: prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
 | Idle | 1 | Reserve, setup, standing, and the wait between swings |
 
-**TestArena playback** (all eight, one constant set in `AllyPoseClock`): 8 frames per second. Movement (seeking or repositioning) loops the walk. The instant a basic attack swings, the attack plays once and does not loop. When that one-shot ends, idle plays while the unit waits out the rest of its attack interval. Reserve, setup, and any unit that has not marched stay on idle. `unit_placeholder_enemy` stays on `chr_enemy_placeholder_idle`; it has no walk or attack frames. The 0.5 s attack clip finishes inside the existing intervals (melee 1.2 s, ranged 1.5 s). Those combat numbers are unchanged.
+**TestArena playback** (all eight, one constant set in `AllyPoseClock`): 8 frames per second. Movement (seeking or repositioning) loops the walk. The instant a basic attack swings, the attack plays once and does not loop. When that one-shot ends, idle plays while the unit waits out the rest of its attack interval. Reserve, setup, and any unit that has not marched stay on idle. `unit_placeholder_enemy` still plays `chr_enemy_placeholder_idle` in TestArena. Walk and attack frames for this enemy are shipped (see below) but are **not yet wired into TestArena**. The 0.5 s attack clip finishes inside the existing intervals (melee 1.2 s, ranged 1.5 s). Those combat numbers are unchanged.
 
 Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope.
 
 Import matches idle: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot about **(0.50, 0.125)** at the feet / gold ring, facing **right**, grave-lamp gold ring `#C9A227`. Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. TestArena plays these frames with the rules above. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`.
+
+## Enemy placeholder walk + attack (锈蚀步卒 / Rustsoldier)
+
+Walk and attack frames are in scope and shipped for the single M0 enemy (`unit_placeholder_enemy`, display name 锈蚀步卒 / Rustsoldier) under `Assets/_Project/Art/Characters/`. Battlefield slots `enemy_c1` / `enemy_c2` share this one set. Frame counts match the official allies so a later engineering pass can use the same playback clock. **These frames are not yet wired into TestArena** — TestArena still plays `chr_enemy_placeholder_idle` for this unit.
+
+| Clip | Frames | Playback (when wired) |
+|------|--------|-----------------------|
+| Walk | 4 | Loop while moving: `chr_enemy_placeholder_walk_01.png` … `chr_enemy_placeholder_walk_04.png` |
+| Attack | 4 | One-shot on a basic-attack swing: prep, hit, recover, return toward idle — `chr_enemy_placeholder_attack_01.png` … `chr_enemy_placeholder_attack_04.png` |
+| Idle | 1 | Current TestArena playback; standing / wait. The production idle file is unchanged. |
+
+Import: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot **(0.50, 0.15)** to match the existing enemy idle (not the allies' 0.125). Faces **left** (toward the allies). Rust-red ground ring `#8B2E32` (rust outer edge, dark-blue inner). **No** grave-lamp gold `#C9A227`. Q 版暗黑 style lock. Silhouette matches the existing placeholder idle (fox-like pointed hood, rust-edged gray-black tattered cloak, rust scythe); not a palette-swap of ashguard or any ally.
+
+The existing `chr_enemy_placeholder_idle.png` remains **732×732** RGBA, pivot (0.50, 0.15), PPU 64, guid `e1d00009e1d00009e1d00009e1d00009`. This pass does not replace, rescale, or retouch that idle or its `.meta`. After wiring, switching from the 732 idle to a 128 walk/attack frame may show a sharpness difference, and at the same PPU 64 the canvases have different world sizes — engineering should account for display size when wiring.
+
+Hit, death, skill loops, projectile atlases, standalone VFX, Boss, and additional enemy types stay out of scope.
+
+Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.jpg`.
