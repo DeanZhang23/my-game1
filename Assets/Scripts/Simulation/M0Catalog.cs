@@ -167,5 +167,90 @@ namespace Echoes.Simulation
                 }
             };
         }
+
+        // Setup reserve only. CreateEncounter does not include these, so an unplaced
+        // reserve unit does not march and does not change the default lineup.
+        public static UnitDef Oathblade()
+        {
+            return CopyOf(Melee(), UnitIds.Oathblade);
+        }
+
+        public static UnitDef Chainjudge()
+        {
+            return CopyOf(Melee(), UnitIds.Chainjudge);
+        }
+
+        public static UnitDef Lampsister()
+        {
+            return CopyOf(Caster(), UnitIds.Lampsister);
+        }
+
+        public static UnitDef Misthunter()
+        {
+            return CopyOf(Caster(), UnitIds.Misthunter);
+        }
+
+        public static UnitDef Boneapostle()
+        {
+            return CopyOf(Caster(), UnitIds.Boneapostle);
+        }
+
+        public static UnitDef Bloodacolyte()
+        {
+            return CopyOf(Caster(), UnitIds.Bloodacolyte);
+        }
+
+        public static UnitDef[] SetupReserve()
+        {
+            return new[]
+            {
+                Oathblade(),
+                Chainjudge(),
+                Lampsister(),
+                Misthunter(),
+                Boneapostle(),
+                Bloodacolyte()
+            };
+        }
+
+        private static UnitDef CopyOf(UnitDef source, string id)
+        {
+            return new UnitDef
+            {
+                Id = id,
+                NameKey = "unit." + id.Substring("unit_".Length) + ".name",
+                MaxHp = source.MaxHp,
+                Attack = source.Attack,
+                SpellPower = source.SpellPower,
+                Armor = source.Armor,
+                MagicResist = source.MagicResist,
+                CritRate = source.CritRate,
+                CritDamage = source.CritDamage,
+                BaseAttackInterval = source.BaseAttackInterval,
+                EnergyPerSecond = source.EnergyPerSecond,
+                MaxEnergy = source.MaxEnergy,
+                Role = source.Role,
+                MoveSpeed = source.MoveSpeed,
+                AttackRange = source.AttackRange,
+                Basic = CopySkill(source.Basic),
+                Skill = CopySkill(source.Skill)
+            };
+        }
+
+        private static SkillDef CopySkill(SkillDef source)
+        {
+            if (source == null)
+                return null;
+            return new SkillDef
+            {
+                Id = source.Id,
+                NameKey = source.NameKey,
+                School = source.School,
+                Ratio = source.Ratio,
+                EnergyCost = source.EnergyCost,
+                CooldownSeconds = source.CooldownSeconds,
+                IsBasic = source.IsBasic
+            };
+        }
     }
 }

@@ -18,3 +18,15 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: e1d00004e1d00004e1d00004e1d00004, type: 3}
   - unitId: unit_placeholder_enemy
     sprite: {fileID: 21300000, guid: e1d00009e1d00009e1d00009e1d00009, type: 3}
+  - unitId: unit_oathblade
+    sprite: {fileID: 21300000, guid: e1d00002e1d00002e1d00002e1d00002, type: 3}
+  - unitId: unit_chainjudge
+    sprite: {fileID: 21300000, guid: e1d00007e1d00007e1d00007e1d00007, type: 3}
+  - unitId: unit_lampsister
+    sprite: {fileID: 21300000, guid: e1d00003e1d00003e1d00003e1d00003, type: 3}
+  - unitId: unit_misthunter
+    sprite: {fileID: 21300000, guid: e1d00005e1d00005e1d00005e1d00005, type: 3}
+  - unitId: unit_boneapostle
+    sprite: {fileID: 21300000, guid: e1d00006e1d00006e1d00006e1d00006, type: 3}
+  - unitId: unit_bloodacolyte
+    sprite: {fileID: 21300000, guid: e1d00008e1d00008e1d00008e1d00008, type: 3}

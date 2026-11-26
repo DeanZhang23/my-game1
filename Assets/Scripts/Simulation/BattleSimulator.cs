@@ -23,6 +23,7 @@ namespace Echoes.Simulation
 
         public const int DiceRollCost = 50;
         public const int DiceConfirmDelayMs = 6000;
+        public const int MaxPlacedAllies = 5;
 
         public BattlePhase Phase { get; private set; }
         public int NowMs { get { return _nowMs; } }
@@ -128,6 +129,7 @@ namespace Echoes.Simulation
 
         // Setup only. An empty slot id benches the unit. An occupied ally slot swaps.
         // Does not mutate the encounter, and does not write a log line. Slot ids are logged at spawn.
+        // Placing a benched unit on an empty cell stops at MaxPlacedAllies. A swap does not.
         public bool TrySetAllySlot(string unitId, string slotId)
         {
             if (Phase != BattlePhase.Setup)
@@ -143,14 +145,37 @@ namespace Echoes.Simulation
             if (!Slots.IsAllySlot(slotId))
                 return false;
 
+            int occupant = -1;
             for (int i = 0; i < _roster.Count; i++)
             {
                 if (i == index || _roster[i].SlotId != slotId)
                     continue;
-                _roster[i].SlotId = _roster[index].SlotId;
+                occupant = i;
                 break;
             }
+
+            bool wasBenched = string.IsNullOrEmpty(_roster[index].SlotId);
+            if (wasBenched && occupant < 0 && PlacedAllyCount >= MaxPlacedAllies)
+                return false;
+
+            if (occupant >= 0)
+                _roster[occupant].SlotId = _roster[index].SlotId;
             _roster[index].SlotId = slotId;
+            return true;
+        }
+
+        // Setup only. Adds a unit that starts benched. It is not an encounter placement:
+        // an empty slot does not spawn, so leaving the reserve unplaced does not change March.
+        // Duplicate ids are ignored. Does not write a log line.
+        public bool TryAddReserve(UnitDef unit)
+        {
+            if (Phase != BattlePhase.Setup)
+                return false;
+            if (unit == null || string.IsNullOrEmpty(unit.Id))
+                return false;
+            if (FindRosterIndex(unit.Id) >= 0)
+                return false;
+            _roster.Add(new RosterUnit { Def = unit, SlotId = null });
             return true;
         }
 
@@ -1301,7 +1326,7 @@ namespace Echoes.Simulation
         {
             if (encounter.Allies == null || encounter.Allies.Count < 1)
                 throw new InvalidOperationException("Encounter needs at least one ally.");
-            if (encounter.Allies.Count > 5)
+            if (encounter.Allies.Count > MaxPlacedAllies)
                 throw new InvalidOperationException("Ally cap is 5.");
 
             var roster = new List<RosterUnit>();

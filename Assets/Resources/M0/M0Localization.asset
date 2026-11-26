@@ -264,3 +264,21 @@ MonoBehaviour:
   - key: ui.formation.enemy
     zhHans: "敌方"
     en: "Foes"
+  - key: unit.oathblade.name
+    zhHans: "烬誓剑士"
+    en: "Oathblade"
+  - key: unit.chainjudge.name
+    zhHans: "锁链判官"
+    en: "Chainjudge"
+  - key: unit.lampsister.name
+    zhHans: "墓灯修女"
+    en: "Lampsister"
+  - key: unit.misthunter.name
+    zhHans: "雾行猎手"
+    en: "Misthunter"
+  - key: unit.boneapostle.name
+    zhHans: "骨匣使徒"
+    en: "Boneapostle"
+  - key: unit.bloodacolyte.name
+    zhHans: "血契侍从"
+    en: "Bloodacolyte"
