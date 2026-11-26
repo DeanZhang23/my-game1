@@ -235,7 +235,7 @@ namespace Echoes.Presentation
                         widget.shield = Mathf.Max(0, widget.shield - Parse(evt.Get("shieldAbsorbed")));
                 }
                 // Presentation only. A basic swing starts that unit's attack one-shot.
-                // Skills are not attack clips. The enemy placeholder has no attack frames.
+                // Skills are not attack clips. unit_placeholder_enemy uses this same path.
                 if (evt.Type == BattleEvents.Damage && evt.Get("kind") == "basic")
                     NoteSwing(evt.Get("sourceSlot"));
             }
@@ -689,6 +689,9 @@ namespace Echoes.Presentation
                 next = FrameAt(widget.walk, sample.Frame);
             else if (sample.Pose == AllyPose.Attack)
                 next = FrameAt(widget.attack, sample.Frame);
+            // Swap inside the fixed portrait. Do not call SetNativeSize and do not
+            // size the frame from pixels-per-unit: the enemy idle canvas is 732 and
+            // its walk/attack frames are 128, padded to the same figure fraction.
             if (next != null && widget.portrait.sprite != next)
                 widget.portrait.sprite = next;
         }
@@ -1002,6 +1005,10 @@ namespace Echoes.Presentation
         {
             if (sprite == null || parent == null)
                 return null;
+            // Fixed box (combat 32, setup/token 44). preserveAspect fits the sprite
+            // inside it. The enemy idle is 732 px and its clips are 128 px; both pad
+            // the figure to the same fraction of the canvas, so the on-screen size
+            // stays with this box across poses.
             RectTransform rt = Box(parent, "Portrait", pos, new Vector2(size, size), Color.white, false);
             Image image = rt.GetComponent<Image>();
             image.sprite = sprite;
