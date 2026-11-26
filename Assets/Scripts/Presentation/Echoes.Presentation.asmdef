@@ -3,7 +3,8 @@
     "rootNamespace": "Echoes.Presentation",
     "references": [
         "Echoes.Simulation",
-        "Unity.ugui"
+        "Unity.ugui",
+        "UnityEngine.ImageConversionModule"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

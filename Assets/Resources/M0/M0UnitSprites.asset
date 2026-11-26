@@ -24,6 +24,11 @@ MonoBehaviour:
     - {fileID: 21300000, guid: e1d00016e1d00016e1d00016e1d00016, type: 3}
     - {fileID: 21300000, guid: e1d00017e1d00017e1d00017e1d00017, type: 3}
     - {fileID: 21300000, guid: e1d00018e1d00018e1d00018e1d00018, type: 3}
+    death:
+    - {fileID: 21300000, guid: 839e2804ad81e96f9fbcb379b5b4f3e0, type: 3}
+    - {fileID: 21300000, guid: 2217064c747b45498f8098c08f9e81d2, type: 3}
+    - {fileID: 21300000, guid: 52c78549cd4c523f02551b5722ce2bef, type: 3}
+    - {fileID: 21300000, guid: 8cd509d608da0f4ad9bf229c68f868d7, type: 3}
   - unitId: unit_placeholder_caster
     sprite: {fileID: 21300000, guid: e1d00004e1d00004e1d00004e1d00004, type: 3}
     walk:
@@ -36,6 +41,11 @@ MonoBehaviour:
     - {fileID: 21300000, guid: e1d00026e1d00026e1d00026e1d00026, type: 3}
     - {fileID: 21300000, guid: e1d00027e1d00027e1d00027e1d00027, type: 3}
     - {fileID: 21300000, guid: e1d00028e1d00028e1d00028e1d00028, type: 3}
+    death:
+    - {fileID: 21300000, guid: 5fc7fa1d7e3d1f686c49689c1bfff833, type: 3}
+    - {fileID: 21300000, guid: 8411426c3e175ff7716b4ed52fd4ec9d, type: 3}
+    - {fileID: 21300000, guid: 6bca760c52e050064c3b87fdc1465ea2, type: 3}
+    - {fileID: 21300000, guid: b68ae69746de7e231da14f5a73b23a37, type: 3}
   - unitId: unit_placeholder_enemy
     sprite: {fileID: 21300000, guid: e1d00009e1d00009e1d00009e1d00009, type: 3}
     walk:
@@ -48,6 +58,11 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 987afadc6a4125735da60837f470d254, type: 3}
     - {fileID: 21300000, guid: 0b6822bbf96517456e6bc33465af83b0, type: 3}
     - {fileID: 21300000, guid: 5d156f93554e2a835c67e30e4528febe, type: 3}
+    death:
+    - {fileID: 21300000, guid: 18d31f6fd16e6e500d85e0274aada1d5, type: 3}
+    - {fileID: 21300000, guid: 0931907a47bdf9767cb643e29beb5321, type: 3}
+    - {fileID: 21300000, guid: 10dfb76defd44bc736f5562d3ac6a7c6, type: 3}
+    - {fileID: 21300000, guid: eaeaf14524d74655696cb79f327699a5, type: 3}
   - unitId: unit_oathblade
     sprite: {fileID: 21300000, guid: e1d00002e1d00002e1d00002e1d00002, type: 3}
     walk:

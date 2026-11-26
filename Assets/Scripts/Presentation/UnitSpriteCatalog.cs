@@ -9,9 +9,11 @@ namespace Echoes.Presentation
         public string unitId;
         // Idle still. Walk and attack are the 4-frame clips. unit_placeholder_enemy
         // uses the same complete set. An entry with an empty clip stays on this sprite.
+        // Death is the 4-frame fall for the three default TestArena units only.
         public Sprite sprite;
         public Sprite[] walk;
         public Sprite[] attack;
+        public Sprite[] death;
     }
 
     // Presentation-only map from a simulation unit id to idle, walk, and attack sprites.
@@ -50,6 +52,18 @@ namespace Echoes.Presentation
             idle = entry.sprite;
             walk = entry.walk;
             attack = entry.attack;
+            return true;
+        }
+
+        // True only for a full 4-frame death one-shot. The other six official allies
+        // have no death frames, so this stays false and they keep idle / walk / attack.
+        public bool TryGetDeath(string unitId, out Sprite[] death)
+        {
+            death = null;
+            UnitSpriteEntry entry = Find(unitId);
+            if (entry == null || !Complete(entry.death))
+                return false;
+            death = entry.death;
             return true;
         }
 

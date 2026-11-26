@@ -263,4 +263,4 @@ Assets/_Project/Art/UI/Hud/ui_bar_endcap_right_ready.png
 
 Import: Sprite (2D and UI), Mesh Type Full Rect, Filter Bilinear, compression None or High Quality, mipmaps off, PPU 64, PNG RGBA with real transparency (no baked `#0B1220` void on the slices). Buttons and tracks are Image Type Sliced. Bar fills are Image Type Filled (horizontal, origin left) or Sliced + width. See `manifest.json` for per-file 9-slice borders and pivots.
 
-Do not wire these slices to TestArena in this kit, and do not change combat numbers or button logic.
+TestArena uses these slices for the right-rail fate bar, dice slots, combo badge, pending glow, 出征 / 掷骰 / 确认 buttons, and the combat / Resolve nameplates. Setup keeps the in-cell names. Combat numbers and the existing enable / disable / hide rules for those buttons are unchanged. Decorative slices do not take clicks.

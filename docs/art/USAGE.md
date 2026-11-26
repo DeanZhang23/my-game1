@@ -54,7 +54,7 @@ Assets/_Project/Art/UI/Hud/ui_ornament_*.png
 Assets/_Project/Art/UI/Hud/ui_bar_endcap_*.png
 ```
 
-Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena. Death / fall-down paths for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are shipped as an art lock (see below). Death / fall-down paths for the remaining six official allies are a second art lock (see below). TestArena keeps playing idle, walk, and attack for those allies. TestArena continues to play the existing idle, walk, and attack clips. M0 hit-flash and death-puff paths are shipped (see below).
+Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena. Death / fall-down paths for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are played by TestArena (see below). Death / fall-down paths for the remaining six official allies are a second art lock (see below). TestArena keeps playing idle, walk, and attack for those allies. M0 hit-flash and death-puff paths are played by TestArena (see below).
 
 Dice faces remain at `Assets/_Project/Art/UI/Dice/ui_dice_{face}_{state}.png`. The HUD kit composites `*_normal` faces into the 48×48 slots; it does not replace the dice pack.
 
@@ -107,7 +107,7 @@ The original M0 plates `env_riftarena_{ground,bg_far,bg_mid,fg}.png` remain the 
 
 ## TestArena dressing props (additive)
 
-This is an additive dressing layer for the TestArena rift battlefield. It helps read the 3×3 vs 3×3 mid-line and the footholds. It does not replace the locked ground plate. This pack does not wire TestArena scenes or code.
+This is an additive dressing layer for the TestArena rift battlefield. It helps read the 3×3 vs 3×3 mid-line and the footholds. It does not replace the locked ground plate. TestArena draws the three 1280×720 overlays on the locked ground plate. They do not take clicks. Loose stamps stay the composited pieces inside those overlays. `env_riftarena_prop_dressing.png` is the optional composite and is not stacked on the three overlays.
 
 Sort order: dressing sits on **Ground**, under **UnitsRing** / **Units**, so characters stay readable on top.
 
@@ -236,7 +236,7 @@ Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previ
 
 In scope and shipped for the three default TestArena units only: `ashguard` (灰烬卫士), `riftmage` (裂隙术士), and `unit_placeholder_enemy` (锈蚀步卒 / Rustsoldier). Death frames for the remaining six official allies are a second art lock (see below).
 
-This is an art lock. TestArena continues to play the existing idle, walk, and attack clips. Connecting death playback is a later engineering ticket. Do not change simulation numbers in this pass.
+TestArena plays this clip for the three default units (`unit_placeholder_melee` / ashguard, `unit_placeholder_caster` / riftmage, `unit_placeholder_enemy`). Playback is 8 frames per second, a 4-frame one-shot (0.5 s), then holds frame 04 through Resolve. The clip does not loop. A death during an attack one-shot takes over. The other six official allies have a shipped death art lock (see below). TestArena does not play those clips; they stay on idle, walk, and attack. Simulation numbers are unchanged.
 
 | Clip | Count | Naming |
 |------|-------|--------|
@@ -291,7 +291,7 @@ Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previ
 
 ## M0 hit flash and death puff
 
-In scope and shipped under `Assets/_Project/Art/VFX/`. One set, two colorways (`_ally` and `_enemy`), shared by every unit of that side. TestArena scenes, prefabs, and code leave these sprites unplayed. Combat numbers stay as they are. Character art stays as it is. The M0 dice and TestArena environment pack is unchanged and is not voided.
+In scope and shipped under `Assets/_Project/Art/VFX/`. One set, two colorways (`_ally` and `_enemy`), shared by every unit of that side. TestArena plays the hit flash on the unit that takes damage and the death puff at that unit's feet, together with the downed pose. Playback is 10 frames per second, a 4-frame one-shot (0.4 s), and does not loop. Overlapping hits stack. Allies use the `_ally` set. Rustsoldiers (`unit_placeholder_enemy`) use the `_enemy` set. Combat numbers stay as they are. Character art stays as it is. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 | Clip | Count | Naming | Pivot |
 |------|-------|--------|-------|
