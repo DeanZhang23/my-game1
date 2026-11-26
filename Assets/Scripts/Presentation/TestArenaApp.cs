@@ -13,8 +13,9 @@ namespace Echoes.Presentation
         public EncounterDefinitionAsset encounter;
         public LocalizationTableAsset localization;
         public FaceCatalogAsset faces;
-        // Idle stills only. Default melee shows ashguard, caster shows riftmage,
-        // the six reserve allies show their official idles, enemies show the placeholder.
+        // Idle, walk, and attack for the eight official allies. The enemy entry is idle only.
+        // Default melee shows ashguard, caster shows riftmage, the six reserve allies show
+        // their own frames, and enemies stay on the placeholder idle.
         public UnitSpriteCatalog sprites;
         public int fixedSeed;
 
@@ -65,6 +66,9 @@ namespace Echoes.Presentation
         private string _selectedUnitId;
         private string _dragUnitId;
         private bool _fromDrag;
+        // Seconds the pose clock may consume. Button paints leave this at 0 so a click
+        // does not advance a clip a second time in the same frame.
+        private float _poseDt;
 
         // Reference canvas 1600x900, origin at center, +y up.
         // Left: ally 3x3. Center: enemy 3x3. Right: seed and March. The log sits under that column.
@@ -105,6 +109,7 @@ namespace Echoes.Presentation
         {
             if (_sim == null)
                 return;
+            _poseDt = Time.deltaTime;
             if (_sim.Phase == BattlePhase.Countdown)
             {
                 _countdown -= Time.deltaTime;
@@ -118,6 +123,7 @@ namespace Echoes.Presentation
 
             ApplyNew();
             Paint();
+            _poseDt = 0f;
         }
 
         private void LateUpdate()
@@ -228,6 +234,10 @@ namespace Echoes.Presentation
                     if (evt.Type == BattleEvents.Damage)
                         widget.shield = Mathf.Max(0, widget.shield - Parse(evt.Get("shieldAbsorbed")));
                 }
+                // Presentation only. A basic swing starts that unit's attack one-shot.
+                // Skills are not attack clips. The enemy placeholder has no attack frames.
+                if (evt.Type == BattleEvents.Damage && evt.Get("kind") == "basic")
+                    NoteSwing(evt.Get("sourceSlot"));
             }
 
             _logBuilder.AppendLine(Format(evt));
@@ -550,7 +560,19 @@ namespace Echoes.Presentation
             var widget = new UnitWidget();
             widget.root = panel.gameObject;
             widget.unitId = unitId;
-            widget.portrait = AddPortrait(panel, SpriteFor(unitId), new Vector2(-26f, 12f), 32f);
+            Sprite idle = SpriteFor(unitId);
+            Sprite[] walk;
+            Sprite[] attack;
+            Sprite posedIdle;
+            if (sprites != null && sprites.TryGetPose(unitId, out posedIdle, out walk, out attack))
+            {
+                idle = posedIdle;
+                widget.walk = walk;
+                widget.attack = attack;
+                widget.hasClips = true;
+            }
+            widget.idle = idle;
+            widget.portrait = AddPortrait(panel, idle, new Vector2(-26f, 12f), 32f);
             float textX = widget.portrait != null ? 14f : 0f;
             float textW = widget.portrait != null ? 58f : 82f;
             widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 18f), new Vector2(textW, 16f), Clear), 12);
@@ -623,7 +645,66 @@ namespace Echoes.Presentation
                 Vector2 screen = SimToScreen(view.X, view.Y);
                 rt.anchoredPosition = screen - BoardPos;
                 rt.SetAsLastSibling();
+                TickPose(widget, Moving(widget, view));
             }
+        }
+
+        // Position changes mark a step. The hold in AllyPoseClock keeps the walk across
+        // the 50 ms lattice so the loop does not blink to idle between steps.
+        private bool Moving(UnitWidget widget, CombatantView view)
+        {
+            if (!widget.hasPoseSample)
+            {
+                widget.hasPoseSample = true;
+                widget.lastX = view.X;
+                widget.lastY = view.Y;
+                widget.sinceMove = 1f;
+                return false;
+            }
+
+            bool stepped = widget.lastX != view.X || widget.lastY != view.Y;
+            widget.lastX = view.X;
+            widget.lastY = view.Y;
+            if (stepped)
+                widget.sinceMove = 0f;
+            else
+                widget.sinceMove += _poseDt;
+            return AllyPoseClock.IsMoving(widget.sinceMove, view.Alive);
+        }
+
+        private void TickPose(UnitWidget widget, bool moving)
+        {
+            if (widget.portrait == null || !widget.hasClips)
+            {
+                widget.swing = false;
+                return;
+            }
+
+            AllyPoseSample sample = AllyPoseClock.Advance(widget.pose, widget.poseTime, moving, widget.swing, _poseDt);
+            widget.swing = false;
+            widget.pose = sample.Pose;
+            widget.poseTime = sample.Time;
+            Sprite next = widget.idle;
+            if (sample.Pose == AllyPose.Walk)
+                next = FrameAt(widget.walk, sample.Frame);
+            else if (sample.Pose == AllyPose.Attack)
+                next = FrameAt(widget.attack, sample.Frame);
+            if (next != null && widget.portrait.sprite != next)
+                widget.portrait.sprite = next;
+        }
+
+        private static Sprite FrameAt(Sprite[] frames, int index)
+        {
+            if (frames == null || index < 0 || index >= frames.Length)
+                return null;
+            return frames[index];
+        }
+
+        private void NoteSwing(string slot)
+        {
+            UnitWidget widget = FindWidget(slot);
+            if (widget != null && widget.hasClips)
+                widget.swing = true;
         }
 
         private void BuildFormation(Transform root)
@@ -1271,6 +1352,17 @@ namespace Echoes.Presentation
             public int hp;
             public int maxHp;
             public int shield;
+            public Sprite idle;
+            public Sprite[] walk;
+            public Sprite[] attack;
+            public bool hasClips;
+            public bool swing;
+            public AllyPose pose;
+            public float poseTime;
+            public bool hasPoseSample;
+            public decimal lastX;
+            public decimal lastY;
+            public float sinceMove;
 
             public void Paint(string unitLabel, string hpLabel, string shieldLabel)
             {

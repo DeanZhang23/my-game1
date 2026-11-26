@@ -14,19 +14,99 @@ MonoBehaviour:
   entries:
   - unitId: unit_placeholder_melee
     sprite: {fileID: 21300000, guid: e1d00001e1d00001e1d00001e1d00001, type: 3}
+    walk:
+    - {fileID: 21300000, guid: e1d00011e1d00011e1d00011e1d00011, type: 3}
+    - {fileID: 21300000, guid: e1d00012e1d00012e1d00012e1d00012, type: 3}
+    - {fileID: 21300000, guid: e1d00013e1d00013e1d00013e1d00013, type: 3}
+    - {fileID: 21300000, guid: e1d00014e1d00014e1d00014e1d00014, type: 3}
+    attack:
+    - {fileID: 21300000, guid: e1d00015e1d00015e1d00015e1d00015, type: 3}
+    - {fileID: 21300000, guid: e1d00016e1d00016e1d00016e1d00016, type: 3}
+    - {fileID: 21300000, guid: e1d00017e1d00017e1d00017e1d00017, type: 3}
+    - {fileID: 21300000, guid: e1d00018e1d00018e1d00018e1d00018, type: 3}
   - unitId: unit_placeholder_caster
     sprite: {fileID: 21300000, guid: e1d00004e1d00004e1d00004e1d00004, type: 3}
+    walk:
+    - {fileID: 21300000, guid: e1d00021e1d00021e1d00021e1d00021, type: 3}
+    - {fileID: 21300000, guid: e1d00022e1d00022e1d00022e1d00022, type: 3}
+    - {fileID: 21300000, guid: e1d00023e1d00023e1d00023e1d00023, type: 3}
+    - {fileID: 21300000, guid: e1d00024e1d00024e1d00024e1d00024, type: 3}
+    attack:
+    - {fileID: 21300000, guid: e1d00025e1d00025e1d00025e1d00025, type: 3}
+    - {fileID: 21300000, guid: e1d00026e1d00026e1d00026e1d00026, type: 3}
+    - {fileID: 21300000, guid: e1d00027e1d00027e1d00027e1d00027, type: 3}
+    - {fileID: 21300000, guid: e1d00028e1d00028e1d00028e1d00028, type: 3}
   - unitId: unit_placeholder_enemy
     sprite: {fileID: 21300000, guid: e1d00009e1d00009e1d00009e1d00009, type: 3}
   - unitId: unit_oathblade
     sprite: {fileID: 21300000, guid: e1d00002e1d00002e1d00002e1d00002, type: 3}
+    walk:
+    - {fileID: 21300000, guid: 878dc312f0e665d9d1e526f8b4e71b49, type: 3}
+    - {fileID: 21300000, guid: 73ac259a671533a47a395480c6aab7d1, type: 3}
+    - {fileID: 21300000, guid: aae41b456dce7763966e021d84173c06, type: 3}
+    - {fileID: 21300000, guid: 1bfc79c0d045527a561601888e603706, type: 3}
+    attack:
+    - {fileID: 21300000, guid: 83dc73ae70ae2f0c8692e0c40f49ea7d, type: 3}
+    - {fileID: 21300000, guid: c347de0ae6c2d71c98b317e187584816, type: 3}
+    - {fileID: 21300000, guid: 7bfdbdcecd26a58b042eb37bf1044a9e, type: 3}
+    - {fileID: 21300000, guid: 264e4ad7bc930496b9bf8a390d18d6f3, type: 3}
   - unitId: unit_chainjudge
     sprite: {fileID: 21300000, guid: e1d00007e1d00007e1d00007e1d00007, type: 3}
+    walk:
+    - {fileID: 21300000, guid: f3daebee289707e61295fbf948103376, type: 3}
+    - {fileID: 21300000, guid: 28015fd8a055ff7ba9e49a9d5ca9e89e, type: 3}
+    - {fileID: 21300000, guid: 415391f3879cd1336b3711a9bac79008, type: 3}
+    - {fileID: 21300000, guid: fd02734db0ab77d44a4c1845ba8e956b, type: 3}
+    attack:
+    - {fileID: 21300000, guid: 944a966e05d2fabe8669c14d84e318ef, type: 3}
+    - {fileID: 21300000, guid: f47867426ac5b99f61aa308216264cb8, type: 3}
+    - {fileID: 21300000, guid: 2443ea908fd8a09d6d4059f7a9f9fcc2, type: 3}
+    - {fileID: 21300000, guid: 850b75209d33159343a4d9023f2d3603, type: 3}
   - unitId: unit_lampsister
     sprite: {fileID: 21300000, guid: e1d00003e1d00003e1d00003e1d00003, type: 3}
+    walk:
+    - {fileID: 21300000, guid: b7a9e637bcf7856c48b71cf504478cb7, type: 3}
+    - {fileID: 21300000, guid: f62d892f45547f07e33aca05aeb9c10f, type: 3}
+    - {fileID: 21300000, guid: 78741e038b94bb74e218be4769330e66, type: 3}
+    - {fileID: 21300000, guid: 7dbefcfb0f9a5cb0fc487317659e265d, type: 3}
+    attack:
+    - {fileID: 21300000, guid: 02e34632cb7bf8b5ca3e63deea1f65fc, type: 3}
+    - {fileID: 21300000, guid: d245619fcd055ef93bd19117573cc226, type: 3}
+    - {fileID: 21300000, guid: ffa2f39519168fb156dae51ad238dc12, type: 3}
+    - {fileID: 21300000, guid: 8a79e95698decb73097887839a1a0347, type: 3}
   - unitId: unit_misthunter
     sprite: {fileID: 21300000, guid: e1d00005e1d00005e1d00005e1d00005, type: 3}
+    walk:
+    - {fileID: 21300000, guid: ae193366b69671c089346be90eee7d81, type: 3}
+    - {fileID: 21300000, guid: 96a323253349bfa03319acf007381015, type: 3}
+    - {fileID: 21300000, guid: 969ffef852a409f76b82e907018d8049, type: 3}
+    - {fileID: 21300000, guid: 08f0a463f3e557ef820b81fece8d2622, type: 3}
+    attack:
+    - {fileID: 21300000, guid: d048ef363f7287c022b62d1d230e31b5, type: 3}
+    - {fileID: 21300000, guid: 556dc6fff377916449bb61767dcea946, type: 3}
+    - {fileID: 21300000, guid: 547a1989cce3cbd719304fe3cb153529, type: 3}
+    - {fileID: 21300000, guid: 85418bfefc8b562a227e1b58a45e3df1, type: 3}
   - unitId: unit_boneapostle
     sprite: {fileID: 21300000, guid: e1d00006e1d00006e1d00006e1d00006, type: 3}
+    walk:
+    - {fileID: 21300000, guid: 39671494715a3d3ef49db27bd8b4aeb1, type: 3}
+    - {fileID: 21300000, guid: dc8393ada0c3362eb3c25f4acc9d905e, type: 3}
+    - {fileID: 21300000, guid: ef7208984da404eccf6279f1ef834f65, type: 3}
+    - {fileID: 21300000, guid: 87f6618218af0a71d26374a8d15ac58b, type: 3}
+    attack:
+    - {fileID: 21300000, guid: 2c4fcd19a57b54b77968257c5149d835, type: 3}
+    - {fileID: 21300000, guid: 19687396820528a41009f58cf188d4c9, type: 3}
+    - {fileID: 21300000, guid: 1606e6379d43f6707e05941510c35cc8, type: 3}
+    - {fileID: 21300000, guid: 7e297a8344b7376e95efb90119107fb1, type: 3}
   - unitId: unit_bloodacolyte
     sprite: {fileID: 21300000, guid: e1d00008e1d00008e1d00008e1d00008, type: 3}
+    walk:
+    - {fileID: 21300000, guid: 7ab6d0fb5f103ce34b2057a57e13022f, type: 3}
+    - {fileID: 21300000, guid: 3f1db97301122e46f561442c086b0ecc, type: 3}
+    - {fileID: 21300000, guid: 7d5754d53cff96745170fffc0241271c, type: 3}
+    - {fileID: 21300000, guid: c629afdc48d9215d26161d445207f2f0, type: 3}
+    attack:
+    - {fileID: 21300000, guid: 44067152cfeabeb32eaa960f10c768b1, type: 3}
+    - {fileID: 21300000, guid: 94ea24417a617f9b35bbac593d34fcce, type: 3}
+    - {fileID: 21300000, guid: 9ba76c6af5b134265711f2c3b4c163e9, type: 3}
+    - {fileID: 21300000, guid: 186d65eaafd56ee81edfc57633a7d690, type: 3}
