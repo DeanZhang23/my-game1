@@ -36,7 +36,7 @@ Assets/_Project/Art/Characters/chr_enemy_placeholder_walk_01.png … chr_enemy_p
 Assets/_Project/Art/Characters/chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
 ```
 
-Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped; they are **not yet wired into TestArena**.
+Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena.
 
 ## Dice
 
@@ -52,7 +52,7 @@ Star is a magic spark-star, not a hexagram. Coin is a gold coin, not a compass.
 
 ## Placeholders
 
-Ally melee and caster placeholders remain idle-only. The enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) now also has shipped walk and attack frames (see below); those frames are **not yet wired into TestArena**. All Q-version (big head, short body). Melee = cloak + polearm. Caster = pointed hood + lantern or staff. Enemy uses a **different silhouette** from melee, plus rust ring / rust outline and no gold, and faces left.
+Ally melee and caster placeholders remain idle-only. The enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) walk and attack frames are wired into TestArena (see below). All Q-version (big head, short body). Melee = cloak + polearm. Caster = pointed hood + lantern or staff. Enemy uses a **different silhouette** from melee, plus rust ring / rust outline and no gold, and faces left.
 
 `chr_ally_placeholder_*` and `chr_enemy_placeholder_idle` remain **temporary stand-ins** until the official 8-ally idles below are approved and merged. Do not delete the M0 dice or TestArena environment pack.
 
@@ -77,7 +77,7 @@ Official idles use stronger per-role accent colors (linings, sashes, cloak panel
 
 ## Official walk + attack (all eight playable allies)
 
-In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). TestArena plays them. Movement loops the walk. A basic-attack swing plays the attack one-shot, then idle while that unit waits for the next swing. Reserve, setup, and units that have not marched stay on idle. The enemy placeholder still plays its idle in TestArena; its walk and attack frames are shipped separately below and are **not yet wired**.
+In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). TestArena plays them. Movement loops the walk. A basic-attack swing plays the attack one-shot, then idle while that unit waits for the next swing. Reserve, setup, and units that have not marched stay on idle. `unit_placeholder_enemy` is wired into TestArena on the same `AllyPoseClock` (see below).
 
 Playback is one constant set for every ally (`AllyPoseClock`): 8 frames per second, 125 ms per frame. The walk cycle is 0.5 s. The attack one-shot is 0.5 s and finishes inside the existing melee 1.2 s and ranged 1.5 s intervals. Those combat numbers are unchanged.
 
@@ -103,13 +103,15 @@ Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/prev
 
 ## Enemy placeholder walk + attack (锈蚀步卒 / Rustsoldier)
 
-In scope and shipped for the single M0 enemy (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier). Battlefield slots `enemy_c1` / `enemy_c2` share this one set. Frame counts match the official allies. **Not yet wired into TestArena** — TestArena still plays `chr_enemy_placeholder_idle` for this unit.
+In scope and shipped for the single M0 enemy (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier). `unit_placeholder_enemy` is wired into TestArena. Battlefield slots `enemy_c1` / `enemy_c2` share this one catalog entry and play independently. Frame counts match the official allies. Playback reuses `AllyPoseClock` unchanged (8 frames per second, 4 frames, walk loop 0.5 s, attack one-shot 0.5 s, move hold 0.08 s).
+
+Setup, or not moving and not attacking, or waiting between swings: idle. Seeking or otherwise moving: loop the walk. The instant a basic-attack swing fires (`kind == "basic"`), the attack one-shot starts at frame 0 and does not loop. Skill casts do not start the attack clip. When the clip ends, idle plays if the unit is still waiting, and walk plays if the unit is still moving. The attack plays to the end even if the unit is also moving. A new basic swing restarts the one-shot from frame 0.
 
 | Clip | Count | Naming |
 |------|-------|--------|
-| Walk | 4-frame loop (when wired) | `chr_enemy_placeholder_walk_01.png` … `chr_enemy_placeholder_walk_04.png` |
-| Attack | 4-frame one-shot (when wired): prep, hit, recover, return toward idle | `chr_enemy_placeholder_attack_01.png` … `chr_enemy_placeholder_attack_04.png` |
-| Idle | still | current TestArena playback; the production idle file is unchanged |
+| Walk | 4-frame loop while seeking or otherwise moving | `chr_enemy_placeholder_walk_01.png` … `chr_enemy_placeholder_walk_04.png` |
+| Attack | 4-frame one-shot on a basic-attack swing: prep, hit, recover, return toward idle | `chr_enemy_placeholder_attack_01.png` … `chr_enemy_placeholder_attack_04.png` |
+| Idle | still | setup, standing, and the wait between swings; the production idle file is unchanged |
 
 | Setting | Value |
 |---------|--------|
@@ -121,6 +123,6 @@ In scope and shipped for the single M0 enemy (`unit_placeholder_enemy`, 锈蚀�
 | Facing | Left (toward the allies) |
 | Ground ring | Rust red `#8B2E32` (rust outer edge, dark-blue inner). No grave-lamp gold `#C9A227`. |
 
-The existing `chr_enemy_placeholder_idle.png` remains 732×732, pivot (0.50, 0.15), PPU 64. This pass does not replace or rescale it. After wiring, sharpness and on-screen scale may differ from the 732 idle unless engineering accounts for the canvas-size difference.
+The existing `chr_enemy_placeholder_idle.png` remains 732×732, pivot (0.50, 0.15), PPU 64, guid `e1d00009e1d00009e1d00009e1d00009`. This wiring does not replace or rescale it or its `.meta`. TestArena portraits are fixed-size UI images (combat 32, setup/token 44) with `preserveAspect`. Walk and attack sprites are swapped inside those boxes. `SetNativeSize` is not used, and the 128 frames are not placed at world size from PPU 64. The 128 frames pad the figure to the same fraction of the canvas as the 732 idle (feet near 93% of canvas height, figure height about 86% of the canvas), so the on-screen character stays roughly the same size when the pose changes. A sharpness difference between the 732 idle and the 128 frames is acceptable and is left alone.
 
 Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, standalone VFX, Boss, and additional enemy types stay out of scope. Do not delete the official-ally playback notes above. The M0 dice and TestArena environment pack is unchanged and is not voided.

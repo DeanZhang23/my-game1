@@ -102,7 +102,7 @@ namespace Echoes.Simulation.Tests
         }
 
         [Fact]
-        public void Catalog_BindsWalkAndAttackForTheEightAllies_AndNotTheEnemy()
+        public void Catalog_BindsWalkAndAttackForTheEightAllies_AndTheEnemy()
         {
             string root = RepoRoot();
             string catalog = Read(root, "Assets/Resources/M0/M0UnitSprites.asset");
@@ -136,9 +136,41 @@ namespace Echoes.Simulation.Tests
             }
 
             string enemy = Entry(catalog, "unit_placeholder_enemy");
-            Assert.Contains("e1d00009e1d00009e1d00009e1d00009", enemy);
-            Assert.DoesNotContain("walk:", enemy);
-            Assert.DoesNotContain("attack:", enemy);
+            const string enemyIdle = "e1d00009e1d00009e1d00009e1d00009";
+            int enemyAt = enemy.IndexOf(enemyIdle, StringComparison.Ordinal);
+            Assert.True(enemyAt >= 0, "enemy idle");
+            string[] enemyWalk =
+            {
+                "aa4458cbe138a5b540570a6a354e0a14",
+                "981ada06e77bd65d2f5215c26f4ab808",
+                "36d09fb683adb07bd8144acbfa2afe9c",
+                "008fd34b0e5b58a933f03184f4df51f5"
+            };
+            string[] enemyAttack =
+            {
+                "0486a0e6f0755ac5651fbd09816779e1",
+                "987afadc6a4125735da60837f470d254",
+                "0b6822bbf96517456e6bc33465af83b0",
+                "5d156f93554e2a835c67e30e4528febe"
+            };
+            for (int frame = 0; frame < enemyWalk.Length; frame++)
+            {
+                string file = "chr_enemy_placeholder_walk_0" + (frame + 1) + ".png";
+                Assert.Equal(enemyWalk[frame], GuidOf(root, file));
+                int at = enemy.IndexOf(enemyWalk[frame], enemyAt, StringComparison.Ordinal);
+                Assert.True(at > enemyAt, "enemy walk " + (frame + 1));
+                enemyAt = at;
+                AssertEnemyImport(root, file);
+            }
+            for (int frame = 0; frame < enemyAttack.Length; frame++)
+            {
+                string file = "chr_enemy_placeholder_attack_0" + (frame + 1) + ".png";
+                Assert.Equal(enemyAttack[frame], GuidOf(root, file));
+                int at = enemy.IndexOf(enemyAttack[frame], enemyAt, StringComparison.Ordinal);
+                Assert.True(at > enemyAt, "enemy attack " + (frame + 1));
+                enemyAt = at;
+                AssertEnemyImport(root, file);
+            }
         }
 
         [Fact]
@@ -148,14 +180,30 @@ namespace Echoes.Simulation.Tests
             string style = Read(root, "docs/art/STYLE_GUIDE.md");
             string usage = Read(root, "docs/art/USAGE.md");
             string app = Read(root, "Assets/Scripts/Presentation/TestArenaApp.cs");
+            Assert.DoesNotContain("not yet wired into TestArena", style);
+            Assert.DoesNotContain("not yet wired into TestArena", usage);
+            Assert.DoesNotContain("not yet wired", style);
+            Assert.DoesNotContain("not yet wired", usage);
+            Assert.DoesNotContain("Not yet wired", style);
+            Assert.DoesNotContain("Not yet wired", usage);
             Assert.DoesNotContain("not wired into TestArena", style);
             Assert.DoesNotContain("not wired into TestArena", usage);
+            Assert.DoesNotContain("not wired", style);
+            Assert.DoesNotContain("not wired", usage);
+            Assert.DoesNotContain("still plays `chr_enemy_placeholder_idle`", style);
+            Assert.DoesNotContain("still plays `chr_enemy_placeholder_idle`", usage);
+            Assert.Contains("`unit_placeholder_enemy` is wired into TestArena", style);
+            Assert.Contains("`unit_placeholder_enemy` is wired into TestArena", usage);
             Assert.Contains("8 frames per second", style);
             Assert.Contains("8 frames per second", usage);
             Assert.Contains("basic-attack swing", style);
             Assert.Contains("basic-attack swing", usage);
             Assert.Contains("Movement loops the walk", usage);
-            Assert.Contains("`unit_placeholder_enemy` still plays `chr_enemy_placeholder_idle` in TestArena", style);
+            Assert.Contains("Faces **left**", style);
+            Assert.Contains("#8B2E32", style);
+            Assert.Contains("#8B2E32", usage);
+            Assert.Contains("732×732", style);
+            Assert.Contains("732×732", usage);
             Assert.Contains("evt.Get(\"kind\") == \"basic\"", app);
             Assert.Contains("AllyPoseClock.Advance", app);
             Assert.Contains("LocKeys.Begin", app);
@@ -171,6 +219,17 @@ namespace Echoes.Simulation.Tests
             Assert.Contains("spritePixelsToUnits: 64", meta);
             Assert.Contains("filterMode: 1", meta);
             Assert.Contains("spritePivot: {x: 0.5, y: 0.125}", meta);
+        }
+
+        // Enemy feet sit at (0.50, 0.15). Do not reuse the ally pivot 0.125.
+        private static void AssertEnemyImport(string root, string file)
+        {
+            string meta = Read(root, "Assets/_Project/Art/Characters/" + file + ".meta");
+            Assert.Contains("textureType: 8", meta);
+            Assert.Contains("spritePixelsToUnits: 64", meta);
+            Assert.Contains("filterMode: 1", meta);
+            Assert.Contains("spritePivot: {x: 0.5, y: 0.15}", meta);
+            Assert.DoesNotContain("spritePivot: {x: 0.5, y: 0.125}", meta);
         }
 
         private static string GuidOf(string root, string file)

@@ -7,8 +7,8 @@ namespace Echoes.Presentation
     public sealed class UnitSpriteEntry
     {
         public string unitId;
-        // Idle still. Walk and attack are the 4-frame clips. Leave them empty for
-        // the enemy placeholder so it stays on this sprite.
+        // Idle still. Walk and attack are the 4-frame clips. unit_placeholder_enemy
+        // uses the same complete set. An entry with an empty clip stays on this sprite.
         public Sprite sprite;
         public Sprite[] walk;
         public Sprite[] attack;
@@ -35,7 +35,8 @@ namespace Echoes.Presentation
         }
 
         // True only when idle plus a full walk loop and a full attack one-shot are assigned.
-        // The enemy placeholder fails this and the presentation keeps its idle.
+        // unit_placeholder_enemy meets this, so enemy_c1 and enemy_c2 play through it.
+        // An incomplete entry stays on idle.
         public bool TryGetPose(string unitId, out Sprite idle, out Sprite[] walk, out Sprite[] attack)
         {
             idle = null;
