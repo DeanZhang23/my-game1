@@ -1,4 +1,4 @@
-# Echoes of Fate — art USAGE (M0 + official 8-ally idles + walk & attack + enemy placeholder walk & attack)
+# Echoes of Fate — art USAGE (M0 + official 8-ally idles + walk & attack + enemy placeholder walk & attack + M0 hit flash & death puff)
 
 **Style:** Q 版暗黑 (chibi dark-fantasy). See `STYLE_GUIDE.md`.  
 The earlier realistic / painterly M0 draft is **void**. Do not import it into TestArena. Prior Abyss Hook / Cthulhu sheets are also not for this mode.
@@ -36,9 +36,11 @@ Assets/_Project/Art/Characters/chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_
 Assets/_Project/Art/Characters/chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
 Assets/_Project/Art/Characters/chr_enemy_placeholder_walk_01.png … chr_enemy_placeholder_walk_04.png
 Assets/_Project/Art/Characters/chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
+Assets/_Project/Art/VFX/fx_hit_flash_{ally|enemy}_01.png … fx_hit_flash_{ally|enemy}_04.png
+Assets/_Project/Art/VFX/fx_death_puff_{ally|enemy}_01.png … fx_death_puff_{ally|enemy}_04.png
 ```
 
-Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena.
+Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena. M0 hit-flash and death-puff paths are shipped (see below).
 
 ## Dice
 
@@ -124,7 +126,7 @@ IDs: `ashguard` (灰烬卫士), `oathblade` (烬誓剑士), `lampsister` (墓灯
 | Facing | Right (toward the enemy side) |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. TestArena shows this still for reserve, setup, standing, and the wait between swings. Walk and attack for all eight playable allies are a separate shipped set (below). Hit, death, skill loops, projectile atlases, and standalone VFX are still out of scope.
+Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. TestArena shows this still for reserve, setup, standing, and the wait between swings. Walk and attack for all eight playable allies are a separate shipped set (below). Character hit-react loops, character death/down animation frames, skill loops, and projectile atlases are still out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (below).
 
 Official idles use stronger per-role accent colors (linings, sashes, cloak panels, weapon glow) so the roster is not a single navy mass, and they are accessory-dense with layered materials and chunky ornaments. Each official idle should show 5–7 fairly obvious gear pieces, readable at 64 px (not tiny trim; the gold ground ring does not count). Palette and import settings are otherwise unchanged. The M0 dice / TestArena pack is not voided.
 
@@ -152,7 +154,7 @@ All units use this same frame count.
 | Facing | Right |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope. The M0 dice and TestArena environment pack is unchanged and is not voided.
+Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`. Character hit-react loops, character death/down animation frames, skill loops, and projectile atlases stay out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (below). The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 ## Enemy placeholder walk + attack (锈蚀步卒 / Rustsoldier)
 
@@ -178,4 +180,32 @@ Setup, or not moving and not attacking, or waiting between swings: idle. Seeking
 
 The existing `chr_enemy_placeholder_idle.png` remains 732×732, pivot (0.50, 0.15), PPU 64, guid `e1d00009e1d00009e1d00009e1d00009`. This wiring does not replace or rescale it or its `.meta`. TestArena portraits are fixed-size UI images (combat 32, setup/token 44) with `preserveAspect`. Walk and attack sprites are swapped inside those boxes. `SetNativeSize` is not used, and the 128 frames are not placed at world size from PPU 64. The 128 frames pad the figure to the same fraction of the canvas as the 732 idle (feet near 93% of canvas height, figure height about 86% of the canvas), so the on-screen character stays roughly the same size when the pose changes. A sharpness difference between the 732 idle and the 128 frames is acceptable and is left alone.
 
-Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, standalone VFX, Boss, and additional enemy types stay out of scope. Do not delete the official-ally playback notes above. The M0 dice and TestArena environment pack is unchanged and is not voided.
+Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.jpg`. Character hit-react loops, character death/down animation frames, skill loops, projectile atlases, Boss VFX, and additional enemy types stay out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (below). Do not delete the official-ally playback notes above. The M0 dice and TestArena environment pack is unchanged and is not voided.
+
+## M0 hit flash and death puff
+
+In scope and shipped under `Assets/_Project/Art/VFX/`. One set, two colorways (`_ally` and `_enemy`), shared by every unit of that side. TestArena scenes, prefabs, and code leave these sprites unplayed. Combat numbers stay as they are. Character art stays as it is. The M0 dice and TestArena environment pack is unchanged and is not voided.
+
+| Clip | Count | Naming | Pivot |
+|------|-------|--------|-------|
+| Hit flash | 4-frame one-shot, no loop | `fx_hit_flash_{ally\|enemy}_01.png` … `_04.png` | (0.50, 0.50) on the unit body |
+| Death puff | 4-frame one-shot, no loop | `fx_death_puff_{ally\|enemy}_01.png` … `_04.png` | (0.50, 0.18) at the feet / ground ring |
+
+Playback: recommended 10 fps, 100 ms per frame, 0.4 s total. Do not loop.
+
+| Setting | Value |
+|---------|--------|
+| Canvas | 128×128 RGBA |
+| Texture Type | Sprite (2D and UI) |
+| Pixels Per Unit | 64 |
+| Filter Mode | Bilinear |
+| Compression | None |
+| Mipmaps | Off |
+| Color space | sRGB, alphaIsTransparency |
+| Pivot | Custom (alignment 9); see the table above |
+
+`_ally` is grave-lamp gold `#C9A227` with highlight `#E8C547`. `_enemy` is rust red `#8B2E32` with highlight `#B84A3E` and shadow `#5C1C22`. Death puffs are ash `#6B6560` / `#9A938A` with those accents.
+
+Review contact sheet: `docs/art/previews/lockpass_m0_hit_death_vfx.jpg`.
+
+Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, character death/down animation frames, Grave-Lamp Village, additional enemy types.
