@@ -1,4 +1,4 @@
-# Echoes of Fate — art USAGE (M0 + official 8-ally idles + ashguard/riftmage walk & attack)
+# Echoes of Fate — art USAGE (M0 + official 8-ally idles + walk & attack)
 
 **Style:** Q 版暗黑 (chibi dark-fantasy). See `STYLE_GUIDE.md`.  
 The earlier realistic / painterly M0 draft is **void**. Do not import it into TestArena. Prior Abyss Hook / Cthulhu sheets are also not for this mode.
@@ -34,7 +34,7 @@ Assets/_Project/Art/Characters/chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_
 Assets/_Project/Art/Characters/chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
 ```
 
-Walk and attack paths are shipped for `ashguard` and `riftmage` only. The other six allies still have idle only until a later ticket.
+Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`).
 
 ## Dice
 
@@ -69,20 +69,20 @@ IDs: `ashguard` (灰烬卫士), `oathblade` (烬誓剑士), `lampsister` (墓灯
 | Facing | Right (toward the enemy side) |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. Walk and attack for `ashguard` and `riftmage` are a separate shipped set (below). Hit, death, skill loops, projectile atlases, and standalone VFX are still out of scope.
+Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. Walk and attack for all eight playable allies are a separate shipped set (below). Hit, death, skill loops, projectile atlases, and standalone VFX are still out of scope.
 
 Official idles use stronger per-role accent colors (linings, sashes, cloak panels, weapon glow) so the roster is not a single navy mass, and they are accessory-dense with layered materials and chunky ornaments. Each official idle should show 5–7 fairly obvious gear pieces, readable at 64 px (not tiny trim; the gold ground ring does not count). Palette and import settings are otherwise unchanged. The M0 dice / TestArena pack is not voided.
 
-## Official walk + attack (ashguard, riftmage)
+## Official walk + attack (all eight playable allies)
 
-In scope and shipped for `ashguard` and `riftmage` only. The other six allies still have idle only until a later ticket. Not wired into TestArena.
+In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Not wired into TestArena.
 
 | Clip | Count | Naming |
 |------|-------|--------|
 | Walk | 4-frame loop | `chr_ally_{id}_walk_01.png` … `chr_ally_{id}_walk_04.png` |
 | Attack | 4-frame one-shot | prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
 
-All units will use this same frame count.
+All units use this same frame count.
 
 | Setting | Value |
 |---------|--------|
@@ -94,4 +94,4 @@ All units will use this same frame count.
 | Facing | Right |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope. The M0 dice and TestArena environment pack is unchanged and is not voided.
+Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`. Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope. The M0 dice and TestArena environment pack is unchanged and is not voided.
