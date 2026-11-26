@@ -61,6 +61,7 @@ namespace Echoes.Simulation
     public static class BattleEvents
     {
         public const string BattleStart = "battle_start";
+        public const string FateEnergy = "fate_energy";
         public const string DiceRoll = "dice_roll";
         public const string DiceLock = "dice_lock";
         public const string DiceReroll = "dice_reroll";
@@ -77,6 +78,24 @@ namespace Echoes.Simulation
         public const string SkillCast = "skill_cast";
         public const string UnitDeath = "unit_death";
         public const string BattleEnd = "battle_end";
+    }
+
+    public static class FateSources
+    {
+        public const string Damage = "fate_from_damage";
+        public const string Kill = "fate_from_kill";
+        public const string SkillEnergy = "fate_from_skill_energy";
+        public const string SkillCast = "fate_from_skill_cast";
+    }
+
+    public static class EffectTargets
+    {
+        public const string AllMelee = "target_all_melee";
+        public const string AllRanged = "target_all_ranged";
+        public const string AllAllies = "target_all_allies";
+        public const string Battle = "target_battle";
+        public const string Hero = "target_hero";
+        public const string HeroLink = "target_hero_link";
     }
 
     public static class UnitRoles
@@ -100,6 +119,8 @@ namespace Echoes.Simulation
         public const string Reroll = "ui.reroll";
         public const string Commit = "ui.commit";
         public const string Confirm = "ui.confirm";
+        public const string Roll = "ui.roll";
+        public const string Fate = "ui.fate";
         public const string Skip = "ui.skip";
         public const string Locale = "ui.locale";
         public const string Crack = "ui.crack";

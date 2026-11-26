@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Echoes.Simulation
 {
@@ -113,7 +114,26 @@ namespace Echoes.Simulation
                 result.SacrificeFraction = 0.05m * m;
             }
 
+            var effects = new List<FaceEffectSpec>();
+            AddEffect(effects, counts, FaceIds.Sword, EffectTargets.AllMelee);
+            AddEffect(effects, counts, FaceIds.Shield, EffectTargets.AllMelee);
+            AddEffect(effects, counts, FaceIds.Star, EffectTargets.AllRanged);
+            AddEffect(effects, counts, FaceIds.Feather, EffectTargets.AllAllies);
+            AddEffect(effects, counts, FaceIds.Coin, EffectTargets.Battle);
+            AddEffect(effects, counts, FaceIds.Skull, EffectTargets.AllAllies);
+            result.Effects = effects.ToArray();
             return result;
+        }
+
+        private static void AddEffect(List<FaceEffectSpec> effects, int[] counts, string faceId, string targetKind)
+        {
+            if (counts[FaceIds.IndexOf(faceId)] <= 0)
+                return;
+            effects.Add(new FaceEffectSpec
+            {
+                FaceId = faceId,
+                TargetKind = targetKind
+            });
         }
 
         private static decimal Coeff(FaceResolution result, string face)

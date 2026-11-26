@@ -11,9 +11,18 @@ namespace Echoes.Simulation.Tests
         public const int Seed = 424242;
 
         [Fact]
-        public void GoldenSeed_AutoSeekMoveEngage_ReplaysExactly()
+        public void GoldenSeed_MidCombatDice_ReplaysExactly()
         {
-            string actual = Canonical(Play());
+            BattleSimulator sim = Play();
+            Assert.Equal(1, Count(sim, BattleEvents.DiceRoll));
+            Assert.Equal(1, Count(sim, BattleEvents.DiceCommit));
+            Assert.Equal("player", Find(sim, BattleEvents.DiceCommit).Get("reason"));
+            Assert.Equal(1, Count(sim, BattleEvents.ComboResolved));
+            Assert.Equal(0, Count(sim, BattleEvents.DiceReroll));
+            Assert.Equal(0, Count(sim, BattleEvents.DiceLock));
+            Assert.Equal(0, Count(sim, BattleEvents.CrackGained));
+            Assert.Equal(0, Count(sim, "tactical_window_opened"));
+            string actual = Canonical(sim);
             string path = GoldenPath();
             if (Environment.GetEnvironmentVariable("UPDATE_GOLDEN") == "1")
             {
@@ -38,7 +47,24 @@ namespace Echoes.Simulation.Tests
             sim.Start(M0Catalog.CreateEncounter(), Seed);
             sim.Commit();
             sim.BeginAutoCombat();
-            sim.RunToEnd();
+            // 50ms is the movement lattice. Roll on the first return where the pool can pay,
+            // using the same Roll and Confirm the greybox buttons call. One cycle per battle.
+            bool rolled = false;
+            int guard = 0;
+            while (sim.Phase != BattlePhase.Resolve)
+            {
+                if (++guard > 200000)
+                    throw new InvalidOperationException("Battle did not finish.");
+                if (!rolled && sim.CanRoll)
+                {
+                    sim.Roll();
+                    sim.Confirm();
+                    rolled = true;
+                }
+                if (sim.Phase != BattlePhase.AutoCombat)
+                    break;
+                sim.PumpMs(50);
+            }
             return sim;
         }
 
@@ -47,7 +73,7 @@ namespace Echoes.Simulation.Tests
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             while (dir != null)
             {
-                string candidate = Path.Combine(dir.FullName, "tests", "Echoes.Simulation.Tests", "golden", "m0-autocombat.txt");
+                string candidate = Path.Combine(dir.FullName, "tests", "Echoes.Simulation.Tests", "golden", "m0-midcombat-dice.txt");
                 if (File.Exists(candidate) || Directory.Exists(Path.Combine(dir.FullName, "tests")))
                 {
                     if (Directory.Exists(Path.Combine(dir.FullName, "tests")))
@@ -82,6 +108,27 @@ namespace Echoes.Simulation.Tests
             if (value == null)
                 return "";
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private static int Count(BattleSimulator sim, string type)
+        {
+            int count = 0;
+            for (int i = 0; i < sim.Events.Count; i++)
+            {
+                if (sim.Events[i].Type == type)
+                    count++;
+            }
+            return count;
+        }
+
+        private static BattleEvent Find(BattleSimulator sim, string type)
+        {
+            for (int i = 0; i < sim.Events.Count; i++)
+            {
+                if (sim.Events[i].Type == type)
+                    return sim.Events[i];
+            }
+            return null;
         }
     }
 }

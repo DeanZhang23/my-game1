@@ -30,6 +30,12 @@ MonoBehaviour:
   - key: ui.confirm
     zhHans: "确认"
     en: "Confirm"
+  - key: ui.roll
+    zhHans: "掷骰"
+    en: "Roll"
+  - key: ui.fate
+    zhHans: "命运能量 {0}/100"
+    en: "Fate {0}/100"
   - key: ui.skip
     zhHans: "跳过"
     en: "Skip"
@@ -124,14 +130,14 @@ MonoBehaviour:
     zhHans: "颅 / 献祭"
     en: "Skull / Offering"
   - key: face.sword.desc
-    zhHans: "全队攻击，前排锐意"
-    en: "Team attack, front keen"
+    zhHans: "近战攻击，近战锐意"
+    en: "Melee attack, melee keen"
   - key: face.shield.desc
-    zhHans: "全队护甲，前排护盾"
-    en: "Team armor, front shield"
+    zhHans: "近战护甲，近战护盾"
+    en: "Melee armor, melee shield"
   - key: face.star.desc
-    zhHans: "后排能量，技能伤害"
-    en: "Back energy, skill damage"
+    zhHans: "远程能量，技能伤害"
+    en: "Ranged energy, skill damage"
   - key: face.feather.desc
     zhHans: "攻速，技能冷却"
     en: "Attack speed, cooldown"
@@ -190,8 +196,11 @@ MonoBehaviour:
     zhHans: "裂纹 {0}"
     en: "Crack {0}"
   - key: log.dice_commit
-    zhHans: "出征 {0} / {1} / {2}"
-    en: "March {0} / {1} / {2}"
+    zhHans: "确认 {0} / {1} / {2}  {3}"
+    en: "Confirm {0} / {1} / {2}  {3}"
+  - key: log.fate_energy
+    zhHans: "{0} +{1} → {2}"
+    en: "{0} +{1} -> {2}"
   - key: log.combo_resolved
     zhHans: "{0}"
     en: "{0}"

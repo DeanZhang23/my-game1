@@ -10,10 +10,19 @@ namespace Echoes.Simulation
         private readonly List<RosterUnit> _roster = new List<RosterUnit>();
         private EncounterDef _encounter;
         private DeterministicRng _rng;
+        private FatePool _fate = new FatePool();
+        private readonly string[] _faces = new string[3];
+        private bool _diceRolled;
+        private bool _diceCommitted;
+        private int _diceConfirmAtMs = -1;
+        private int _coinGold;
         private int _seed;
         private int _nowMs;
         private int _nextRetargetMs;
         private int _bankMs;
+
+        public const int DiceRollCost = 50;
+        public const int DiceConfirmDelayMs = 6000;
 
         public BattlePhase Phase { get; private set; }
         public int NowMs { get { return _nowMs; } }
@@ -41,6 +50,37 @@ namespace Echoes.Simulation
             get { return Phase == BattlePhase.Setup && PlacedAllyCount > 0; }
         }
 
+        public int FateEnergy { get { return _fate.Pool; } }
+        public int DamageFateRemainder { get { return _fate.DamageRemainder; } }
+        public bool HasRolled { get { return _diceRolled; } }
+        public bool DiceCommitted { get { return _diceCommitted; } }
+
+        public bool CanRoll
+        {
+            get { return Phase == BattlePhase.AutoCombat && !_diceRolled && _fate.Pool >= DiceRollCost; }
+        }
+
+        public bool CanConfirm
+        {
+            get { return Phase == BattlePhase.AutoCombat && _diceRolled && !_diceCommitted; }
+        }
+
+        public int DiceConfirmRemainingMs
+        {
+            get
+            {
+                if (!DiceConfirmPending)
+                    return 0;
+                int left = _diceConfirmAtMs - _nowMs;
+                return left < 0 ? 0 : left;
+            }
+        }
+
+        private bool DiceConfirmPending
+        {
+            get { return _diceRolled && !_diceCommitted && _diceConfirmAtMs >= 0; }
+        }
+
         public void Start(EncounterDef encounter, int seed)
         {
             if (encounter == null)
@@ -54,6 +94,7 @@ namespace Echoes.Simulation
             _rng = new DeterministicRng(seed);
             _events.Clear();
             _units.Clear();
+            ResetFate();
             Phase = BattlePhase.Setup;
             _nowMs = 0;
             _nextRetargetMs = 0;
@@ -127,7 +168,32 @@ namespace Echoes.Simulation
             view.Hp = unit.Hp;
             view.MaxHp = unit.MaxHp;
             view.Shield = unit.Shield;
+            view.IsAlly = unit.IsAlly;
+            view.Role = unit.Role;
+            view.Attack = unit.Attack;
+            view.Armor = unit.Armor;
+            view.Energy = unit.Energy;
+            view.Keen = unit.Keen;
+            view.SkillDamageMultiplier = unit.SkillDamageMultiplier;
+            view.IntervalMs = unit.IntervalMs;
             return true;
+        }
+
+        public decimal SkillFateRemainder(string slotId)
+        {
+            for (int i = 0; i < _units.Count; i++)
+            {
+                if (_units[i].SlotId == slotId)
+                    return _units[i].SkillFateRemainder;
+            }
+            return 0m;
+        }
+
+        public string RolledFace(int index)
+        {
+            if (!_diceRolled || index < 0 || index >= _faces.Length)
+                return null;
+            return _faces[index];
         }
 
         public void Commit()
@@ -147,6 +213,7 @@ namespace Echoes.Simulation
             _nowMs = 0;
             _bankMs = 0;
             _nextRetargetMs = 0;
+            ResetFate();
             for (int i = 0; i < _units.Count; i++)
             {
                 Combatant unit = _units[i];
@@ -154,6 +221,8 @@ namespace Echoes.Simulation
                 unit.NextSkillReadyMs = 0;
                 unit.Target = null;
                 unit.Engaged = false;
+                unit.SkillFateRemainder = 0m;
+                unit.SkillOpened = false;
             }
 
             // Lock the opening target before any movement. The 0.25s clock starts after this pass.
@@ -162,7 +231,7 @@ namespace Echoes.Simulation
             if (CheckEnd())
                 return;
             if (_nowMs >= _encounter.TimeoutMs)
-                EndBattle("defeat", "timeout", 0);
+                EndBattle("defeat", "timeout");
         }
 
         private decimal _pumpRemainder;
@@ -197,6 +266,11 @@ namespace Echoes.Simulation
                 if (++guard > 200000)
                     throw new InvalidOperationException("Combat pump did not advance.");
 
+                if (DiceConfirmPending && _nowMs >= _diceConfirmAtMs)
+                    CommitDice("timeout");
+                if (Phase != BattlePhase.AutoCombat)
+                    return;
+
                 if (_nowMs >= _nextRetargetMs)
                     RetargetAll();
                 if (Phase != BattlePhase.AutoCombat)
@@ -220,10 +294,14 @@ namespace Echoes.Simulation
                 if (_bankMs < need)
                     return;
 
-                bool moveStep = moving && need == LatticeGap(_nowMs) && _encounter.TimeoutMs >= horizon;
+                // A pending confirm can split the 50ms lattice. That partial step still moves.
+                // The battle timeout still does not move on the clipped step, matching E2.1.
+                int lattice = _nowMs + LatticeGap(_nowMs);
+                bool timeoutClipped = horizon == _encounter.TimeoutMs && _encounter.TimeoutMs < lattice;
+                bool moveStep = moving && !timeoutClipped;
                 _bankMs -= need;
-                AdvanceEnergy(need);
                 _nowMs = horizon;
+                AdvanceEnergy(need);
                 if (moveStep)
                 {
                     MoveAll(need);
@@ -245,19 +323,51 @@ namespace Echoes.Simulation
             }
         }
 
+        public void Roll()
+        {
+            if (!CanRoll)
+                throw new InvalidOperationException("Roll is available once during AutoCombat at 50 fate.");
+            SpendAndRoll(null);
+        }
+
+        public void Confirm()
+        {
+            if (!CanConfirm)
+                throw new InvalidOperationException("Confirm is available after the one roll, before it commits.");
+            CommitDice("player");
+        }
+
+        internal void SetFateEnergy(int value)
+        {
+            _fate.SetPool(value);
+        }
+
+        internal void RollKnown(string die0, string die1, string die2)
+        {
+            if (FaceIds.IndexOf(die0) < 0 || FaceIds.IndexOf(die1) < 0 || FaceIds.IndexOf(die2) < 0)
+                throw new ArgumentException("Unknown face.");
+            if (!CanRoll)
+                throw new InvalidOperationException("Roll is available once during AutoCombat at 50 fate.");
+            SpendAndRoll(new string[] { die0, die1, die2 });
+        }
+
         private int NextHorizon(bool moving)
         {
             if (moving)
             {
-                int lattice = _nowMs + LatticeGap(_nowMs);
-                if (_encounter.TimeoutMs < lattice)
-                    return _encounter.TimeoutMs;
-                return lattice;
+                int horizon = _nowMs + LatticeGap(_nowMs);
+                if (_encounter.TimeoutMs < horizon)
+                    horizon = _encounter.TimeoutMs;
+                if (DiceConfirmPending && _diceConfirmAtMs < horizon)
+                    horizon = _diceConfirmAtMs;
+                return horizon;
             }
 
             int next = PeekNextActionMs();
             if (_nextRetargetMs < next)
                 next = _nextRetargetMs;
+            if (DiceConfirmPending && _diceConfirmAtMs < next)
+                next = _diceConfirmAtMs;
             return next;
         }
 
@@ -355,9 +465,13 @@ namespace Echoes.Simulation
                 unit.ShieldExpired = true;
                 unit.Attack = def.Attack;
                 unit.Armor = def.Armor;
+                unit.BaseAttackInterval = def.BaseAttackInterval;
+                unit.AttackSpeedBonus = 0m;
                 unit.IntervalMs = CombatFormulas.IntervalMs(def.BaseAttackInterval, 0m);
                 unit.Energy = 0m;
                 unit.Keen = 0;
+                unit.SkillFateRemainder = 0m;
+                unit.SkillOpened = false;
 
                 if (def.Skill != null)
                 {
@@ -369,7 +483,8 @@ namespace Echoes.Simulation
                     unit.SkillSchool = def.Skill.School;
                     unit.SkillRatio = def.Skill.Ratio;
                     unit.SkillCost = def.Skill.EnergyCost;
-                    unit.CooldownMs = CombatFormulas.SecondsToMs(cooldown);
+                    unit.BaseCooldownMs = CombatFormulas.SecondsToMs(cooldown);
+                    unit.PendingFirstCooldownMs = unit.BaseCooldownMs;
                 }
 
                 _units.Add(unit);
@@ -462,7 +577,7 @@ namespace Echoes.Simulation
 
             if (_nowMs >= _encounter.TimeoutMs)
             {
-                EndBattle("defeat", "timeout", 0);
+                EndBattle("defeat", "timeout");
                 return true;
             }
 
@@ -483,7 +598,9 @@ namespace Echoes.Simulation
             unit.Energy -= unit.SkillCost;
             if (unit.Energy < 0m)
                 unit.Energy = 0m;
-            unit.NextSkillReadyMs = _nowMs + unit.CooldownMs;
+            int cooldown = unit.SkillOpened ? unit.BaseCooldownMs : unit.PendingFirstCooldownMs;
+            unit.SkillOpened = true;
+            unit.NextSkillReadyMs = _nowMs + cooldown;
             if (target == null || !target.Alive)
                 return;
 
@@ -494,6 +611,8 @@ namespace Echoes.Simulation
             Add(fields, "skillId", unit.SkillId);
             Add(fields, "targetSlot", target.SlotId);
             Log(BattleEvents.SkillCast, fields);
+            if (unit.IsAlly)
+                LogFate(FateSources.SkillCast, _fate.AddFlat(8), null, unit);
             DealDamage(unit, target, true);
         }
 
@@ -557,6 +676,9 @@ namespace Echoes.Simulation
             Add(fields, "keen", EventFormat.Bool(keen));
             Log(BattleEvents.Damage, fields);
 
+            if (source.IsAlly && !target.IsAlly && absorbed + hpLost > 0)
+                LogFate(FateSources.Damage, _fate.AddDamage(absorbed + hpLost), EventFormat.Int(_fate.DamageRemainder), source);
+
             if (killed)
             {
                 var death = Fields();
@@ -565,6 +687,8 @@ namespace Echoes.Simulation
                 Add(death, "unitId", target.UnitId);
                 Log(BattleEvents.UnitDeath, death);
                 RetargetLockedOn(target);
+                if (source.IsAlly && !target.IsAlly)
+                    LogFate(FateSources.Kill, _fate.AddFlat(15), null, source);
             }
         }
 
@@ -752,11 +876,16 @@ namespace Echoes.Simulation
                 Combatant unit = _units[i];
                 if (!unit.Alive)
                     continue;
+                decimal before = unit.Energy;
                 unit.Energy += unit.EnergyPerSecond * dt;
                 if (unit.Energy > unit.MaxEnergy)
                     unit.Energy = unit.MaxEnergy;
                 if (unit.Energy < 0m)
                     unit.Energy = 0m;
+                if (!unit.IsAlly)
+                    continue;
+                decimal gained = unit.Energy - before;
+                LogFate(FateSources.SkillEnergy, _fate.AddSkillEnergy(ref unit.SkillFateRemainder, gained), EventFormat.Dec(unit.SkillFateRemainder), unit);
             }
         }
 
@@ -777,19 +906,24 @@ namespace Echoes.Simulation
             }
             if (!ally)
             {
-                EndBattle("defeat", "ally_wiped", 0);
+                EndBattle("defeat", "ally_wiped");
                 return true;
             }
             if (!enemy)
             {
-                EndBattle("victory", "enemy_wiped", 0);
+                EndBattle("victory", "enemy_wiped");
                 return true;
             }
             return false;
         }
 
-        private void EndBattle(string outcome, string reason, int gold)
+        private void EndBattle(string outcome, string reason)
         {
+            if (Phase == BattlePhase.Resolve)
+                return;
+            if (_diceRolled && !_diceCommitted)
+                CommitDice("resolve");
+            int gold = outcome == "victory" ? _coinGold : 0;
             Phase = BattlePhase.Resolve;
             var fields = Fields();
             Add(fields, "outcome", outcome);
@@ -797,6 +931,364 @@ namespace Echoes.Simulation
             Add(fields, "duration", EventFormat.Ms(_nowMs));
             Add(fields, "gold", EventFormat.Int(gold));
             Log(BattleEvents.BattleEnd, fields);
+        }
+
+        private void ResetFate()
+        {
+            _fate = new FatePool();
+            _diceRolled = false;
+            _diceCommitted = false;
+            _diceConfirmAtMs = -1;
+            _coinGold = 0;
+            _faces[0] = null;
+            _faces[1] = null;
+            _faces[2] = null;
+        }
+
+        private void SpendAndRoll(string[] forced)
+        {
+            if (!_fate.TrySpend(DiceRollCost))
+                throw new InvalidOperationException("Roll cannot overdraw fate.");
+            _diceRolled = true;
+            for (int i = 0; i < 3; i++)
+            {
+                if (forced != null)
+                    _faces[i] = forced[i];
+                else
+                    _faces[i] = FaceIds.Order[_rng.NextInt(FaceIds.Order.Length)];
+            }
+            _diceConfirmAtMs = _nowMs + DiceConfirmDelayMs;
+
+            var fields = Fields();
+            Add(fields, "time", EventFormat.Ms(_nowMs));
+            Add(fields, "cost", EventFormat.Int(DiceRollCost));
+            Add(fields, "pool", EventFormat.Int(_fate.Pool));
+            Add(fields, "die0", _faces[0]);
+            Add(fields, "die1", _faces[1]);
+            Add(fields, "die2", _faces[2]);
+            Log(BattleEvents.DiceRoll, fields);
+        }
+
+        // reason is player, timeout, or resolve. Confirm does not spend fate.
+        // Effects are chosen from the face specs. M0 faces do not set hero ids.
+        private void CommitDice(string reason)
+        {
+            if (!_diceRolled || _diceCommitted)
+                return;
+            _diceCommitted = true;
+            _diceConfirmAtMs = -1;
+
+            FaceResolution resolved = FaceEffects.Resolve(_faces[0], _faces[1], _faces[2]);
+            FaceEffectSpec[] effects = resolved.Effects ?? new FaceEffectSpec[0];
+            var chosen = new List<Combatant>[effects.Length];
+            var union = new List<Combatant>();
+            for (int i = 0; i < effects.Length; i++)
+            {
+                chosen[i] = SelectTargets(effects[i]);
+                if (effects[i].TargetKind == EffectTargets.Battle)
+                    continue;
+                for (int t = 0; t < chosen[i].Count; t++)
+                {
+                    if (!ContainsCombatant(union, chosen[i][t]))
+                        union.Add(chosen[i][t]);
+                }
+            }
+            union.Sort(CompareSlot);
+
+            var commit = Fields();
+            Add(commit, "time", EventFormat.Ms(_nowMs));
+            Add(commit, "reason", reason);
+            Add(commit, "cost", "0");
+            Add(commit, "pool", EventFormat.Int(_fate.Pool));
+            Add(commit, "die0", _faces[0]);
+            Add(commit, "die1", _faces[1]);
+            Add(commit, "die2", _faces[2]);
+            Add(commit, "affected", JoinSlots(union));
+            Add(commit, "units", JoinUnitIds(union));
+            Log(BattleEvents.DiceCommit, commit);
+
+            var combo = Fields();
+            Add(combo, "time", EventFormat.Ms(_nowMs));
+            Add(combo, "combo", resolved.ComboId);
+            Add(combo, "face", resolved.ComboFace);
+            Add(combo, "coefficient", EventFormat.Dec(resolved.Coefficient));
+            Add(combo, "wildTokens", EventFormat.Int(resolved.WildTokens));
+            Add(combo, "wildUsed", EventFormat.Int(resolved.WildUsed));
+            Add(combo, "wildFace", resolved.WildFace);
+            for (int i = 0; i < effects.Length; i++)
+            {
+                string key = FaceKey(effects[i].FaceId);
+                if (effects[i].TargetKind == EffectTargets.Battle)
+                {
+                    Add(combo, key, "battle");
+                }
+                else
+                {
+                    Add(combo, key, JoinSlots(chosen[i]));
+                    Add(combo, key + "Units", JoinUnitIds(chosen[i]));
+                }
+                if (!string.IsNullOrEmpty(effects[i].HeroId))
+                    Add(combo, key + "Hero", effects[i].HeroId);
+                if (!string.IsNullOrEmpty(effects[i].HeroId2))
+                    Add(combo, key + "Hero2", effects[i].HeroId2);
+            }
+            Log(BattleEvents.ComboResolved, combo);
+
+            for (int i = 0; i < effects.Length; i++)
+                ApplyFace(effects[i], chosen[i], resolved);
+        }
+
+        private void ApplyFace(FaceEffectSpec spec, List<Combatant> targets, FaceResolution resolved)
+        {
+            if (spec.FaceId == FaceIds.Sword)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    Combatant unit = targets[i];
+                    unit.Attack *= resolved.AttackMultiplier;
+                    unit.Keen += resolved.KeenPerFront;
+                }
+                return;
+            }
+            if (spec.FaceId == FaceIds.Shield)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    Combatant unit = targets[i];
+                    unit.Armor += resolved.ArmorBonus;
+                    int amount = CombatFormulas.ShieldAmount(unit.MaxHp, resolved.ShieldLifeRatio);
+                    AddShield(unit, amount);
+                }
+                return;
+            }
+            if (spec.FaceId == FaceIds.Star)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    Combatant unit = targets[i];
+                    decimal before = unit.Energy;
+                    decimal after = before + resolved.BackEnergy;
+                    if (after > unit.MaxEnergy)
+                        after = unit.MaxEnergy;
+                    if (after < before)
+                        after = before;
+                    unit.Energy = after;
+                    decimal gained = after - before;
+                    LogFate(FateSources.SkillEnergy, _fate.AddSkillEnergy(ref unit.SkillFateRemainder, gained), EventFormat.Dec(unit.SkillFateRemainder), unit);
+                    unit.SkillDamageMultiplier *= resolved.SkillDamageMultiplier;
+                }
+                return;
+            }
+            if (spec.FaceId == FaceIds.Feather)
+            {
+                int cut = CombatFormulas.SecondsToMs(resolved.CooldownReductionSeconds);
+                if (cut < 0)
+                    cut = 0;
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    Combatant unit = targets[i];
+                    unit.AttackSpeedBonus += resolved.AttackSpeedBonus;
+                    unit.IntervalMs = CombatFormulas.IntervalMs(unit.BaseAttackInterval, unit.AttackSpeedBonus);
+                    if (!unit.HasSkill)
+                        continue;
+                    if (!unit.SkillOpened)
+                    {
+                        unit.PendingFirstCooldownMs -= cut;
+                        if (unit.PendingFirstCooldownMs < 0)
+                            unit.PendingFirstCooldownMs = 0;
+                    }
+                    if (unit.NextSkillReadyMs > _nowMs)
+                    {
+                        unit.NextSkillReadyMs -= cut;
+                        if (unit.NextSkillReadyMs < _nowMs)
+                            unit.NextSkillReadyMs = _nowMs;
+                    }
+                }
+                return;
+            }
+            if (spec.FaceId == FaceIds.Coin)
+            {
+                _coinGold = resolved.Gold;
+                return;
+            }
+            if (spec.FaceId == FaceIds.Skull)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    Combatant unit = targets[i];
+                    int loss = CombatFormulas.SacrificeLoss(unit.Hp, resolved.SacrificeFraction);
+                    if (loss <= 0)
+                        continue;
+                    unit.Hp -= loss;
+                    var fields = Fields();
+                    Add(fields, "time", EventFormat.Ms(_nowMs));
+                    Add(fields, "slot", unit.SlotId);
+                    Add(fields, "delta", EventFormat.Int(-loss));
+                    Add(fields, "hp", EventFormat.Int(unit.Hp));
+                    Log(BattleEvents.HealOrHpLoss, fields);
+                }
+            }
+        }
+
+        private void AddShield(Combatant unit, int amount)
+        {
+            if (amount <= 0 || unit == null)
+                return;
+            int expire = _nowMs + CombatFormulas.ShieldDurationMs;
+            if (!unit.ShieldTracked || unit.ShieldExpired)
+            {
+                unit.Shield = amount;
+                unit.ShieldExpireMs = expire;
+                unit.ShieldTracked = true;
+                unit.ShieldExpired = false;
+            }
+            else
+            {
+                unit.Shield += amount;
+                if (expire < unit.ShieldExpireMs)
+                    unit.ShieldExpireMs = expire;
+            }
+            var fields = Fields();
+            Add(fields, "time", EventFormat.Ms(_nowMs));
+            Add(fields, "slot", unit.SlotId);
+            Add(fields, "amount", EventFormat.Int(amount));
+            Add(fields, "expire", EventFormat.Ms(unit.ShieldExpireMs));
+            Log(BattleEvents.ShieldApplied, fields);
+        }
+
+        private List<Combatant> SelectTargets(FaceEffectSpec spec)
+        {
+            var list = new List<Combatant>();
+            if (spec == null || spec.TargetKind == EffectTargets.Battle)
+                return list;
+            if (spec.TargetKind == EffectTargets.Hero)
+            {
+                AddMatchingAllies(list, spec.HeroId);
+                list.Sort(CompareSlot);
+                return list;
+            }
+            if (spec.TargetKind == EffectTargets.HeroLink)
+            {
+                if (!AnyLivingAlly(spec.HeroId) || !AnyLivingAlly(spec.HeroId2))
+                    return list;
+                AddMatchingAllies(list, spec.HeroId);
+                AddMatchingAllies(list, spec.HeroId2);
+                list.Sort(CompareSlot);
+                return list;
+            }
+
+            for (int i = 0; i < _units.Count; i++)
+            {
+                Combatant unit = _units[i];
+                if (!unit.Alive || !unit.IsAlly)
+                    continue;
+                if (spec.TargetKind == EffectTargets.AllAllies
+                    || (spec.TargetKind == EffectTargets.AllMelee && unit.Role == UnitRoles.Melee)
+                    || (spec.TargetKind == EffectTargets.AllRanged && unit.Role == UnitRoles.Ranged))
+                    list.Add(unit);
+            }
+            list.Sort(CompareSlot);
+            return list;
+        }
+
+        private void AddMatchingAllies(List<Combatant> list, string unitId)
+        {
+            if (string.IsNullOrEmpty(unitId))
+                return;
+            for (int i = 0; i < _units.Count; i++)
+            {
+                Combatant unit = _units[i];
+                if (!unit.Alive || !unit.IsAlly || unit.UnitId != unitId)
+                    continue;
+                if (!ContainsCombatant(list, unit))
+                    list.Add(unit);
+            }
+        }
+
+        private bool AnyLivingAlly(string unitId)
+        {
+            if (string.IsNullOrEmpty(unitId))
+                return false;
+            for (int i = 0; i < _units.Count; i++)
+            {
+                Combatant unit = _units[i];
+                if (unit.Alive && unit.IsAlly && unit.UnitId == unitId)
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool ContainsCombatant(List<Combatant> list, Combatant unit)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == unit)
+                    return true;
+            }
+            return false;
+        }
+
+        private static int CompareSlot(Combatant a, Combatant b)
+        {
+            return string.CompareOrdinal(a.SlotId, b.SlotId);
+        }
+
+        private static string JoinSlots(List<Combatant> units)
+        {
+            if (units == null || units.Count == 0)
+                return "";
+            string text = units[0].SlotId;
+            for (int i = 1; i < units.Count; i++)
+                text = text + "," + units[i].SlotId;
+            return text;
+        }
+
+        private static string JoinUnitIds(List<Combatant> units)
+        {
+            if (units == null || units.Count == 0)
+                return "";
+            string text = units[0].UnitId;
+            for (int i = 1; i < units.Count; i++)
+                text = text + "," + units[i].UnitId;
+            return text;
+        }
+
+        private static string FaceKey(string faceId)
+        {
+            if (faceId == FaceIds.Sword)
+                return "sword";
+            if (faceId == FaceIds.Shield)
+                return "shield";
+            if (faceId == FaceIds.Star)
+                return "star";
+            if (faceId == FaceIds.Feather)
+                return "feather";
+            if (faceId == FaceIds.Coin)
+                return "coin";
+            if (faceId == FaceIds.Skull)
+                return "skull";
+            return faceId;
+        }
+
+        private void LogFate(string source, FateGrant grant, string remainder, Combatant unit)
+        {
+            if (grant.Gained <= 0 || grant.Added <= 0)
+                return;
+            var fields = Fields();
+            Add(fields, "time", EventFormat.Ms(_nowMs));
+            Add(fields, "source", source);
+            Add(fields, "gained", EventFormat.Int(grant.Gained));
+            Add(fields, "added", EventFormat.Int(grant.Added));
+            Add(fields, "discarded", EventFormat.Int(grant.Discarded));
+            Add(fields, "pool", EventFormat.Int(grant.Pool));
+            if (remainder != null)
+                Add(fields, "remainder", remainder);
+            if (unit != null)
+            {
+                Add(fields, "slot", unit.SlotId);
+                Add(fields, "unitId", unit.UnitId);
+            }
+            Log(BattleEvents.FateEnergy, fields);
         }
 
         private void RequireSetup()
@@ -898,11 +1390,14 @@ namespace Echoes.Simulation
             public decimal MagicResist;
             public decimal CritRate;
             public decimal CritDamage;
+            public decimal BaseAttackInterval;
+            public decimal AttackSpeedBonus;
             public int IntervalMs;
             public int NextAttackMs;
             public decimal Energy;
             public decimal EnergyPerSecond;
             public int MaxEnergy;
+            public decimal SkillFateRemainder;
             public bool HasSkill;
             public string SkillId;
             public string BasicId;
@@ -911,7 +1406,9 @@ namespace Echoes.Simulation
             public DamageSchool SkillSchool;
             public decimal SkillRatio;
             public decimal SkillCost;
-            public int CooldownMs;
+            public int BaseCooldownMs;
+            public int PendingFirstCooldownMs;
+            public bool SkillOpened;
             public int NextSkillReadyMs;
             public decimal SkillDamageMultiplier = 1m;
             public int Keen;
