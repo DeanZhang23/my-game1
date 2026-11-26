@@ -12,7 +12,7 @@ The earlier realistic / painterly M0 draft is **void**. Do not import it into Te
 | Filter Mode | Bilinear |
 | Compression | None or High quality for UI |
 | Mesh Type | Dice = Full Rect; characters Tight or Full Rect |
-| Pivot | Characters at feet / ring; dice center; ground center |
+| Pivot | Characters at feet / ring; dice center; ground center. Dressing overlays, foothold marks, and rust / crack / ashpuff decals: center (0.5, 0.5). Standing dressing props (rubble, ash, chip, midline stones): bottom center (0.5, 0.1) |
 
 Sorting layers: `BGFar` < `BGMid` < `Ground` < `UnitsRing` < `Units` < `FG` < `UI`. Y-sort units by foot pivot. Keep 2D Lights local (gold lamp or rust/cyan rift), never a full-screen wash.
 
@@ -26,6 +26,8 @@ docs/art/USAGE.md
 Assets/_Project/Art/UI/Dice/ui_dice_{face}_{state}.png
 Assets/_Project/Art/UI/Dice/sheets/ui_dice_faces_{normal|locked|cracked}.png
 Assets/_Project/Art/Environment/TestArena/env_riftarena_{bg_far|bg_mid|ground|fg}.png
+Assets/_Project/Art/Environment/TestArena/env_riftarena_prop_*.png
+docs/art/previews/lockpass_riftarena_dressing.jpg
 Assets/_Project/Art/Characters/chr_ally_placeholder_melee_idle.png
 Assets/_Project/Art/Characters/chr_ally_placeholder_caster_idle.png
 Assets/_Project/Art/Characters/chr_enemy_placeholder_idle.png
@@ -48,7 +50,58 @@ Star is a magic spark-star, not a hexagram. Coin is a gold coin, not a compass.
 
 ## TestArena
 
-`env_riftarena_ground` is the only playable field (3×3 vs 3×3). Mid is a backdrop. Far is sky/void. FG is a bottom overlay only.
+`env_riftarena_ground` is the only playable field (3×3 vs 3×3). Mid is still a distant backdrop, not a second battlefield. Far is sky/void. Foreground is a bottom overlay only and still must not hide footholds.
+
+The original M0 plates `env_riftarena_{ground,bg_far,bg_mid,fg}.png` remain the locked environment pack. They are not voided or replaced. Their PNGs, paths, GUIDs, pivots, and importer settings stay as they are, and they still have no `.meta` files.
+
+## TestArena dressing props (additive)
+
+This is an additive dressing layer for the TestArena rift battlefield. It helps read the 3×3 vs 3×3 mid-line and the footholds. It does not replace the locked ground plate. This pack does not wire TestArena scenes or code.
+
+Sort order: dressing sits on **Ground**, under **UnitsRing** / **Units**, so characters stay readable on top.
+
+```
+BGFar < BGMid < Ground (locked plate, then dressing) < UnitsRing < Units < FG < UI
+```
+
+Preview: `docs/art/previews/lockpass_riftarena_dressing.jpg`.
+
+Folder: `Assets/_Project/Art/Environment/TestArena/`.
+
+Registered 1280×720 overlays (same canvas as the locked plates). Pivot center (0.5, 0.5):
+
+- `env_riftarena_prop_midline.png` — midline rust, crack, and ash ticks
+- `env_riftarena_prop_footholds.png` — 16 foothold marks (the two cells that fall in the rift itself are unmarked)
+- `env_riftarena_prop_edge_rubble.png` — edge rubble, ash, and chips
+- `env_riftarena_prop_dressing.png` — optional convenience composite of the three overlays above
+
+Loose decals and foothold marks. Pivot center (0.5, 0.5):
+
+- `env_riftarena_prop_rust_01.png` … `env_riftarena_prop_rust_05.png`
+- `env_riftarena_prop_crack_01.png` … `env_riftarena_prop_crack_05.png`
+- `env_riftarena_prop_ashpuff_01.png` … `env_riftarena_prop_ashpuff_04.png`
+- `env_riftarena_prop_foothold_west.png`
+- `env_riftarena_prop_foothold_east.png`
+
+Standing props. Pivot bottom center (0.5, 0.1):
+
+- `env_riftarena_prop_rubble_01.png` … `env_riftarena_prop_rubble_03.png`
+- `env_riftarena_prop_ash_01.png`, `env_riftarena_prop_ash_02.png`
+- `env_riftarena_prop_chip_01.png`, `env_riftarena_prop_chip_02.png`
+- `env_riftarena_prop_midline_stones.png`
+
+Naming: `env_riftarena_prop_*.png`.
+
+| Setting | Value |
+|---------|--------|
+| Texture Type | Sprite (2D and UI) |
+| Sprite Mode | Single |
+| Pixels Per Unit | 64 |
+| Filter Mode | Bilinear |
+| alphaIsTransparency | On |
+| Mipmaps | Off |
+| Compression | None / uncompressed (same as character sprite art) |
+| Pivot | Overlays, foothold marks, rust / crack / ashpuff: (0.5, 0.5). Rubble, ash, chip, midline stones: (0.5, 0.1) |
 
 ## Placeholders
 

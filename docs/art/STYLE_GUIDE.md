@@ -81,9 +81,52 @@ Naming: `ui_dice_{sword|shield|star|feather|coin|skull}_{normal|locked|cracked}.
 ## TestArena — Rift Battlefield (not Grave-Lamp Village)
 
 - `env_riftarena_ground`: stylized **Q-version** isometric brick / tile grid, **3×3 ally vs 3×3 enemy**, visible mid-line. Graphic rust stains, fate-crack cyan, ash. No photoreal rubble.
-- `env_riftarena_bg_mid`: a **backdrop layer** (distant stylized ridges, a rift in the dark, hanging ash). **Not** a second complete battlefield that competes with the playable ground.
+- `env_riftarena_bg_mid`: a **backdrop layer** (distant stylized ridges, a rift in the dark, hanging ash). Mid is still a distant backdrop, not a second battlefield.
 - `env_riftarena_bg_far`: far void / sky / distant graphic cracks. **Not** another ground texture.
-- `env_riftarena_fg` (optional): near-edge stylized stones / ash along the bottom only; must not hide footholds.
+- `env_riftarena_fg` (optional): near-edge stylized stones / ash along the bottom only. Foreground still must not hide footholds.
+
+### TestArena dressing props (additive)
+
+This is an **additive dressing layer** for the TestArena rift battlefield. It sits on the locked ground plate so the **3×3 vs 3×3** mid-line and the footholds stay easy to read. It does not void or replace the locked M0 environment pack.
+
+The original M0 plates remain the locked environment pack. Their PNGs, paths, and importer settings are unchanged, and they still have no `.meta` files:
+
+- `Assets/_Project/Art/Environment/TestArena/env_riftarena_ground.png`
+- `Assets/_Project/Art/Environment/TestArena/env_riftarena_bg_far.png`
+- `Assets/_Project/Art/Environment/TestArena/env_riftarena_bg_mid.png`
+- `Assets/_Project/Art/Environment/TestArena/env_riftarena_fg.png`
+
+Sort order: dressing sits on **Ground**, under **UnitsRing** / **Units**, so characters stay readable on top.
+
+```
+BGFar < BGMid < Ground (locked plate, then dressing) < UnitsRing < Units < FG < UI
+```
+
+Preview: `docs/art/previews/lockpass_riftarena_dressing.jpg`.
+
+Registered **1280×720** overlays (same canvas as the locked plates). Pivot **center (0.5, 0.5)**:
+
+- `env_riftarena_prop_midline.png` — midline rust, crack, and ash ticks
+- `env_riftarena_prop_footholds.png` — 16 foothold marks (the two cells that fall in the rift itself are unmarked)
+- `env_riftarena_prop_edge_rubble.png` — edge rubble, ash, and chips
+- `env_riftarena_prop_dressing.png` — optional convenience composite of the three overlays above
+
+Loose decals and foothold marks. Pivot **center (0.5, 0.5)**:
+
+- `env_riftarena_prop_rust_01.png` … `env_riftarena_prop_rust_05.png`
+- `env_riftarena_prop_crack_01.png` … `env_riftarena_prop_crack_05.png`
+- `env_riftarena_prop_ashpuff_01.png` … `env_riftarena_prop_ashpuff_04.png`
+- `env_riftarena_prop_foothold_west.png`
+- `env_riftarena_prop_foothold_east.png`
+
+Standing props. Pivot **bottom center (0.5, 0.1)**:
+
+- `env_riftarena_prop_rubble_01.png` … `env_riftarena_prop_rubble_03.png`
+- `env_riftarena_prop_ash_01.png`, `env_riftarena_prop_ash_02.png`
+- `env_riftarena_prop_chip_01.png`, `env_riftarena_prop_chip_02.png`
+- `env_riftarena_prop_midline_stones.png`
+
+Folder: `Assets/_Project/Art/Environment/TestArena/`. Import matches character sprites: Texture Type **Sprite (2D and UI)**, Sprite Mode **Single**, Pixels Per Unit **64**, Filter Mode **Bilinear**, `alphaIsTransparency` on, mipmaps off, compression uncompressed. This pack does not wire TestArena scenes or code.
 
 ## Layers and pivots
 
@@ -98,6 +141,8 @@ BGFar < BGMid < Ground < UnitsRing < Units < FG < UI
 | Ground | Geometric center of the isometric field |
 | BG Far / Mid | Center |
 | FG | Center or bottom |
+| Dressing overlays, foothold marks, rust / crack / ashpuff decals | Center (0.5, 0.5) |
+| Standing dressing props (rubble, ash, chip, midline stones) | Bottom center (0.5, 0.1) |
 
 Y-sort units within `Units` by foot pivot.
 
@@ -106,6 +151,7 @@ Y-sort units within `Units` by foot pivot.
 ```
 ui_dice_{sword|shield|star|feather|coin|skull}_{normal|locked|cracked}.png
 env_riftarena_{bg_far|bg_mid|ground|fg}.png
+env_riftarena_prop_*.png
 chr_ally_placeholder_melee_{anim}.png
 chr_ally_placeholder_caster_{anim}.png
 chr_enemy_placeholder_{anim}.png
