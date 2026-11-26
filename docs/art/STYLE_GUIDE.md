@@ -114,7 +114,7 @@ chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_04.png
 chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
 ```
 
-M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Official walk and attack frames are in scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided. These walk and attack sprites are not wired into TestArena.
+M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Official walk and attack frames are in scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided. TestArena plays these frames for all eight: movement loops the walk, a basic-attack swing plays the attack one-shot, and idle covers reserve, setup, and the wait between swings. The enemy placeholder stays on its idle. Playback is 8 frames per second for every ally (125 ms per frame; walk cycle 0.5 s; attack one-shot 0.5 s), which finishes inside the existing melee 1.2 s and ranged 1.5 s intervals.
 
 IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `enemy` → the matching `chr_*` files; official allies use the stable IDs in the table below.
 
@@ -157,11 +157,14 @@ Official walk and attack frames are in scope and shipped for all eight playable 
 
 | Clip | Frames | Playback |
 |------|--------|----------|
-| Walk | 4 | Loop: `chr_ally_{id}_walk_01.png` … `chr_ally_{id}_walk_04.png` |
-| Attack | 4 | One-shot: prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
+| Walk | 4 | Loop while moving: `chr_ally_{id}_walk_01.png` … `chr_ally_{id}_walk_04.png` |
+| Attack | 4 | One-shot on a basic-attack swing: prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
+| Idle | 1 | Reserve, setup, standing, and the wait between swings |
+
+**TestArena playback** (all eight, one constant set in `AllyPoseClock`): 8 frames per second. Movement (seeking or repositioning) loops the walk. The instant a basic attack swings, the attack plays once and does not loop. When that one-shot ends, idle plays while the unit waits out the rest of its attack interval. Reserve, setup, and any unit that has not marched stay on idle. `unit_placeholder_enemy` stays on `chr_enemy_placeholder_idle`; it has no walk or attack frames. The 0.5 s attack clip finishes inside the existing intervals (melee 1.2 s, ranged 1.5 s). Those combat numbers are unchanged.
 
 Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope.
 
-Import matches idle: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot about **(0.50, 0.125)** at the feet / gold ring, facing **right**, grave-lamp gold ring `#C9A227`. Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. These frames are not wired into TestArena (that is a later Engineer ticket). The M0 dice and TestArena environment pack is unchanged and is not voided.
+Import matches idle: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot about **(0.50, 0.125)** at the feet / gold ring, facing **right**, grave-lamp gold ring `#C9A227`. Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. TestArena plays these frames with the rules above. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`.

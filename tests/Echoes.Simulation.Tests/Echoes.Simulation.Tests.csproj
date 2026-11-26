@@ -15,4 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Echoes.Simulation\Echoes.Simulation.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Assets\Scripts\Presentation\AllyPoseClock.cs" Link="Presentation\AllyPoseClock.cs" />
+  </ItemGroup>
 </Project>

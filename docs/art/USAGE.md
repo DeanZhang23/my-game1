@@ -69,18 +69,21 @@ IDs: `ashguard` (灰烬卫士), `oathblade` (烬誓剑士), `lampsister` (墓灯
 | Facing | Right (toward the enemy side) |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. Walk and attack for all eight playable allies are a separate shipped set (below). Hit, death, skill loops, projectile atlases, and standalone VFX are still out of scope.
+Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. TestArena shows this still for reserve, setup, standing, and the wait between swings. Walk and attack for all eight playable allies are a separate shipped set (below). Hit, death, skill loops, projectile atlases, and standalone VFX are still out of scope.
 
 Official idles use stronger per-role accent colors (linings, sashes, cloak panels, weapon glow) so the roster is not a single navy mass, and they are accessory-dense with layered materials and chunky ornaments. Each official idle should show 5–7 fairly obvious gear pieces, readable at 64 px (not tiny trim; the gold ground ring does not count). Palette and import settings are otherwise unchanged. The M0 dice / TestArena pack is not voided.
 
 ## Official walk + attack (all eight playable allies)
 
-In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Not wired into TestArena.
+In scope and shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). TestArena plays them. Movement loops the walk. A basic-attack swing plays the attack one-shot, then idle while that unit waits for the next swing. Reserve, setup, and units that have not marched stay on idle. The enemy placeholder stays on its idle.
+
+Playback is one constant set for every ally (`AllyPoseClock`): 8 frames per second, 125 ms per frame. The walk cycle is 0.5 s. The attack one-shot is 0.5 s and finishes inside the existing melee 1.2 s and ranged 1.5 s intervals. Those combat numbers are unchanged.
 
 | Clip | Count | Naming |
 |------|-------|--------|
-| Walk | 4-frame loop | `chr_ally_{id}_walk_01.png` … `chr_ally_{id}_walk_04.png` |
-| Attack | 4-frame one-shot | prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
+| Walk | 4-frame loop while moving | `chr_ally_{id}_walk_01.png` … `chr_ally_{id}_walk_04.png` |
+| Attack | 4-frame one-shot on a basic-attack swing | prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
+| Idle | still | reserve, setup, standing, and the wait between swings |
 
 All units use this same frame count.
 
