@@ -54,7 +54,7 @@ Assets/_Project/Art/UI/Hud/ui_ornament_*.png
 Assets/_Project/Art/UI/Hud/ui_bar_endcap_*.png
 ```
 
-Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena. Death / fall-down paths for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are shipped as an art lock (see below). Death / fall-down paths for the remaining six official allies are a second art lock (see below) and are not wired. TestArena continues to play the existing idle, walk, and attack clips. M0 hit-flash and death-puff paths are shipped (see below).
+Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena. Death / fall-down paths for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are shipped as an art lock (see below). Death / fall-down paths for the remaining six official allies are a second art lock (see below). TestArena keeps playing idle, walk, and attack for those allies. TestArena continues to play the existing idle, walk, and attack clips. M0 hit-flash and death-puff paths are shipped (see below).
 
 Dice faces remain at `Assets/_Project/Art/UI/Dice/ui_dice_{face}_{state}.png`. The HUD kit composites `*_normal` faces into the 48×48 slots; it does not replace the dice pack.
 
@@ -175,7 +175,7 @@ IDs: `ashguard` (灰烬卫士), `oathblade` (烬誓剑士), `lampsister` (墓灯
 | Facing | Right (toward the enemy side) |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. TestArena shows this still for reserve, setup, standing, and the wait between swings. Walk and attack for all eight playable allies are a separate shipped set (below). Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death frames for the remaining six official allies are a second art lock (see below) and are not wired. Character hit-react loops, skill loops, and projectile atlases are still out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (below).
+Import as Sprite (2D and UI). Y-sort by the foot / ring pivot. These files are idle stills. TestArena shows this still for reserve, setup, standing, and the wait between swings. Walk and attack for all eight playable allies are a separate shipped set (below). Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death frames for the remaining six official allies are a second art lock (see below). TestArena keeps playing idle, walk, and attack for those allies. Character hit-react loops, skill loops, and projectile atlases are still out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (below).
 
 Official idles use stronger per-role accent colors (linings, sashes, cloak panels, weapon glow) so the roster is not a single navy mass, and they are accessory-dense with layered materials and chunky ornaments. Each official idle should show 5–7 fairly obvious gear pieces, readable at 64 px (not tiny trim; the gold ground ring does not count). Palette and import settings are otherwise unchanged. The M0 dice / TestArena pack is not voided.
 
@@ -203,7 +203,7 @@ All units use this same frame count.
 | Facing | Right |
 | Ground ring | Grave-lamp gold `#C9A227` |
 
-Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`. Character hit-react loops, skill loops, and projectile atlases stay out of scope. Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death frames for the remaining six official allies are a second art lock (see below) and are not wired. The M0 hit-flash and death-puff pack is a separate shipped set (below). The M0 dice and TestArena environment pack is unchanged and is not voided.
+Folder: `Assets/_Project/Art/Characters/`. Review contact sheets: `docs/art/previews/lockpass_ashguard_riftmage_walk_attack.jpg` and `docs/art/previews/lockpass_remaining6_walk_attack.jpg`. Character hit-react loops, skill loops, and projectile atlases stay out of scope. Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death frames for the remaining six official allies are a second art lock (see below). TestArena keeps playing idle, walk, and attack for those allies. The M0 hit-flash and death-puff pack is a separate shipped set (below). The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 ## Enemy placeholder walk + attack (锈蚀步卒 / Rustsoldier)
 
@@ -260,7 +260,7 @@ Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previ
 
 In scope and shipped for `oathblade` (烬誓剑士), `lampsister` (墓灯修女), `misthunter` (雾行猎手), `boneapostle` (骨匣使徒), `chainjudge` (锁链判官), and `bloodacolyte` (血契侍从).
 
-This is an art lock only. TestArena is not wired to these frames. It continues to play the existing idle, walk, and attack clips. Do not change simulation numbers in this pass. `ashguard`, `riftmage`, and the rusted-footsoldier death frames are unchanged.
+This is an art lock only. TestArena keeps playing the existing idle, walk, and attack clips. Do not change simulation numbers in this pass. `ashguard`, `riftmage`, and the rusted-footsoldier death frames are unchanged.
 
 | Clip | Count | Naming |
 |------|-------|--------|
@@ -304,4 +304,4 @@ Playback: recommended 10 fps, 100 ms per frame, 0.4 s total. Do not loop.
 
 Review contact sheet: `docs/art/previews/lockpass_m0_hit_death_vfx.jpg`.
 
-Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, Grave-Lamp Village, additional enemy types. Death frames for the remaining six official allies are shipped as an art lock above and are not wired.
+Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, Grave-Lamp Village, additional enemy types. Death frames for the remaining six official allies are shipped as an art lock above. TestArena keeps playing idle, walk, and attack.

@@ -202,7 +202,7 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - 3D meshes, perspective cameras, photo-rock / photo-fabric
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
-- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). Death / fall-down frames for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are now in scope and shipped (see below). Death / fall-down frames for the remaining six official allies are a second art lock and are shipped (see below); they are not wired. The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: 6 enemies, Boss, Boss VFX, character hit-react loops, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
+- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). Death / fall-down frames for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are now in scope and shipped (see below). Death / fall-down frames for the remaining six official allies are a second art lock and are shipped (see below). TestArena keeps playing idle, walk, and attack for those allies. The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: 6 enemies, Boss, Boss VFX, character hit-react loops, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
 - Restyling or shipping 墓灯村, shop UI, world-map UI, or a full official HUD as part of this M0 TestArena kit
 - Default engine-green HP bars (use rust `#8B2E32`)
 - Baking player-visible strings (出征 / 掷骰 / 确认 / 命运能量 / 生命 / 护盾 / 双生 / 同调) into reusable 9-slices
@@ -248,7 +248,7 @@ Official walk and attack frames are in scope and shipped for all eight playable 
 
 **TestArena playback** (all eight, one constant set in `AllyPoseClock`): 8 frames per second. Movement (seeking or repositioning) loops the walk. The instant a basic attack swings, the attack plays once and does not loop. When that one-shot ends, idle plays while the unit waits out the rest of its attack interval. Reserve, setup, and any unit that has not marched stay on idle. `unit_placeholder_enemy` is wired into TestArena on the same `AllyPoseClock` (see below). The 0.5 s attack clip finishes inside the existing intervals (melee 1.2 s, ranged 1.5 s). Those combat numbers are unchanged.
 
-Character hit-react loops, skill loops, and projectile atlases stay out of scope. Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death frames for the remaining six official allies are a second art lock (see below) and are not wired into TestArena. The M0 hit-flash and death-puff pack is a separate shipped set (see below).
+Character hit-react loops, skill loops, and projectile atlases stay out of scope. Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death frames for the remaining six official allies are a second art lock (see below). TestArena keeps playing idle, walk, and attack for those allies. The M0 hit-flash and death-puff pack is a separate shipped set (see below).
 
 Import matches idle: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot about **(0.50, 0.125)** at the feet / gold ring, facing **right**, grave-lamp gold ring `#C9A227`. Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. TestArena plays these frames with the rules above. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
@@ -312,7 +312,7 @@ Review contact sheet: `docs/art/previews/lockpass_default_units_death.jpg`.
 
 Death / fall-down frames are in scope and shipped for the six formal allies that were not in the first batch: `oathblade` (烬誓剑士), `lampsister` (墓灯修女), `misthunter` (雾行猎手), `boneapostle` (骨匣使徒), `chainjudge` (锁链判官), and `bloodacolyte` (血契侍从).
 
-This is an art lock only. TestArena is not wired to these frames. Combat and simulation numbers are unchanged. Do not treat this pack as a code or balance change.
+This is an art lock only. TestArena keeps playing the existing idle, walk, and attack clips. Combat and simulation numbers are unchanged. Do not treat this pack as a code or balance change.
 
 | Clip | Frames | Playback intent |
 |------|--------|-----------------|
@@ -371,4 +371,4 @@ fx_death_puff_{ally|enemy}_01.png … fx_death_puff_{ally|enemy}_04.png
 
 Review contact sheet: `docs/art/previews/lockpass_m0_hit_death_vfx.jpg`.
 
-Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, Grave-Lamp Village, additional enemy types. Death frames for the remaining six official allies are shipped as an art lock above and are not wired.
+Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, Grave-Lamp Village, additional enemy types. Death frames for the remaining six official allies are shipped as an art lock above. TestArena keeps playing idle, walk, and attack.
