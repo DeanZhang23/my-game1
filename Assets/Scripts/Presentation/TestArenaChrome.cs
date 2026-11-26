@@ -439,7 +439,7 @@ namespace Echoes.Presentation
                 camera = UnityEngine.Object.FindAnyObjectByType<Camera>();
             if (camera == null || camera.GetComponent<AudioListener>() != null)
                 return;
-            camera.AddComponent<AudioListener>();
+            camera.gameObject.AddComponent<AudioListener>();
         }
 
         private void Spawn(Image portrait, Sprite[] frames, bool death, bool enemy)

@@ -234,7 +234,9 @@ namespace Echoes.Simulation.Tests
             int source = chrome.IndexOf("AddComponent<AudioSource>()", StringComparison.Ordinal);
             Assert.True(listener >= 0 && source > listener);
             Assert.Contains("FindAnyObjectByType<AudioListener>() != null", chrome);
-            Assert.Contains("AddComponent<AudioListener>()", chrome);
+            const string listenerOnCameraObject = "camera.gameObject.AddComponent<AudioListener>()";
+            Assert.Contains(listenerOnCameraObject, chrome);
+            Assert.DoesNotContain("AddComponent<AudioListener>()", chrome.Replace(listenerOnCameraObject, ""));
 
             string scene = Read(root, "Assets/Scenes/TestArena.unity");
             int camera = scene.IndexOf("m_Name: Main Camera", StringComparison.Ordinal);
