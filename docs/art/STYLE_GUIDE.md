@@ -195,7 +195,7 @@ Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.
 
 ## M0 hit flash and death puff
 
-The M0 hit-flash and death-puff pack is in scope and shipped. It is one graphic set in two colorways (`_ally` and `_enemy`), the same shapes for every unit of that side. These are standalone one-shots played on the unit (hit flash) or at the feet / ground ring (death puff). They are separate from character hit-react loops and from character death/down animation frames. This pack does not wire the sprites into TestArena and does not change combat numbers. The M0 dice and TestArena environment pack is unchanged and is not voided.
+The M0 hit-flash and death-puff pack is in scope and shipped. It is one graphic set in two colorways (`_ally` and `_enemy`), the same shapes for every unit of that side. These are standalone one-shots played on the unit (hit flash) or at the feet / ground ring (death puff). They are separate from character hit-react loops and from character death/down animation frames. TestArena scenes, prefabs, and code leave these sprites unplayed, and combat numbers stay as they are. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 Path: `Assets/_Project/Art/VFX/`
 

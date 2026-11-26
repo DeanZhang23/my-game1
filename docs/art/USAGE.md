@@ -131,7 +131,7 @@ Folder: `Assets/_Project/Art/Characters/`. Review contact sheet: `docs/art/previ
 
 ## M0 hit flash and death puff
 
-In scope and shipped under `Assets/_Project/Art/VFX/`. One set, two colorways (`_ally` and `_enemy`), shared by every unit of that side. These sprites are not wired into TestArena. Combat numbers are unchanged. Character art is unchanged. The M0 dice and TestArena environment pack is unchanged and is not voided.
+In scope and shipped under `Assets/_Project/Art/VFX/`. One set, two colorways (`_ally` and `_enemy`), shared by every unit of that side. TestArena scenes, prefabs, and code leave these sprites unplayed. Combat numbers stay as they are. Character art stays as it is. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 | Clip | Count | Naming | Pivot |
 |------|-------|--------|-------|
