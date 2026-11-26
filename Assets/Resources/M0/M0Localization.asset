@@ -282,3 +282,30 @@ MonoBehaviour:
   - key: unit.bloodacolyte.name
     zhHans: "血契侍从"
     en: "Bloodacolyte"
+  - key: ui.testarena.fate_energy
+    zhHans: "命运能量"
+    en: "Fate"
+  - key: ui.testarena.btn_march
+    zhHans: "出征"
+    en: "March"
+  - key: ui.testarena.btn_roll
+    zhHans: "掷骰"
+    en: "Roll"
+  - key: ui.testarena.btn_confirm
+    zhHans: "确认"
+    en: "Confirm"
+  - key: combo.twin
+    zhHans: "双生"
+    en: "Twin"
+  - key: combo.attunement
+    zhHans: "同调"
+    en: "Attunement"
+  - key: ui.testarena.can_roll
+    zhHans: "可掷骰"
+    en: "Can roll"
+  - key: ui.unit.hp
+    zhHans: "生命"
+    en: "HP"
+  - key: ui.unit.shield
+    zhHans: "护盾"
+    en: "Shield"

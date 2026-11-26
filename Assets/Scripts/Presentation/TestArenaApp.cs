@@ -13,10 +13,10 @@ namespace Echoes.Presentation
         public EncounterDefinitionAsset encounter;
         public LocalizationTableAsset localization;
         public FaceCatalogAsset faces;
-        // Idle, walk, and attack for the eight official allies. The enemy entry is idle only.
-        // Default melee shows ashguard, caster shows riftmage, the six reserve allies show
-        // their own frames, and enemies stay on the placeholder idle.
+        // Idle, walk, and attack for the eight official allies and unit_placeholder_enemy.
+        // Death frames are bound for the three default units only.
         public UnitSpriteCatalog sprites;
+        public TestArenaKit kit;
         public int fixedSeed;
 
         private BattleSimulator _sim;
@@ -43,8 +43,7 @@ namespace Echoes.Presentation
         private GameObject _confirmDiceButton;
         private Text _rollLabel;
         private Text _confirmDiceLabel;
-        private Text _fateLabel;
-        private Text _diceLabel;
+        private TestArenaChrome _chrome;
         private readonly Dictionary<string, UnitWidget> _units = new Dictionary<string, UnitWidget>();
         private readonly StringBuilder _logBuilder = new StringBuilder();
         private Transform _board;
@@ -156,6 +155,8 @@ namespace Echoes.Presentation
                 faces = Resources.Load<FaceCatalogAsset>("M0/M0FaceCatalog");
             if (sprites == null)
                 sprites = Resources.Load<UnitSpriteCatalog>("M0/M0UnitSprites");
+            if (kit == null)
+                kit = Resources.Load<TestArenaKit>("M0/M0TestArenaKit");
             try
             {
                 _def = encounter != null ? ContentMapper.ToEncounter(encounter) : null;
@@ -242,7 +243,41 @@ namespace Echoes.Presentation
                     NoteSwing(evt.Get("sourceSlot"));
             }
 
+            Present(evt);
             _logBuilder.AppendLine(Format(evt));
+        }
+
+        // Presentation only. Does not change button enablement or combat numbers.
+        // Hit flash + sfx_combat_hit on damage. Death puff + sfx_combat_down on death.
+        // sfx_ui_dice_confirm on a player confirm or the 6-second timeout, not on resolve.
+        private void Present(BattleEvent evt)
+        {
+            if (_chrome == null || kit == null)
+                return;
+            if (evt.Type == BattleEvents.Damage)
+            {
+                UnitWidget widget = FindWidget(evt.Get("targetSlot"));
+                if (widget != null)
+                    _chrome.QueueHit(widget.portrait, !widget.ally);
+                _chrome.Play(kit.sfxHit, TestArenaSfx.Hit);
+            }
+            else if (evt.Type == BattleEvents.UnitDeath)
+            {
+                UnitWidget widget = FindWidget(evt.Get("slot"));
+                if (widget != null)
+                {
+                    if (widget.hasDeath)
+                        widget.die = true;
+                    _chrome.QueueDeath(widget.portrait, !widget.ally);
+                }
+                _chrome.Play(kit.sfxDown, TestArenaSfx.Down);
+            }
+            else if (evt.Type == BattleEvents.DiceCommit)
+            {
+                string reason = evt.Get("reason");
+                if (reason == "player" || reason == "timeout")
+                    _chrome.Play(kit.sfxConfirm, TestArenaSfx.Confirm);
+            }
         }
 
         private string Format(BattleEvent evt)
@@ -341,7 +376,15 @@ namespace Echoes.Presentation
             }
 
             foreach (KeyValuePair<string, UnitWidget> pair in _units)
-                pair.Value.Paint(UnitName(pair.Value.unitId), L(LocKeys.Hp), L(LocKeys.Shield));
+            {
+                UnitWidget widget = pair.Value;
+                if (widget.plate != null && _chrome != null)
+                {
+                    bool dead = widget.maxHp > 0 && widget.hp <= 0;
+                    _chrome.RememberPlate(widget.plate, widget.ally, dead);
+                    widget.plate.Paint(UnitName(widget.unitId), widget.hp, widget.maxHp, widget.shield, widget.ally, dead);
+                }
+            }
 
             _log.text = _logBuilder.ToString();
             float height = Mathf.Max(200f, _log.preferredHeight + 12f);
@@ -352,8 +395,12 @@ namespace Echoes.Presentation
                 Canvas.ForceUpdateCanvases();
                 _logScroll.verticalNormalizedPosition = 0f;
             }
+            if (_commitButton != null && _sim != null)
+                TestArenaChrome.PaintLabel(_commitLabel, true, setup && _sim.CanCommit);
             LayoutFormation();
             SyncCombatTokens();
+            if (_chrome != null)
+                _chrome.Flush(_poseDt);
         }
 
         private string PhaseLabel()
@@ -390,11 +437,17 @@ namespace Echoes.Presentation
             scaler.referenceResolution = new Vector2(1600f, 900f);
             scaler.matchWidthOrHeight = 0.5f;
             Transform root = canvasGo.transform;
+            _chrome = new TestArenaChrome();
+            _chrome.Install(canvasGo, _font, kit);
+            // Locked plates have no .meta. Props sit on the ground plate and do not raycast.
+            // env_riftarena_prop_dressing.png is the optional composite and is not stacked on the three overlays.
+            _chrome.BuildBackdrop(root);
 
             _title = MakeText(Box(root, "Title", new Vector2(-360f, 308f), new Vector2(640f, 40f), new Color(0f, 0f, 0f, 0f)), 28);
             _localeLabel = MakeText(ButtonBox(root, "Locale", new Vector2(710f, 410f), new Vector2(130f, 34f), ToggleLocale), 18);
 
             BuildFormation(root);
+            _chrome.BuildForeground(root);
 
             _status = MakeText(Box(root, "Status", new Vector2(0f, -420f), new Vector2(1520f, 32f), new Color(0f, 0f, 0f, 0f)), 16);
             _result = MakeText(Box(root, "Result", new Vector2(-420f, -376f), new Vector2(520f, 30f), new Color(0f, 0f, 0f, 0f)), 24);
@@ -409,40 +462,29 @@ namespace Echoes.Presentation
             _beginLabel = MakeText(ButtonBox(root, "Begin", new Vector2(706f, 336f), new Vector2(140f, 40f), BeginBattle), 20);
             _beginButton = _beginLabel.transform.parent.gameObject;
 
-            _commitLabel = MakeText(ButtonBox(root, "Commit", new Vector2(653f, 168f), new Vector2(180f, 42f), OnCommit), 20);
+            _commitLabel = MakeText(ButtonBox(root, "Commit", new Vector2(670f, 160f), new Vector2(HudMetrics.PrimaryW, HudMetrics.PrimaryH), OnCommit), 14);
             _commitButton = _commitLabel.transform.parent.gameObject;
             _commitButton.SetActive(false);
-            Button commit = _commitButton.GetComponent<Button>();
-            ColorBlock colors = commit.colors;
-            colors.disabledColor = new Color(0.25f, 0.25f, 0.28f, 0.75f);
-            commit.colors = colors;
+            _chrome.Skin(_commitButton, true);
+            TestArenaChrome.PaintLabel(_commitLabel, true, false);
 
             BuildDragLayer(root);
             EnsureTokens();
             BuildDice(root);
         }
 
-        // Right column, above March. Built last so the board cannot take the click.
+        // Right rail, under the 240px fate bar. Built last so the board cannot take the click.
         private void BuildDice(Transform root)
         {
-            _fateLabel = MakeText(Box(root, "Fate", new Vector2(640f, 300f), new Vector2(340f, 26f), new Color(0f, 0f, 0f, 0f)), 16);
-            _diceLabel = MakeText(Box(root, "Dice", new Vector2(640f, 268f), new Vector2(360f, 32f), new Color(0f, 0f, 0f, 0f)), 14);
-            _rollLabel = MakeText(ButtonBox(root, "Roll", new Vector2(545f, 220f), new Vector2(150f, 40f), OnRoll), 20);
+            _chrome.BuildRail(root);
+            _rollLabel = MakeText(ButtonBox(root, "Roll", new Vector2(616f, 198f), new Vector2(HudMetrics.SecondaryW, HudMetrics.SecondaryH), OnRoll), 14);
             _rollButton = _rollLabel.transform.parent.gameObject;
-            _confirmDiceLabel = MakeText(ButtonBox(root, "Confirm", new Vector2(715f, 220f), new Vector2(150f, 40f), OnConfirmDice), 20);
+            _confirmDiceLabel = MakeText(ButtonBox(root, "Confirm", new Vector2(724f, 198f), new Vector2(HudMetrics.SecondaryW, HudMetrics.SecondaryH), OnConfirmDice), 14);
             _confirmDiceButton = _confirmDiceLabel.transform.parent.gameObject;
-            DimButton(_rollButton);
-            DimButton(_confirmDiceButton);
+            _chrome.Skin(_rollButton, false);
+            _chrome.Skin(_confirmDiceButton, false);
             _rollButton.SetActive(false);
             _confirmDiceButton.SetActive(false);
-        }
-
-        private static void DimButton(GameObject button)
-        {
-            Button widget = button.GetComponent<Button>();
-            ColorBlock colors = widget.colors;
-            colors.disabledColor = new Color(0.25f, 0.25f, 0.28f, 0.75f);
-            widget.colors = colors;
         }
 
         private void PaintDice()
@@ -453,27 +495,41 @@ namespace Echoes.Presentation
             _rollButton.SetActive(live);
             _confirmDiceButton.SetActive(live);
             if (!live)
+            {
+                if (_chrome != null)
+                    _chrome.PaintFate(0, false, L(HudMetrics.FateEnergy), L(HudMetrics.CanRoll));
                 return;
+            }
             _rollLabel.text = L(LocKeys.Roll);
             _confirmDiceLabel.text = L(LocKeys.Confirm);
-            _rollButton.GetComponent<Button>().interactable = _sim.CanRoll;
-            _confirmDiceButton.GetComponent<Button>().interactable = _sim.CanConfirm;
-            _fateLabel.text = F(LocKeys.Fate, _sim.FateEnergy.ToString(CultureInfo.InvariantCulture));
-            string faces = "- / - / -";
-            if (_sim.HasRolled)
-                faces = FaceName(_sim.RolledFace(0)) + " / " + FaceName(_sim.RolledFace(1)) + " / " + FaceName(_sim.RolledFace(2));
-            if (_sim.CanConfirm)
+            bool canRoll = _sim.CanRoll;
+            bool canConfirm = _sim.CanConfirm;
+            _rollButton.GetComponent<Button>().interactable = canRoll;
+            _confirmDiceButton.GetComponent<Button>().interactable = canConfirm;
+            TestArenaChrome.PaintLabel(_rollLabel, false, canRoll);
+            TestArenaChrome.PaintLabel(_confirmDiceLabel, false, canConfirm);
+            if (_chrome == null)
+                return;
+            bool rolled = _sim.HasRolled;
+            _chrome.PaintFate(_sim.FateEnergy, rolled, L(HudMetrics.FateEnergy), L(HudMetrics.CanRoll));
+            string badge = null;
+            if (rolled)
             {
-                int seconds = (_sim.DiceConfirmRemainingMs + 999) / 1000;
-                faces = faces + "  " + seconds.ToString(CultureInfo.InvariantCulture) + "s";
+                FaceResolution resolved = FaceEffects.Resolve(_sim.RolledFace(0), _sim.RolledFace(1), _sim.RolledFace(2));
+                if (resolved.ComboId == ComboIds.Twin)
+                    badge = L(HudMetrics.ComboTwin);
+                else if (resolved.ComboId == ComboIds.Attunement)
+                    badge = L(HudMetrics.ComboAttunement);
             }
-            _diceLabel.text = faces;
+            _chrome.PaintDice(canConfirm, badge, rolled ? _sim.RolledFace(0) : null, rolled ? _sim.RolledFace(1) : null, rolled ? _sim.RolledFace(2) : null);
         }
 
         private void OnRoll()
         {
             if (_sim == null || !_sim.CanRoll)
                 return;
+            if (_chrome != null && kit != null)
+                _chrome.Play(kit.sfxRoll, TestArenaSfx.Roll);
             _sim.Roll();
             ApplyNew();
             Paint();
@@ -528,6 +584,8 @@ namespace Echoes.Presentation
         {
             if (_sim == null || !_sim.CanCommit)
                 return;
+            if (_chrome != null && kit != null)
+                _chrome.Play(kit.sfxMarch, TestArenaSfx.March);
             _selectedUnitId = null;
             _dragUnitId = null;
             _sim.Commit();
@@ -555,13 +613,12 @@ namespace Echoes.Presentation
             UnitWidget found = FindWidget(slot);
             if (found != null)
                 return found;
-            Color color = slot.StartsWith("ally_")
-                ? new Color(0.28f, 0.38f, 0.34f, 1f)
-                : new Color(0.42f, 0.26f, 0.26f, 1f);
-            RectTransform panel = Box(_board, slot, SlotLocal(slot), new Vector2(CellW, CellH), color);
+            RectTransform panel = Box(_board, slot, SlotLocal(slot), new Vector2(CellW, CellH), Clear);
+            panel.GetComponent<Image>().raycastTarget = false;
             var widget = new UnitWidget();
             widget.root = panel.gameObject;
             widget.unitId = unitId;
+            widget.ally = slot.StartsWith("ally_");
             Sprite idle = SpriteFor(unitId);
             Sprite[] walk;
             Sprite[] attack;
@@ -573,19 +630,16 @@ namespace Echoes.Presentation
                 widget.attack = attack;
                 widget.hasClips = true;
             }
+            Sprite[] death;
+            if (sprites != null && sprites.TryGetDeath(unitId, out death))
+            {
+                widget.death = death;
+                widget.hasDeath = true;
+            }
             widget.idle = idle;
             widget.portrait = AddPortrait(panel, idle, new Vector2(UnitCardLayout.PortraitRestX, UnitCardLayout.PortraitRestY), 32f);
-            float textX = widget.portrait != null ? 14f : 0f;
-            float textW = widget.portrait != null ? 58f : 82f;
-            widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 18f), new Vector2(textW, 16f), Clear), 12);
-            widget.hpText = MakeText(Box(panel, "Hp", new Vector2(0f, -8f), new Vector2(82f, 14f), Clear), 11);
-            RectTransform bar = Box(panel, "Bar", new Vector2(0f, -24f), new Vector2(80f, 6f), new Color(0.08f, 0.08f, 0.08f, 1f));
-            widget.fill = Box(bar, "Fill", Vector2.zero, new Vector2(116f, 6f), new Color(0.45f, 0.75f, 0.42f, 1f)).GetComponent<Image>();
-            RectTransform fillRt = widget.fill.rectTransform;
-            fillRt.anchorMin = new Vector2(0f, 0f);
-            fillRt.anchorMax = new Vector2(1f, 1f);
-            fillRt.offsetMin = Vector2.zero;
-            fillRt.offsetMax = Vector2.zero;
+            if (_chrome != null)
+                widget.plate = _chrome.BuildPlate(panel, widget.ally);
             _units[slot] = widget;
             return widget;
         }
@@ -729,8 +783,10 @@ namespace Echoes.Presentation
                 return;
             }
 
-            AllyPoseSample sample = AllyPoseClock.Advance(widget.pose, widget.poseTime, moving, widget.swing, _poseDt);
+            bool die = widget.die && widget.hasDeath;
+            AllyPoseSample sample = AllyPoseClock.Advance(widget.pose, widget.poseTime, moving, widget.swing, die, _poseDt);
             widget.swing = false;
+            widget.die = false;
             widget.pose = sample.Pose;
             widget.poseTime = sample.Time;
             Sprite next = widget.idle;
@@ -738,6 +794,8 @@ namespace Echoes.Presentation
                 next = FrameAt(widget.walk, sample.Frame);
             else if (sample.Pose == AllyPose.Attack)
                 next = FrameAt(widget.attack, sample.Frame);
+            else if (sample.Pose == AllyPose.Death)
+                next = FrameAt(widget.death, sample.Frame);
             // Swap inside the fixed portrait. Do not call SetNativeSize and do not
             // size the frame from pixels-per-unit: the enemy idle canvas is 732 and
             // its walk/attack frames are 128, padded to the same figure fraction.
@@ -1401,37 +1459,26 @@ namespace Echoes.Presentation
         {
             public GameObject root;
             public string unitId;
-            public Text nameText;
-            public Text hpText;
-            public Image fill;
             public Image portrait;
+            public CombatPlate plate;
+            public bool ally;
             public int hp;
             public int maxHp;
             public int shield;
             public Sprite idle;
             public Sprite[] walk;
             public Sprite[] attack;
+            public Sprite[] death;
             public bool hasClips;
+            public bool hasDeath;
             public bool swing;
+            public bool die;
             public AllyPose pose;
             public float poseTime;
             public bool hasPoseSample;
             public decimal lastX;
             public decimal lastY;
             public float sinceMove;
-
-            public void Paint(string unitLabel, string hpLabel, string shieldLabel)
-            {
-                nameText.text = unitLabel;
-                hpText.text = hpLabel + " " + hp.ToString(CultureInfo.InvariantCulture)
-                    + "  " + shieldLabel + " " + shield.ToString(CultureInfo.InvariantCulture);
-                float ratio = maxHp <= 0 ? 0f : Mathf.Clamp01(hp / (float)maxHp);
-                RectTransform rt = fill.rectTransform;
-                rt.anchorMin = new Vector2(0f, 0f);
-                rt.anchorMax = new Vector2(ratio, 1f);
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-            }
         }
 
         private sealed class CellView

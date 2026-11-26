@@ -137,7 +137,7 @@ Standing props. Pivot **bottom center (0.5, 0.1)**:
 - `env_riftarena_prop_chip_01.png`, `env_riftarena_prop_chip_02.png`
 - `env_riftarena_prop_midline_stones.png`
 
-Folder: `Assets/_Project/Art/Environment/TestArena/`. Import matches character sprites: Texture Type **Sprite (2D and UI)**, Sprite Mode **Single**, Pixels Per Unit **64**, Filter Mode **Bilinear**, `alphaIsTransparency` on, mipmaps off, compression uncompressed. This pack does not wire TestArena scenes or code.
+Folder: `Assets/_Project/Art/Environment/TestArena/`. Import matches character sprites: Texture Type **Sprite (2D and UI)**, Sprite Mode **Single**, Pixels Per Unit **64**, Filter Mode **Bilinear**, `alphaIsTransparency` on, mipmaps off, compression uncompressed. TestArena draws the three 1280×720 overlays (`midline`, `footholds`, `edge_rubble`) on the locked ground plate, in the sort order above, and they do not take clicks. Loose stamps are the pieces already composited into those overlays; the scene does not scatter them a second time. `env_riftarena_prop_dressing.png` is the optional composite of the three overlays and is not stacked on top of them. The four locked plates stay as they are, including having no `.meta` files.
 
 ## Layers and pivots
 
@@ -202,7 +202,7 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - 3D meshes, perspective cameras, photo-rock / photo-fabric
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
-- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). Death / fall-down frames for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are now in scope and shipped (see below). Death / fall-down frames for the remaining six official allies are a second art lock and are shipped (see below). TestArena keeps playing idle, walk, and attack for those allies. The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: 6 enemies, Boss, Boss VFX, character hit-react loops, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
+- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). Death / fall-down frames for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are now in scope and shipped (see below). Death / fall-down frames for the remaining six official allies are a second art lock and are shipped (see below). TestArena plays death only for the three default units and keeps playing idle, walk, and attack for those six. The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: 6 enemies, Boss, Boss VFX, character hit-react loops, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, BGM, village ambience, voice, and shop or map audio, 80 icons
 - Restyling or shipping 墓灯村, shop UI, world-map UI, or a full official HUD as part of this M0 TestArena kit
 - Default engine-green HP bars (use rust `#8B2E32`)
 - Baking player-visible strings (出征 / 掷骰 / 确认 / 命运能量 / 生命 / 护盾 / 双生 / 同调) into reusable 9-slices
@@ -279,7 +279,7 @@ Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.
 
 Death / fall-down frames are in scope and shipped for the three default TestArena units only: `ashguard` (灰烬卫士), `riftmage` (裂隙术士), and `unit_placeholder_enemy` (锈蚀步卒 / Rustsoldier). Death frames for the remaining six official allies are a second art lock (see below).
 
-This is an art lock. TestArena continues to play the existing idle, walk, and attack clips. Connecting death playback is a later engineering ticket. Do not change simulation numbers in this pass.
+TestArena plays this clip for the three default units (`unit_placeholder_melee` / ashguard, `unit_placeholder_caster` / riftmage, `unit_placeholder_enemy`). Playback is 8 frames per second, a 4-frame one-shot (0.5 s), then holds frame 04 through Resolve. The clip does not loop. A death during an attack one-shot takes over. The other six official allies have a shipped death art lock (see below). TestArena does not play those clips; they stay on idle, walk, and attack. Simulation numbers are unchanged.
 
 | Clip | Frames | Playback intent |
 |------|--------|-----------------|
@@ -353,7 +353,7 @@ Review contact sheet: `docs/art/previews/lockpass_remaining_allies_death.jpg`.
 
 ## M0 hit flash and death puff
 
-The M0 hit-flash and death-puff pack is in scope and shipped. It is one graphic set in two colorways (`_ally` and `_enemy`), the same shapes for every unit of that side. These are standalone one-shots played on the unit (hit flash) or at the feet / ground ring (death puff). They are separate from character hit-react loops and from the default-unit death / fall-down frames (see above). TestArena scenes, prefabs, and code leave these sprites unplayed, and combat numbers stay as they are. The M0 dice and TestArena environment pack is unchanged and is not voided.
+The M0 hit-flash and death-puff pack is in scope and shipped. It is one graphic set in two colorways (`_ally` and `_enemy`), the same shapes for every unit of that side. These are standalone one-shots played on the unit (hit flash) or at the feet / ground ring (death puff). They are separate from character hit-react loops and from the default-unit death / fall-down frames (see above). TestArena plays the hit flash on the unit that takes damage and the death puff at that unit's feet, together with the downed pose. Playback is 10 frames per second, a 4-frame one-shot (0.4 s), and does not loop. Overlapping hits stack. Allies use the `_ally` set. Rustsoldiers (`unit_placeholder_enemy`) use the `_enemy` set. Combat numbers stay as they are. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 Path: `Assets/_Project/Art/VFX/`
 

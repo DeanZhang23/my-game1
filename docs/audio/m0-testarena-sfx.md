@@ -6,9 +6,9 @@
 **文档路径：** `docs/audio/m0-testarena-sfx.md`  
 **资源路径：** `Assets/_Project/Audio/SFX/`
 
-本包只提供测试场战斗反馈与界面操作所需的五条短音效。不做完整配乐，不做墓灯村氛围乐，不做语音，不做商店 / 大地图音效，也不在本包中把声音接进 TestArena。
+本包只提供测试场战斗反馈与界面操作所需的五条短音效。不做完整配乐，不做墓灯村氛围乐，不做语音，不做商店 / 大地图音效。TestArena 现在按下面的触发时机与建议音量播放这五条，不循环。
 
-This pack is the M0 TestArena *necessary* SFX kit only. No BGM, no Grave-Lamp Village ambience, no voice, no shop or world-map cues, and no engine wiring in this change.
+This pack is the M0 TestArena *necessary* SFX kit only. No BGM, no Grave-Lamp Village ambience, no voice, no shop or world-map cues. TestArena now plays these five clips at the triggers and volumes below. They do not loop.
 
 ---
 
@@ -27,12 +27,12 @@ This pack is the M0 TestArena *necessary* SFX kit only. No BGM, no Grave-Lamp Vi
 | 墓灯村氛围 | 环境床、风、灯火、空间混响设计 |
 | 语音 | 单位呼喊、倒下惨叫、旁白 |
 | 商店 / 大地图 | 任何非测试场界面音 |
-| 工程接线 | 不改场景、预制体、脚本、Audio Mixer 资产，不把 AudioSource 挂进 TestArena |
+| 工程接线 | TestArena 播放这五条 one-shot。不做 BGM 总线，不改 Audio Mixer 资产 |
 | 战斗数值 | 不改伤害、骰面、命运值或其他模拟数据 |
 
-本包只提交音频资源与本文档。接线交给工程在后续任务完成。
+音量是混音备注，不是模拟数值。TestArena 用 `PlayOneShot` 按表内音量播放，受击可以叠播。
 
-This change does **not** modify combat numbers and does **not** hook the clips into TestArena scenes, prefabs, or scripts.
+These volumes are mixing notes, not simulation numbers. TestArena plays each clip once with `PlayOneShot` at the volume in the table. Hits may overlap. Combat numbers are unchanged.
 
 ---
 
@@ -69,9 +69,9 @@ All five clips are original procedural audio created for this project. No third-
 
 ## 4. 文件与触发 / Files and triggers
 
-建议播放音量是给后续接线的混音备注，不是本包已经写入工程的数值。重叠受击可能叠音，所以受击音量偏保守。
+建议播放音量是混音备注，不是模拟数值。重叠受击可能叠音，所以受击音量偏保守。TestArena 按这些音量播放。
 
-Suggested playback volumes below are notes for engineering. They are not wired in this pack.
+Suggested playback volumes below are mixing notes, not simulation numbers. Overlapping hits may overlap, so the hit volume stays conservative. TestArena plays at these volumes.
 
 | 文件名 | 用途 | 触发时机（TestArena） | 时长（约） | 建议播放音量 / 混音备注 | 格式 |
 |---|---|---|---|---|---|

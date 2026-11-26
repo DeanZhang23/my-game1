@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1a00015e1a00015e1a00015e1a00015, type: 3}
+  m_Name: M0TestArenaKit
+  hitFlashAlly:
+  - {fileID: 21300000, guid: a596e530fcd6be4c3142341a67841c77, type: 3}
+  - {fileID: 21300000, guid: 10746359b33f1e056634d057044d6042, type: 3}
+  - {fileID: 21300000, guid: 60f71d1cfbfa641f74ac1d583fd19704, type: 3}
+  - {fileID: 21300000, guid: 8d10b14238b3975ba9516334b6907fd2, type: 3}
+  hitFlashEnemy:
+  - {fileID: 21300000, guid: e5f865ff41cb2f69af49e7c760e435bb, type: 3}
+  - {fileID: 21300000, guid: 6a67d464c29dbe82c296873e3b02a86f, type: 3}
+  - {fileID: 21300000, guid: 432d0718fdeaefeaac242e2e048e8756, type: 3}
+  - {fileID: 21300000, guid: a50ac5baf71b4660784a0ed4ef2ca275, type: 3}
+  deathPuffAlly:
+  - {fileID: 21300000, guid: b695ebaea65101ab737ed6390a09be27, type: 3}
+  - {fileID: 21300000, guid: 630a4c6cf02feab0c2e54be7eee6a0a8, type: 3}
+  - {fileID: 21300000, guid: e798eda9973d8610f5b4cef8e55ce94d, type: 3}
+  - {fileID: 21300000, guid: 4a02c482ea1c85871133103c738dd0d3, type: 3}
+  deathPuffEnemy:
+  - {fileID: 21300000, guid: 482263727a6d81c370059733edad57a7, type: 3}
+  - {fileID: 21300000, guid: 7b520966cd8ace46614214fedd252ed0, type: 3}
+  - {fileID: 21300000, guid: 88db5cc884a848574f01b7fabbfa5e21, type: 3}
+  - {fileID: 21300000, guid: 08af5dd3129b15641c8e93c61319b20a, type: 3}
+  sfxHit: {fileID: 8300000, guid: 378fa55c77a74f4685c15ccc10f606bd, type: 3}
+  sfxDown: {fileID: 8300000, guid: 162d1321bcac404badc7d5db3872cd57, type: 3}
+  sfxRoll: {fileID: 8300000, guid: 186de4dfa26942b8a8ef741289d6bb70, type: 3}
+  sfxConfirm: {fileID: 8300000, guid: 558934cd4a444d9c9c6010900b1fc890, type: 3}
+  sfxMarch: {fileID: 8300000, guid: 6accff8ae22543f093c3dfe8840382f4, type: 3}
+  propMidline: {fileID: 21300000, guid: bfb34d8d4bf94256a86aacfeee0f30b3, type: 3}
+  propFootholds: {fileID: 21300000, guid: 5ec69033fd4648ab8c9d8734ba100167, type: 3}
+  propEdgeRubble: {fileID: 21300000, guid: 8ba510bf66604657ae12ae89bb803a66, type: 3}
+  propDressing: {fileID: 21300000, guid: 06ca607e87e44f1db457939e3a9661e8, type: 3}
+  looseProps:
+  - {fileID: 21300000, guid: 98876a94c2094ee49b10b8d68fdd921d, type: 3}
+  - {fileID: 21300000, guid: a856a8be39c541dc871dc3e1fda1e463, type: 3}
+  - {fileID: 21300000, guid: 816d632394c04e4d80289905a7d13f60, type: 3}
+  - {fileID: 21300000, guid: a9ac9426bcf94e0bbfd6e42cd60c40d1, type: 3}
+  - {fileID: 21300000, guid: 0093528cb2f04b6382bdb1343fbd59fb, type: 3}
+  - {fileID: 21300000, guid: ab3d24194e38478e8f1e20a2f6c0040d, type: 3}
+  - {fileID: 21300000, guid: 3615c42755c04f46a4db42ef07fcc2ca, type: 3}
+  - {fileID: 21300000, guid: 7c6d0e15631f4fe684a812287344d33b, type: 3}
+  - {fileID: 21300000, guid: ee1f39eb4f3b422a8086dcc606e54500, type: 3}
+  - {fileID: 21300000, guid: 1c2a7596538e469f91cea202416883e8, type: 3}
+  - {fileID: 21300000, guid: 65ace8f0c9ec49ebb6fb89b5e163be98, type: 3}
+  - {fileID: 21300000, guid: b63a9fec6738456ca57e0c68317f0226, type: 3}
+  - {fileID: 21300000, guid: 7a02b702ad3f440aaee93a78a5e04669, type: 3}
+  - {fileID: 21300000, guid: 41aff771f6b048c19a34fb8f087a907b, type: 3}
+  - {fileID: 21300000, guid: 503f9536e2b2420ca583bc1dbbb20eeb, type: 3}
+  - {fileID: 21300000, guid: ba74a11c230042169025cd2fc2493d7d, type: 3}
+  - {fileID: 21300000, guid: e34fe8e1dcd048a0a26c691ff16458f8, type: 3}
+  - {fileID: 21300000, guid: f86de7ee70dc487dbd23d4a438e9f06f, type: 3}
+  - {fileID: 21300000, guid: f3226facda0a43a9a6db1798bf569b75, type: 3}
+  - {fileID: 21300000, guid: 044e79e53ad544bab8f3c95b84619dc9, type: 3}
+  - {fileID: 21300000, guid: 18a0b549b5134174ba244d35246f2666, type: 3}
+  - {fileID: 21300000, guid: 1a4b68fe8d4d4d6db14e5ccf10dcfaed, type: 3}
+  - {fileID: 21300000, guid: edcf9cf0b6bd44239d1050f3c28cc5cf, type: 3}
+  - {fileID: 21300000, guid: e787dc633a77466097f069360a863cbf, type: 3}
+  btnPrimaryNormal: {fileID: 21300000, guid: ac9997db330c4a899199984c8c80cbeb, type: 3}
+  btnPrimaryHover: {fileID: 21300000, guid: 5f1402af846e4ef9a69a1869c88bbb58, type: 3}
+  btnPrimaryPressed: {fileID: 21300000, guid: 0d79297e407e40de8bbf41d78b8ed0bd, type: 3}
+  btnPrimaryDisabled: {fileID: 21300000, guid: 2eb7430f365a4b2aa75771c05a012998, type: 3}
+  btnSecondaryNormal: {fileID: 21300000, guid: 497112f555c94ea484bf221234d4341f, type: 3}
+  btnSecondaryHover: {fileID: 21300000, guid: c7db94239ac14f33aaf28dc568c73c0b, type: 3}
+  btnSecondaryPressed: {fileID: 21300000, guid: 284b83c2bb2a4c77b961a2ab0559b7d5, type: 3}
+  btnSecondaryDisabled: {fileID: 21300000, guid: cf5575c5ccc847edae57ed6e605633f7, type: 3}
+  barTrack: {fileID: 21300000, guid: e454affca6f64178985b47b4e4675dee, type: 3}
+  barTrackReady: {fileID: 21300000, guid: 3a14e4fa5a644eb1a042039e90877b4d, type: 3}
+  barFillFate: {fileID: 21300000, guid: ebf3ca4fc49e40a1b7306754ca62c0f4, type: 3}
+  barFillHp: {fileID: 21300000, guid: a2327c963313495dbe4986a616c70703, type: 3}
+  barFillShield: {fileID: 21300000, guid: 922903d139fe4b5d8119ee5ba14c9f5c, type: 3}
+  barTick: {fileID: 21300000, guid: 3d076d90161c4d66ab03be16fef9c95f, type: 3}
+  barTickReady: {fileID: 21300000, guid: 31fe43af8b4d4639999e7816dc660d4e, type: 3}
+  endcapLeft: {fileID: 21300000, guid: 049946d87cfd40a1b0c3403e4d42ffb3, type: 3}
+  endcapRight: {fileID: 21300000, guid: fe024325cbe1478dbff4fd8aa4faee4c, type: 3}
+  endcapLeftReady: {fileID: 21300000, guid: 56c034720c6e4bb28494ef6a1d20308f, type: 3}
+  endcapRightReady: {fileID: 21300000, guid: 220e40674c084e008eb69d3aad657053, type: 3}
+  ornamentBlood: {fileID: 21300000, guid: 31335f203c0343238c3bc4011dc50670, type: 3}
+  nameplateAlly: {fileID: 21300000, guid: be4e171b8ba9410f89438ee3edab1dd3, type: 3}
+  nameplateEnemy: {fileID: 21300000, guid: 1270287a7ce94b67a1b5ab2d4d92094a, type: 3}
+  nameplateDead: {fileID: 21300000, guid: 80a7eb2a169947f585d094b7f56f0063, type: 3}
+  ornamentBoneCorner: {fileID: 21300000, guid: 3118edea10dd417b89274696ab54cde4, type: 3}
+  ornamentSkullRust: {fileID: 21300000, guid: f88fc3ca60034452becdc3e4ba937ac6, type: 3}
+  ornamentSkullAsh: {fileID: 21300000, guid: 3b82ae2417794ef7a18f50a659e3a585, type: 3}
+  diceSlotEmpty: {fileID: 21300000, guid: bcfa6eb044154929bba8ebb314d56073, type: 3}
+  badgeCombo: {fileID: 21300000, guid: ad71e85e11214e699c549c7b128c2411, type: 3}
+  pendingGlow: {fileID: 21300000, guid: e9c023aef5e94ba7a5e2edeab4c24d59, type: 3}

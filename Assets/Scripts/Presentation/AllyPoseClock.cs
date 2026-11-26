@@ -4,7 +4,8 @@ namespace Echoes.Presentation
     {
         Idle = 0,
         Walk = 1,
-        Attack = 2
+        Attack = 2,
+        Death = 3
     }
 
     public struct AllyPoseSample
@@ -20,7 +21,8 @@ namespace Echoes.Presentation
     // Attack is a 4-frame one-shot at that same 8 fps, so the clip lasts 0.5 s.
     // 0.5 s finishes inside the existing attack intervals (melee 1.2 s, ranged 1.5 s).
     // MoveHoldSeconds bridges the sim's 50 ms movement lattice so the walk loop
-    // does not blink to idle between steps. It is not a fourth pose.
+    // does not blink to idle between steps. It is not a pose.
+    // Death uses this same rate: a 4-frame one-shot (0.5 s) that then holds frame 04.
     public static class AllyPoseClock
     {
         public const float FramesPerSecond = 8f;
@@ -60,6 +62,13 @@ namespace Echoes.Presentation
             return true;
         }
 
+        // Same rate and length as the attack one-shot. False once the clip has
+        // finished; frame is then the last downed pose, which the caller holds.
+        public static bool TryDeathFrame(float elapsed, out int frame)
+        {
+            return TryAttackFrame(elapsed, out frame);
+        }
+
         // sinceLastStep is presentation time since the sim position last changed.
         // A dead unit is never walking. Before the first step, pass a value above the hold.
         public static bool IsMoving(float sinceLastStep, bool alive)
@@ -71,16 +80,36 @@ namespace Echoes.Presentation
             return sinceLastStep <= MoveHoldSeconds;
         }
 
-        // swing restarts the attack one-shot at frame 0 and does not consume dt.
-        // A playing attack runs to the end even if the unit is also moving, then the
-        // next pose starts at frame 0. Attack never loops.
-        public static AllyPoseSample Advance(AllyPose pose, float time, bool moving, bool swing, float dt)
-        {
-            if (dt < 0f)
-                dt = 0f;
+    // swing restarts the attack one-shot at frame 0 and does not consume dt.
+    // A playing attack runs to the end even if the unit is also moving, then the
+    // next pose starts at frame 0. Attack never loops.
+    // die starts the death one-shot at frame 0 (same 8 fps, 4 frames, 0.5 s) and
+    // does not consume dt. Death takes over an attack. The clip does not loop:
+    // after the last frame it holds that downed pose. A later die or swing does
+    // not restart it.
+    public static AllyPoseSample Advance(AllyPose pose, float time, bool moving, bool swing, float dt)
+    {
+        return Advance(pose, time, moving, swing, false, dt);
+    }
 
-            if (swing)
-                return Sample(AllyPose.Attack, 0, 0f);
+    public static AllyPoseSample Advance(AllyPose pose, float time, bool moving, bool swing, bool die, float dt)
+    {
+        if (dt < 0f)
+            dt = 0f;
+
+        if (pose == AllyPose.Death)
+        {
+            time += dt;
+            int held;
+            TryDeathFrame(time, out held);
+            return Sample(AllyPose.Death, held, time);
+        }
+
+        if (die)
+            return Sample(AllyPose.Death, 0, 0f);
+
+        if (swing)
+            return Sample(AllyPose.Attack, 0, 0f);
 
             if (pose == AllyPose.Attack)
             {

@@ -18,5 +18,7 @@
   <ItemGroup>
     <Compile Include="..\..\Assets\Scripts\Presentation\AllyPoseClock.cs" Link="Presentation\AllyPoseClock.cs" />
     <Compile Include="..\..\Assets\Scripts\Presentation\UnitCardLayout.cs" Link="Presentation\UnitCardLayout.cs" />
+    <Compile Include="..\..\Assets\Scripts\Presentation\VfxClock.cs" Link="Presentation\VfxClock.cs" />
+    <Compile Include="..\..\Assets\Scripts\Presentation\TestArenaWiring.cs" Link="Presentation\TestArenaWiring.cs" />
   </ItemGroup>
 </Project>
