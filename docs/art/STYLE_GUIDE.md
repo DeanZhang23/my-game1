@@ -1,4 +1,4 @@
-# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles)
+# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles + ashguard/riftmage walk & attack)
 
 **Style lock: Q 版暗黑 (chibi dark-fantasy).** This is the source of truth for Echoes of Fate production.  
 **Supersedes** the withdrawn realistic / painterly / low-poly-realistic M0 draft on PR #10. Those assets are **void** — do not patch or ship them.  
@@ -110,9 +110,11 @@ chr_ally_placeholder_melee_{anim}.png
 chr_ally_placeholder_caster_{anim}.png
 chr_enemy_placeholder_{anim}.png
 chr_ally_{ashguard|oathblade|lampsister|riftmage|misthunter|boneapostle|chainjudge|bloodacolyte}_idle_01.png
+chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_04.png
+chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
 ```
 
-M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided.
+M0 ships placeholder `idle` only (melee / caster / enemy). The official 8 playable allies now have production idle sprites (see below). Official walk and attack frames are shipped for `ashguard` and `riftmage` only; the other six allies still have idle only until a later ticket. Placeholders remain temporary stand-ins until those official idles are approved and merged. The M0 dice and TestArena environment pack is unchanged and is not voided. These walk and attack sprites are not wired into TestArena.
 
 IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `enemy` → the matching `chr_*` files; official allies use the stable IDs in the table below.
 
@@ -122,7 +124,7 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - 3D meshes, perspective cameras, photo-rock / photo-fabric
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
-- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Still out of scope: 6 enemies, Boss, per-unit animation sets, Grave-Lamp Village, shop or large-map UI, full VFX, audio, 80 icons
+- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames for `ashguard` and `riftmage` are now in scope and shipped (see below). The other six allies still have idle only until a later ticket. Still out of scope: 6 enemies, Boss, hit, death, skill loops, projectile atlases, standalone VFX, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
 
 See `docs/art/USAGE.md`.
 
@@ -148,3 +150,16 @@ Path: `Assets/_Project/Art/Characters/chr_ally_{id}_idle_01.png`
 **Density pass:** Official idles should be accessory-dense and color-complex: layered materials (cloth, metal, bone, rust, gold trim, lamp glow, ash, blood, cyan cracks) and several chunky, toy-like ornaments per unit (clasps, seals, vials, charms, pouches, scabbards, hanging tags). Prefer a few large readable accessories over many tiny specks. Kits must still read at 64 px and keep distinct silhouettes; do not hide the gold ally ring under props. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 **Gear quota pass:** Official idles must show **5 to 7 fairly obvious gear pieces** on each unit — chunky, countable objects (weapon, shield, lantern, book, scabbard, quiver, vials, seals, charms, pouches, pauldrons, and similar) that you can point at in the 128 px sprite and still notice at 64 px. Do not count tiny trim, stitching, or a 2 px clasp. Do not count the cloak as a whole unless it is a clearly separate layered garment, and do not count the gold ground ring. Prefer large toyshop ornaments over speck noise; if packing would muddy the 64 px read, enlarge pieces rather than adding more tiny ones. The M0 dice and TestArena environment pack is unchanged and is not voided.
+
+## Official walk + attack (ashguard, riftmage)
+
+Official walk and attack frames for `ashguard` and `riftmage` are in scope and shipped under `Assets/_Project/Art/Characters/`. The other six allies still have idle only until a later ticket. All units will use this same frame count.
+
+| Clip | Frames | Playback |
+|------|--------|----------|
+| Walk | 4 | Loop: `chr_ally_{id}_walk_01.png` … `chr_ally_{id}_walk_04.png` |
+| Attack | 4 | One-shot: prep, hit, recover, return toward idle — `chr_ally_{id}_attack_01.png` … `chr_ally_{id}_attack_04.png` |
+
+Shipped now for `id` = `ashguard` and `riftmage` only. Hit, death, skill loops, projectile atlases, and standalone VFX stay out of scope.
+
+Import matches idle: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot about **(0.50, 0.125)** at the feet / gold ring, facing **right**, grave-lamp gold ring `#C9A227`. Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. These frames are not wired into TestArena (that is a later Engineer ticket). The M0 dice and TestArena environment pack is unchanged and is not voided.
