@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\Assets\Scripts\Presentation\AllyPoseClock.cs" Link="Presentation\AllyPoseClock.cs" />
+    <Compile Include="..\..\Assets\Scripts\Presentation\UnitCardLayout.cs" Link="Presentation\UnitCardLayout.cs" />
   </ItemGroup>
 </Project>

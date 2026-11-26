@@ -60,6 +60,8 @@ namespace Echoes.Presentation
         };
         private RectTransform _bench;
         private RectTransform _dragLayer;
+        // Walking and attacking portraits. Not a click target. Cards stay on the board.
+        private RectTransform _spriteLayer;
         private Text _benchLabel;
         private Text _allyCaption;
         private Text _enemyCaption;
@@ -572,7 +574,7 @@ namespace Echoes.Presentation
                 widget.hasClips = true;
             }
             widget.idle = idle;
-            widget.portrait = AddPortrait(panel, idle, new Vector2(-26f, 12f), 32f);
+            widget.portrait = AddPortrait(panel, idle, new Vector2(UnitCardLayout.PortraitRestX, UnitCardLayout.PortraitRestY), 32f);
             float textX = widget.portrait != null ? 14f : 0f;
             float textW = widget.portrait != null ? 58f : 82f;
             widget.nameText = MakeText(Box(panel, "Name", new Vector2(textX, 18f), new Vector2(textW, 16f), Clear), 12);
@@ -600,8 +602,12 @@ namespace Echoes.Presentation
         {
             foreach (KeyValuePair<string, UnitWidget> pair in _units)
             {
-                if (pair.Value.root != null)
-                    Destroy(pair.Value.root);
+                UnitWidget widget = pair.Value;
+                // A sprite that has left its card is parented to the sprite layer.
+                if (widget.portrait != null && (widget.root == null || widget.portrait.transform.parent != widget.root.transform))
+                    Destroy(widget.portrait.gameObject);
+                if (widget.root != null)
+                    Destroy(widget.root);
             }
             _units.Clear();
         }
@@ -629,10 +635,13 @@ namespace Echoes.Presentation
                 SimAnchor.y + (float)y * PixelsPerUnit);
         }
 
+        // The nameplate (name, hp, shield) stays on the formation slot.
+        // Only the portrait follows seek/move. Allies and unit_placeholder_enemy share this.
         private void SyncCombatTokens()
         {
             if (_sim == null)
                 return;
+            bool raised = false;
             for (int i = 0; i < _sim.CombatantCount; i++)
             {
                 CombatantView view;
@@ -641,12 +650,52 @@ namespace Echoes.Presentation
                 UnitWidget widget = FindWidget(view.SlotId);
                 if (widget == null || widget.root == null)
                     continue;
-                RectTransform rt = widget.root.GetComponent<RectTransform>();
-                Vector2 screen = SimToScreen(view.X, view.Y);
-                rt.anchoredPosition = screen - BoardPos;
-                rt.SetAsLastSibling();
+                Vector2 slotLocal = SlotLocal(view.SlotId);
+                Vector2 bodyLocal = SimToScreen(view.X, view.Y) - BoardPos;
+                UnitLayerPlacement place = UnitCardLayout.Place(slotLocal.x, slotLocal.y, bodyLocal.x, bodyLocal.y);
+                RectTransform card = widget.root.GetComponent<RectTransform>();
+                card.anchoredPosition = new Vector2(place.CardX, place.CardY);
+                PlaceSprite(widget, place);
+                if (place.LeftSlot)
+                    raised = true;
                 TickPose(widget, Moving(widget, view));
             }
+            if (raised && _spriteLayer != null)
+                _spriteLayer.SetAsLastSibling();
+        }
+
+        // At rest the portrait stays the card's first child, under the name and hp.
+        // Once the body leaves the slot, the same image moves on a non-raycast layer
+        // so a back-row walker is not drawn under the front card it crosses.
+        private void PlaceSprite(UnitWidget widget, UnitLayerPlacement place)
+        {
+            if (widget.portrait == null || widget.root == null)
+                return;
+            RectTransform sprite = widget.portrait.rectTransform;
+            if (!place.LeftSlot)
+            {
+                if (sprite.parent != widget.root.transform)
+                {
+                    sprite.SetParent(widget.root.transform, false);
+                    sprite.SetSiblingIndex(0);
+                }
+                sprite.anchoredPosition = new Vector2(UnitCardLayout.PortraitRestX, UnitCardLayout.PortraitRestY);
+                return;
+            }
+
+            RectTransform layer = SpriteLayer();
+            if (layer == null)
+                return;
+            if (sprite.parent != layer)
+                sprite.SetParent(layer, false);
+            sprite.anchoredPosition = new Vector2(place.SpriteX, place.SpriteY);
+        }
+
+        private RectTransform SpriteLayer()
+        {
+            if (_spriteLayer == null && _board != null)
+                _spriteLayer = Box(_board, "CombatSprites", Vector2.zero, Vector2.zero, Clear, false);
+            return _spriteLayer;
         }
 
         // Position changes mark a step. The hold in AllyPoseClock keeps the walk across
