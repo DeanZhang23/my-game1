@@ -155,7 +155,7 @@ namespace Echoes.Simulation.Tests
             Assert.Contains("basic-attack swing", style);
             Assert.Contains("basic-attack swing", usage);
             Assert.Contains("Movement loops the walk", usage);
-            Assert.Contains("enemy placeholder stays on its idle", style);
+            Assert.Contains("`unit_placeholder_enemy` still plays `chr_enemy_placeholder_idle` in TestArena", style);
             Assert.Contains("evt.Get(\"kind\") == \"basic\"", app);
             Assert.Contains("AllyPoseClock.Advance", app);
             Assert.Contains("LocKeys.Begin", app);
