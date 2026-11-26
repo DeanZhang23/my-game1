@@ -38,9 +38,22 @@ Assets/_Project/Art/Characters/chr_enemy_placeholder_walk_01.png … chr_enemy_p
 Assets/_Project/Art/Characters/chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
 Assets/_Project/Art/VFX/fx_hit_flash_{ally|enemy}_01.png … fx_hit_flash_{ally|enemy}_04.png
 Assets/_Project/Art/VFX/fx_death_puff_{ally|enemy}_01.png … fx_death_puff_{ally|enemy}_04.png
+docs/ui/m0-testarena-hud.md
+docs/ui/previews/{kit_sheet,mock_setup,mock_combat_ready,mock_combat_pending,mock_nameplates}.png
+Assets/_Project/Art/UI/Hud/manifest.json
+Assets/_Project/Art/UI/Hud/ui_btn_{primary|secondary}_{*}.png
+Assets/_Project/Art/UI/Hud/ui_bar_*.png
+Assets/_Project/Art/UI/Hud/ui_nameplate_{ally|enemy|dead}.png
+Assets/_Project/Art/UI/Hud/ui_dice_slot_empty.png
+Assets/_Project/Art/UI/Hud/ui_badge_combo.png
+Assets/_Project/Art/UI/Hud/ui_dice_pending_glow.png
+Assets/_Project/Art/UI/Hud/ui_ornament_*.png
+Assets/_Project/Art/UI/Hud/ui_bar_endcap_*.png
 ```
 
 Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oathblade`, `lampsister`, `riftmage`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`). Walk and attack paths for the single M0 enemy placeholder (`unit_placeholder_enemy`, 锈蚀步卒 / Rustsoldier) are also shipped. `unit_placeholder_enemy` is wired into TestArena. M0 hit-flash and death-puff paths are shipped (see below).
+
+Dice faces remain at `Assets/_Project/Art/UI/Dice/ui_dice_{face}_{state}.png`. The HUD kit composites `*_normal` faces into the 48×48 slots; it does not replace the dice pack.
 
 ## Dice
 
@@ -49,6 +62,39 @@ Walk and attack paths are shipped for all eight playable allies (`ashguard`, `oa
 - `cracked` — graphic rust cracks (`status_crack`)
 
 Star is a magic spark-star, not a hexagram. Coin is a gold coin, not a compass.
+
+## Import (HUD slices)
+
+Same base settings as the rest of the pack, with UI-specific image types:
+
+| Setting | Value |
+|---------|-------|
+| Texture Type | Sprite (2D and UI) |
+| Mesh Type | Full Rect |
+| Filter Mode | Bilinear |
+| Compression | None or High Quality |
+| Generate Mipmaps | Off |
+| Pixels Per Unit | 64 |
+| Alpha | Authored PNG RGBA; do not leave a baked `#0B1220` void |
+
+Read 9-slice borders, pivots, and nameplate content rects from `Assets/_Project/Art/UI/Hud/manifest.json`.
+
+| Asset | Unity Image Type | Pivot |
+|-------|------------------|-------|
+| `ui_btn_*`, `ui_bar_track*`, `ui_nameplate_*`, `ui_dice_slot_empty`, `ui_badge_combo` | Sliced (borders in `manifest.json`; unique skulls/bones live in endcaps or corners, never in the stretchable center) | Buttons / tracks / slots / badge: (0.5, 0.5). Nameplates: **(0.5, 0.0)** (top-center, hangs under the token). |
+| `ui_bar_fill_{hp,shield,fate}` | Filled, Horizontal, Origin Left (or Sliced + width) | (0.0, 0.5) |
+| `ui_bar_tick*` | Simple | (0.5, 0.5), placed at 50% of the 240px fate track |
+| `ui_bar_endcap_*` | Simple | Overlay on the left/right ends of the 240×16 fate track. Use the `_ready` pair in the can-roll state. |
+| `ui_ornament_*` | Simple | Stamp per `manifest.json` (skulls/bones/blood). Do not 9-slice. |
+| `ui_dice_pending_glow` | Simple | (0.5, 0.5), behind the three slots during pending confirm |
+
+Button and badge slices have **no baked labels** (the badge skull is chrome only). Draw 出征 / 掷骰 / 确认 / 双生 / 同调 / 命运能量 as runtime Text / TMP, via the loc keys in `docs/ui/m0-testarena-hud.md`. Badge text is drawn in the field to the right of the baked skull (left 16px).
+
+HP fill is rust `#8B2E32`. Shield and fate fills are gold `#C9A227`. Do not leave the default green Image color on any HP bar.
+
+## What this pack does not do
+
+Do not restyle 墓灯村, the shop, the world map, or a full official HUD. Do not restyle the TestArena 语言 button, 种子 field, left roster, 3×3 board chrome, or combat log except where a scoped component (nameplate, rail bar, dice slots, buttons) sits on top of them. Do not change combat numbers or button logic in order to “fit” these slices.
 
 ## TestArena
 
