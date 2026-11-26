@@ -1,4 +1,4 @@
-# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles + walk & attack + enemy placeholder walk & attack + M0 hit flash & death puff)
+# Locked Art Style Guide — Echoes of Fate / 命运残响 (M0 + official 8-ally idles + walk & attack + enemy placeholder walk & attack + default-unit death + M0 hit flash & death puff)
 
 **Style lock: Q 版暗黑 (chibi dark-fantasy).** This is the source of truth for Echoes of Fate production.  
 **Supersedes** the withdrawn realistic / painterly / low-poly-realistic M0 draft on PR #10. Those assets are **void** — do not patch or ship them.  
@@ -171,6 +171,8 @@ chr_ally_{id}_walk_01.png … chr_ally_{id}_walk_04.png
 chr_ally_{id}_attack_01.png … chr_ally_{id}_attack_04.png
 chr_enemy_placeholder_walk_01.png … chr_enemy_placeholder_walk_04.png
 chr_enemy_placeholder_attack_01.png … chr_enemy_placeholder_attack_04.png
+chr_ally_{ashguard|riftmage}_death_01.png … chr_ally_{ashguard|riftmage}_death_04.png
+chr_enemy_placeholder_death_01.png … chr_enemy_placeholder_death_04.png
 fx_hit_flash_{ally|enemy}_01.png … fx_hit_flash_{ally|enemy}_04.png
 fx_death_puff_{ally|enemy}_01.png … fx_death_puff_{ally|enemy}_04.png
 ui_btn_{primary|secondary}_{normal|hover|pressed|disabled}.png
@@ -199,7 +201,7 @@ IDs: `face_sword` → `ui_dice_sword_*`; `unit_placeholder_melee` / `caster` / `
 - 3D meshes, perspective cameras, photo-rock / photo-fabric
 - Pixel-art nearest look for this pack
 - Cozy pastoral greens, neon UI, Grave-Lamp Village as TestArena
-- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: 6 enemies, Boss, Boss VFX, character hit-react loops, character death/down animation frames, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
+- Shipping official 8-ally **idle** sprites is now in scope (see roster below). Official **walk** and **attack** frames are now in scope and shipped for all eight playable allies (see below). Enemy placeholder **walk** and **attack** are now in scope and shipped (see below). Death / fall-down frames for the three default TestArena units (`ashguard`, `riftmage`, `unit_placeholder_enemy`) are now in scope and shipped (see below). The M0 **hit flash** and **death puff** pack is in scope and shipped (see below). Still out of scope: death for the remaining six official allies, 6 enemies, Boss, Boss VFX, character hit-react loops, skill loops, projectile atlases, Grave-Lamp Village, shop or large-map UI, audio, 80 icons
 - Restyling or shipping 墓灯村, shop UI, world-map UI, or a full official HUD as part of this M0 TestArena kit
 - Default engine-green HP bars (use rust `#8B2E32`)
 - Baking player-visible strings (出征 / 掷骰 / 确认 / 命运能量 / 生命 / 护盾 / 双生 / 同调) into reusable 9-slices
@@ -245,7 +247,7 @@ Official walk and attack frames are in scope and shipped for all eight playable 
 
 **TestArena playback** (all eight, one constant set in `AllyPoseClock`): 8 frames per second. Movement (seeking or repositioning) loops the walk. The instant a basic attack swings, the attack plays once and does not loop. When that one-shot ends, idle plays while the unit waits out the rest of its attack interval. Reserve, setup, and any unit that has not marched stay on idle. `unit_placeholder_enemy` is wired into TestArena on the same `AllyPoseClock` (see below). The 0.5 s attack clip finishes inside the existing intervals (melee 1.2 s, ranged 1.5 s). Those combat numbers are unchanged.
 
-Character hit-react loops, character death/down animation frames, skill loops, and projectile atlases stay out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (see below).
+Character hit-react loops, skill loops, and projectile atlases stay out of scope. Death frames for `ashguard` and `riftmage` are a separate shipped art set (see below). Death for the remaining six official allies is still out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (see below).
 
 Import matches idle: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprite (2D and UI)**, pivot about **(0.50, 0.125)** at the feet / gold ring, facing **right**, grave-lamp gold ring `#C9A227`. Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. TestArena plays these frames with the rules above. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
@@ -267,13 +269,47 @@ Import: **128×128** RGBA, PPU **64**, filter **Bilinear**, Texture Type **Sprit
 
 The existing `chr_enemy_placeholder_idle.png` remains **732×732** RGBA, pivot (0.50, 0.15), PPU 64, guid `e1d00009e1d00009e1d00009e1d00009`. This wiring does not replace, rescale, or retouch that idle or its `.meta`. TestArena portraits are fixed-size UI images (combat 32, setup/token 44) with `preserveAspect`. Walk and attack sprites are swapped inside those boxes. `SetNativeSize` is not used, and the 128 frames are not placed at world size from PPU 64. The 128 frames pad the figure to the same fraction of the canvas as the 732 idle (feet near 93% of canvas height, figure height about 86% of the canvas), so the on-screen character stays roughly the same size when the pose changes. A sharpness difference between the 732 idle and the 128 frames is acceptable and is left alone.
 
-Character hit-react loops, character death/down animation frames, skill loops, projectile atlases, Boss VFX, and additional enemy types stay out of scope. The M0 hit-flash and death-puff pack is a separate shipped set (see below).
+Character hit-react loops, skill loops, projectile atlases, Boss VFX, and additional enemy types stay out of scope. Death frames for this enemy are a separate shipped art set (see below). The M0 hit-flash and death-puff pack is a separate shipped set (see below).
 
 Review contact sheet: `docs/art/previews/lockpass_enemy_placeholder_walk_attack.jpg`.
 
+
+## Default TestArena units — death / fall-down (first batch)
+
+Death / fall-down frames are in scope and shipped for the three default TestArena units only: `ashguard` (灰烬卫士), `riftmage` (裂隙术士), and `unit_placeholder_enemy` (锈蚀步卒 / Rustsoldier). The remaining six official allies (`oathblade`, `lampsister`, `misthunter`, `boneapostle`, `chainjudge`, `bloodacolyte`) do not have death frames yet.
+
+This is an art lock. TestArena continues to play the existing idle, walk, and attack clips. Connecting death playback is a later engineering ticket. Do not change simulation numbers in this pass.
+
+| Clip | Frames | Playback intent |
+|------|--------|-----------------|
+| Death | 4 | One-shot fall / collapse at 8 frames per second (0.5 s). The clip does not loop. The sequence is a fall, not an attack that returns toward idle. Frame 04 is a downed / fallen hold pose, meant to be held until settlement. |
+
+- Allies: `chr_ally_{ashguard|riftmage}_death_01.png` … `chr_ally_{ashguard|riftmage}_death_04.png`
+- Enemy: `chr_enemy_placeholder_death_01.png` … `chr_enemy_placeholder_death_04.png`
+
+Import matches each unit's existing walk and attack frames:
+
+| Setting | Allies (`ashguard`, `riftmage`) | Enemy (`unit_placeholder_enemy`) |
+|---------|----------------------------------|----------------------------------|
+| Canvas | 128×128 RGBA | 128×128 RGBA |
+| Texture Type | Sprite (2D and UI) | Sprite (2D and UI) |
+| Pixels Per Unit | 64 | 64 |
+| Filter Mode | Bilinear | Bilinear |
+| Pivot | about (0.50, 0.125) at the feet / gold ring | (0.50, 0.15), matching the existing enemy idle |
+| Facing | Right | Left (toward the allies) |
+| Ground ring | Grave-lamp gold `#C9A227` | Rust red `#8B2E32` (rust outer edge, dark-blue inner). No grave-lamp gold `#C9A227`. |
+
+Q 版暗黑 style lock, palette, and the 5–7 gear quota still apply. After falling, the character must still be recognizable. The pivot stays at the feet / ring so the sprite does not jump in the frame. No realistic gory death.
+
+The existing `chr_enemy_placeholder_idle.png` remains **732×732** RGBA, pivot (0.50, 0.15), PPU 64, guid `e1d00009e1d00009e1d00009e1d00009`. This pass does not replace, rescale, or retouch that idle or its `.meta`. Enemy death frames use the same 128 canvas padding as the merged walk and attack frames (feet near 93% of canvas height, figure height about 86% of the canvas).
+
+Character hit-react loops, skill casts, projectile atlases, Boss VFX, additional enemy types, and death frames for the remaining six official allies stay out of scope.
+
+Review contact sheet: `docs/art/previews/lockpass_default_units_death.jpg`.
+
 ## M0 hit flash and death puff
 
-The M0 hit-flash and death-puff pack is in scope and shipped. It is one graphic set in two colorways (`_ally` and `_enemy`), the same shapes for every unit of that side. These are standalone one-shots played on the unit (hit flash) or at the feet / ground ring (death puff). They are separate from character hit-react loops and from character death/down animation frames. TestArena scenes, prefabs, and code leave these sprites unplayed, and combat numbers stay as they are. The M0 dice and TestArena environment pack is unchanged and is not voided.
+The M0 hit-flash and death-puff pack is in scope and shipped. It is one graphic set in two colorways (`_ally` and `_enemy`), the same shapes for every unit of that side. These are standalone one-shots played on the unit (hit flash) or at the feet / ground ring (death puff). They are separate from character hit-react loops and from the default-unit death / fall-down frames (see above). TestArena scenes, prefabs, and code leave these sprites unplayed, and combat numbers stay as they are. The M0 dice and TestArena environment pack is unchanged and is not voided.
 
 Path: `Assets/_Project/Art/VFX/`
 
@@ -302,4 +338,4 @@ fx_death_puff_{ally|enemy}_01.png … fx_death_puff_{ally|enemy}_04.png
 
 Review contact sheet: `docs/art/previews/lockpass_m0_hit_death_vfx.jpg`.
 
-Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, character death/down animation frames, Grave-Lamp Village, additional enemy types.
+Still out of scope: skill loops, projectile atlases, Boss VFX, character hit-react loops, death frames for the remaining six official allies, Grave-Lamp Village, additional enemy types.
